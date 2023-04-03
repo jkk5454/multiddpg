@@ -21,8 +21,6 @@ def show_depth():
     depth = depth.reshape((720, 720))[::-1]
     # get foreground mask
     rgb, depth = pyflex.render_cloth()
-    wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
-    center_x, center_y=pyflex.center_inf()
     depth = depth.reshape(720, 720)[::-1]
     # mask = mask[:, :, 3]
     # depth[mask == 0] = 0
@@ -32,8 +30,7 @@ def show_depth():
     axes[0].imshow(img)
     axes[1].imshow(depth)
     plt.show()
-    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
-
+    
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
     # ['PassWater', 'PourWater', 'PourWaterAmount', 'RopeFlatten', 'ClothFold', 'ClothFlatten', 'ClothDrop', 'ClothFoldCrumpled', 'ClothFoldDrop', 'RopeConfiguration']
@@ -60,8 +57,10 @@ def main():
     env = normalize(SOFTGYM_ENVS[args.env_name](**env_kwargs))
     env.reset()
     
+    
     frames = [env.get_image(args.img_size, args.img_size)]  
     for i in range(env.horizon):
+        draw=0
     #for i in range(80):
         if i < 20:
             action = np.array([[-0.001, 0.000, 0.000, 0.001],
@@ -70,8 +69,10 @@ def main():
             action = np.array([[-0.00, 0.002, 0.000, 0.001],
                           [-0.00, 0.002, 0.000, 0.001]])
         elif 49<i<101:
-            action = np.array([[0.00111, -0.0001, 0.000, 0.001],
-                          [0.00111, -0.0001, 0.000, 0.001]])
+            action = np.array([[0.00120, -0.0001, 0.000, 0.001],
+                          [0.00120, -0.0001, -0.000, 0.001]])
+            if i==78 or i==95:
+                draw=1
         elif 100<i<115:
             action = np.array([[0.000, 0.0000, 0.000, 0.001],
                         [0.000, 0.0000, 0.000, 0.001]])
@@ -85,17 +86,25 @@ def main():
         
         _, _, _, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
         frames.extend(info['flex_env_recorded_frames'])
+    
+    env.get_elongation_gif()
+    
     if args.test_depth:
         #top vision
         cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
         pyflex.set_camera_params(
             np.array([*cam_pos1,*cam_angle1,720,720]))
         show_depth()
-        #size vision
-        cam_pos2, cam_angle2 = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+        wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
+        center_x, center_y=pyflex.center_inf()
+        print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
+        #side vision
+        cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         pyflex.set_camera_params(
             np.array([*cam_pos2,*cam_angle2,720,720]))
         show_depth()
+        center_x, center_y=pyflex.center_inf()
+        print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
 
     if args.save_video_dir is not None:
         save_name = osp.join(args.save_video_dir, args.env_name + '.gif')

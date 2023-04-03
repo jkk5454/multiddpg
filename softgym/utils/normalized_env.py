@@ -104,5 +104,10 @@ class NormalizedEnv(object):
         lb, ub = self._wrapped_env.action_space.low, self._wrapped_env.action_space.high
         scaled_action = lb + (action + 1.) * 0.5 * (ub - lb)
         self._wrapped_env.get_model_action(scaled_action, curr_pos, particle_pos)
-
+        
+    @overrides
+    def get_elongation_gif(self):
+        self._wrapped_env.get_elongation_gif()
+        
+    
 normalize = NormalizedEnv

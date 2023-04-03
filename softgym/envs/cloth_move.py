@@ -8,11 +8,18 @@ from softgym.utils.misc import quatFromAxisAngle
 from pathlib import Path
 import trimesh
 import random
+import scipy.spatial
+import matplotlib.pyplot as plt
+import imageio
 
 class ClothMoveEnv(ClothEnv):
     def __init__(self, cached_states_path='cloth_move_init_states.pkl', **kwargs):
         self.fold_group_a = self.fold_group_b = None
         self.init_pos, self.prev_dist = None, None
+        self.picked_particles = None
+        self.fig = plt.figure(figsize=(12, 5))
+        self.fig.cbar = [None]*2
+        self.elongnation_images=[]
         self.wall_num = 1  # number of obstacle's wall
         super().__init__(**kwargs)
         self.get_cached_configs_and_states(cached_states_path, self.num_variations)
@@ -26,15 +33,18 @@ class ClothMoveEnv(ClothEnv):
         new_pos[:, 2] = (np.sin(angle) * pos[:, 0] + np.cos(angle) * pos[:, 2])
         new_pos += center
         pyflex.set_positions(new_pos)
+        
+
 
     def get_default_config(self):
         particle_radius = self.cloth_particle_radius
         if self.action_mode in ['sawyer', 'franka']:
             cam_pos, cam_angle = np.array([0.0, 1.62576, 1.04091]), np.array([0.0, -0.844739, 0])
         else:
-            cam_pos, cam_angle = np.array([-0.0, 1.2, 1.2]), np.array([0, -45 / 180. * np.pi, 0.])
-            #cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-            #cam_pos2, cam_angle2 = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+            #cam_pos, cam_angle = np.array([0.1, 1.0, 1.0]), np.array([0, -45 / 180. * np.pi, 0.])
+            #cam_pos, cam_angle = np.array([-0.0, 0.3, 0.5]), np.array([0, -0, 90 / 180 * np.pi])
+            cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            #cam_pos, cam_angle = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         config = {
             #'ClothPos': [-1.6, 2.0, -0.8],
             'ClothPos': [-0.2, 0.005, 0],
@@ -43,7 +53,7 @@ class ClothMoveEnv(ClothEnv):
             'ClothStiff': [2.0, 2.3, 0.2],  # Stretch, Bend and Shear
             'glass': {
                 'glass_border': 0.015,
-                'glass_length': 0.22,
+                'glass_length': 0.20,
                 'glass_width':0.06,
             },
             'camera_name': 'default_camera',
@@ -292,6 +302,8 @@ class ClothMoveEnv(ClothEnv):
 
     def _step(self, action):
         pick_flag=self.action_tool.step(action)
+        if self.picked_particles is None:
+            self.picked_particles=self.action_tool.picked_id_info()
         #self.set_glass_shape_states(self.glass_states,shape_states)
         if self.action_mode in ['sawyer', 'franka']:
              print(self.action_tool.next_action)
@@ -299,9 +311,11 @@ class ClothMoveEnv(ClothEnv):
         else:
             if pick_flag[0]:
                pyflex.step()
+               self.dragging_detection()
             else:
                test_param=np.array([0.1,0.2,0.3,0.4])
                pyflex.step(update_params=test_param)
+
 
     def set_glass_params(self, config):
         params = config
@@ -375,7 +389,7 @@ class ClothMoveEnv(ClothEnv):
         boxes.append([halfEdge, center, quat])
 
         #capsule
-        halfEdge = np.array([glass_border / 2., glass_width / 2. + glass_border])
+        halfEdge = np.array([glass_border / 2., glass_width / 2. + glass_border-0.002])
         quat = quatFromAxisAngle([0, -1., 0], np.pi/2.)
         boxes.append([halfEdge, center, quat])
 
@@ -408,8 +422,8 @@ class ClothMoveEnv(ClothEnv):
         #states[1, :3] = np.array([x_center - (glass_length  + 2*glass_border) / 2., (glass_border) / 2. + y_curr, 0.])
         #states[1, 3:6] = np.array([x_center - (glass_length  + 2*glass_border) / 2., (glass_border) / 2. + y_last, 0.])
 
-        states[1, :3] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_curr, 0.])
-        states[1, 3:6] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_last, 0.])
+        states[1, :3] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_curr-glass_border/4+0.002, 0.])
+        states[1, 3:6] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_last-glass_border/4+0.002, 0.])
 
         states[0, 6:10] = quat
         states[0, 10:] = quat
@@ -460,3 +474,100 @@ class ClothMoveEnv(ClothEnv):
         if 'qpg' in self.action_mode:
             info['total_steps'] = self.action_tool.total_steps
         return info
+    
+    #get the impact point with glass and check the impact points are not dragging the particles too far away that violates the actual physicals constraints.
+    
+    def dragging_detection(self):
+        impact_threshold=0.005
+        particle_radius=0.00625
+        particle_pos = np.array(pyflex.get_positions()).reshape(-1, 4)
+        center_capsule = self.glass_states[1,:3]
+        impact_point=np.zeros((100,3))
+        impact_particles=[None]*100
+        impact_point[0] = center_capsule-[0,0,self.glass_width/2]
+        #get the impact particles id
+        for i in range(100):
+            impact_point[i]=impact_point[0]+[0,0,self.glass_width*i/100]
+            dists = scipy.spatial.distance.cdist(impact_point[i].reshape((-1, 3)), particle_pos[:, :3].reshape((-1, 3)))
+            idx_dists = np.hstack([np.arange(particle_pos.shape[0]).reshape((-1, 1)), dists.reshape((-1, 1))])
+            mask = dists.flatten() <= impact_threshold + self.glass_border/2. + particle_radius
+            idx_dists = idx_dists[mask, :].reshape((-1, 2))
+            if idx_dists.shape[0] > 0:
+                impact_id, impact_dist = None, None
+                for j in range(idx_dists.shape[0]):
+                    if idx_dists[j, 0] not in impact_particles and (impact_id is None or idx_dists[j, 1] < impact_dist):
+                        impact_id = idx_dists[j, 0]
+                        impact_dist = idx_dists[j, 1]
+                    if impact_id is not None:
+                        impact_particles[i] = int(impact_id)
+            
+        if impact_particles is not None:
+            impact_particle_idices = []
+            active_impact_indices = []
+            for i in range(100):
+                if impact_particles[i] is not None:
+                    impact_particle_idices.append(impact_particles[i])
+                    active_impact_indices.append(i)
+
+            l = len(impact_particle_idices)
+            #print('len of l is:',l)
+            for i in range(len(self.picked_particles)):
+                elongations = []
+                draw_particles_x=[]
+                draw_particles_y=[]
+                for j in range(l):
+                    init_distance = np.linalg.norm(self.init_pos[self.picked_particles[i], :3] -
+                                                   self.init_pos[impact_particle_idices[j], :3])
+                    now_distance = np.linalg.norm(particle_pos[self.picked_particles[i], :3] -
+                                                  particle_pos[impact_particle_idices[j], :3])
+                    elongations.append(now_distance / init_distance)          
+                    #print('elongation:',now_distance/init_distance)
+                    draw_particles_x.append(particle_pos[impact_particle_idices[j], 0])
+                    draw_particles_y.append(particle_pos[impact_particle_idices[j], 2])
+                    
+                #colors set
+            if l:
+                for i in range(len(self.picked_particles)):
+                    ax = self.fig.add_subplot(1,2,i+1)
+                    min_elongations = np.min(elongations)
+                    max_elongations = np.max(elongations)
+                    #normalized_elongations = (elongations - min_elongations) / (max_elongations - min_elongations)
+                    normalized_elongations = (elongations - np.array(1.0)) / (np.array(1.8) - np.array(1.0))
+                    colors = plt.cm.rainbow(normalized_elongations)
+                    ax.cla()
+                    
+                    im=ax.scatter(draw_particles_x, draw_particles_y, c=colors,cmap='rainbow')
+                    for j in range(l):
+                        ax.plot([particle_pos[self.picked_particles[i]][0], particle_pos[impact_particle_idices[j]][0]]
+                            ,[particle_pos[self.picked_particles[i]][2], particle_pos[impact_particle_idices[j]][2]],color=colors[j])
+                    ax.set_ylim(-0.12,0.12)
+                    ax.set_xlim(-0.05,0.3)
+                    if self.fig.cbar[i] is None:
+                        cb = self.fig.colorbar(im, ax=ax)
+                        cb.ax.yaxis.set_label_position('left')
+                        cb.ax.set_ylabel('elongation',rotation=270,fontsize=14,fontweight='bold')
+                        self.fig.cbar[i]=cb
+                    self.fig.cbar[i].update_normal(im)
+                self.fig.canvas.draw()
+                #argb_image = self.fig.canvas.tostring_rgb()
+                #print('argb_image:',argb_image) 
+                #image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
+                #image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
+                buf = self.fig.canvas.tostring_rgb()
+                ncols, nrows = self.fig.canvas.get_width_height()
+                image = np.fromstring(buf, dtype=np.uint8).reshape(nrows*2, ncols*2, 3) # 2 for 4k monitor
+                self.elongnation_images.append(image)
+                plt.draw()
+                plt.pause(0.1)
+                #plt.close()
+                
+    # get the elonganation of the object
+    def get_elongation_gif(self):
+        imageio.mimsave('./data/elongation.gif', self.elongnation_images,fps=5)
+
+        
+               
+        
+        
+        
+        

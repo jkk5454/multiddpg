@@ -1135,8 +1135,8 @@ std::tuple<py::array_t<unsigned char>, py::array_t<float>> pyflex_render(int cap
     if(g_clothOnly){
         g_centerx = center_x/(clothvertices*g_screenHeight);
         g_centery = center_y/(clothvertices*g_screenWidth);
-        std::cout<<"camPos:"<<g_camPos[0]<<";"<<g_camPos[1]<<';'<<g_camPos[2]<<endl;
-        std::cout<<"camAngle"<<g_camAngle[0]<<";"<<g_camAngle[1]<<";"<<g_camAngle[2]<<endl;
+        /*std::cout<<"camPos:"<<g_camPos[0]<<";"<<g_camPos[1]<<';'<<g_camPos[2]<<endl;
+        std::cout<<"camAngle"<<g_camAngle[0]<<";"<<g_camAngle[1]<<";"<<g_camAngle[2]<<endl;*/
 
     }
     

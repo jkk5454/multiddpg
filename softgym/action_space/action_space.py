@@ -38,7 +38,8 @@ class Picker(ActionToolBase):
         self.init_pos = init_pos
         self.particle_radius = particle_radius
         self.init_particle_pos = init_particle_pos
-        self.spring_coef = spring_coef  # Prevent picker to drag two particles too far away
+        #self.spring_coef = spring_coef  # Prevent picker to drag two particles too far away
+        self.spring_coef = 5
 
         space_low = np.array([-0.1, -0.1, -0.1, 0] * self.num_picker) * 0.1  # [dx, dy, dz, [0, 1]]
         space_high = np.array([0.1, 0.1, 0.1, 10] * self.num_picker) * 0.1
@@ -132,7 +133,10 @@ class Picker(ActionToolBase):
         #pick_flag = action[:, 3] > 0.5
         picker_pos, particle_pos = self._get_pos()
         new_picker_pos, new_particle_pos = picker_pos.copy(), particle_pos.copy()
-
+        
+        #init_particle_pos set
+        if self.init_particle_pos is None:
+            self.init_particle_pos = particle_pos.copy()
         # Un-pick the particles
         # print('check pick id:', self.picked_particles, new_particle_pos.shape, self.particle_inv_mass.shape)
         for i in range(self.num_picker):
@@ -157,7 +161,6 @@ class Picker(ActionToolBase):
                                 pick_dist = idx_dists[j, 1]
                         if pick_id is not None:
                             self.picked_particles[i] = int(pick_id)
-
                 if self.picked_particles[i] is not None:
                     # TODO The position of the particle needs to be updated such that it is close to the picker particle
                     new_particle_pos[self.picked_particles[i], :3] = particle_pos[self.picked_particles[i], :3] + new_picker_pos[i, :] - picker_pos[i,
@@ -188,6 +191,9 @@ class Picker(ActionToolBase):
 
         self._set_pos(new_picker_pos, new_particle_pos)
         return pick_flag
+    
+    def picked_id_info(self):
+        return self.picked_particles
 
 
 class PickerPickPlace(Picker):
