@@ -42,11 +42,11 @@
 #endif
 
 const float kPi = 3.141592653589f;
-const float k2Pi = 2.0f*kPi;
-const float kInvPi = 1.0f/kPi;
-const float kInv2Pi = 0.5f/kPi;
-const float kDegToRad = kPi/180.0f;
-const float kRadToDeg = 180.0f/kPi;
+const float k2Pi = 2.0f * kPi;
+const float kInvPi = 1.0f / kPi;
+const float kInv2Pi = 0.5f / kPi;
+const float kDegToRad = kPi / 180.0f;
+const float kRadToDeg = 180.0f / kPi;
 
 CUDA_CALLABLE inline float DegToRad(float t)
 {
@@ -68,7 +68,7 @@ CUDA_CALLABLE inline float Cos(float theta)
 	return cosf(theta);
 }
 
-CUDA_CALLABLE inline void SinCos(float theta, float& s, float& c)
+CUDA_CALLABLE inline void SinCos(float theta, float &s, float &c)
 {
 	// no optimizations yet
 	s = sinf(theta);
@@ -152,8 +152,8 @@ CUDA_CALLABLE inline T Max(T a, T b)
 	return a > b ? a : b;
 }
 
-template <typename T> 
-CUDA_CALLABLE inline void Swap(T& a, T& b)
+template <typename T>
+CUDA_CALLABLE inline void Swap(T &a, T &b)
 {
 	T tmp = a;
 	a = b;
@@ -165,14 +165,14 @@ CUDA_CALLABLE inline T Clamp(T a, T low, T high)
 {
 	if (low > high)
 		Swap(low, high);
-	
+
 	return Max(low, Min(a, high));
 }
 
-template <typename V, typename T> 
-CUDA_CALLABLE inline V Lerp(const V& start, const V& end, const T& t)
+template <typename V, typename T>
+CUDA_CALLABLE inline V Lerp(const V &start, const V &end, const T &t)
 {
-	return start + (end-start)*t;
+	return start + (end - start) * t;
 }
 
 CUDA_CALLABLE inline float InvSqrt(float x)
@@ -183,11 +183,11 @@ CUDA_CALLABLE inline float InvSqrt(float x)
 // round towards +infinity
 CUDA_CALLABLE inline int Round(float f)
 {
-	return int(f+0.5f);
+	return int(f + 0.5f);
 }
 
 template <typename T>
-CUDA_CALLABLE T Normalize(const T& v)
+CUDA_CALLABLE T Normalize(const T &v)
 {
 	T a(v);
 	a /= Length(v);
@@ -197,11 +197,11 @@ CUDA_CALLABLE T Normalize(const T& v)
 template <typename T>
 CUDA_CALLABLE inline typename T::value_type LengthSq(const T v)
 {
-	return Dot(v,v);
+	return Dot(v, v);
 }
 
 template <typename T>
-CUDA_CALLABLE inline typename T::value_type Length(const T& v)
+CUDA_CALLABLE inline typename T::value_type Length(const T &v)
 {
 	typename T::value_type lSq = LengthSq(v);
 	if (lSq)
@@ -212,13 +212,13 @@ CUDA_CALLABLE inline typename T::value_type Length(const T& v)
 
 // this is mainly a helper function used by script
 template <typename T>
-CUDA_CALLABLE inline typename T::value_type Distance(const T& v1, const T& v2)
+CUDA_CALLABLE inline typename T::value_type Distance(const T &v1, const T &v2)
 {
-	return Length(v1-v2);
+	return Length(v1 - v2);
 }
 
 template <typename T>
-CUDA_CALLABLE inline T SafeNormalize(const T& v, const T& fallback=T())
+CUDA_CALLABLE inline T SafeNormalize(const T &v, const T &fallback = T())
 {
 	float l = LengthSq(v);
 	if (l > 0.0f)
@@ -230,10 +230,10 @@ CUDA_CALLABLE inline T SafeNormalize(const T& v, const T& fallback=T())
 }
 
 template <typename T>
-CUDA_CALLABLE inline T Sqr(T x) { return x*x; }
+CUDA_CALLABLE inline T Sqr(T x) { return x * x; }
 
 template <typename T>
-CUDA_CALLABLE inline T Cube(T x) { return x*x*x; }
+CUDA_CALLABLE inline T Cube(T x) { return x * x * x; }
 
 #include "vec2.h"
 #include "vec3.h"
@@ -249,10 +249,9 @@ CUDA_CALLABLE inline T Cube(T x) { return x*x*x; }
 class Plane : public Vec4
 {
 public:
-
 	CUDA_CALLABLE inline Plane() {}
 	CUDA_CALLABLE inline Plane(float x, float y, float z, float w) : Vec4(x, y, z, w) {}
-	CUDA_CALLABLE inline Plane(const Vec3& p, const Vector3& n)
+	CUDA_CALLABLE inline Plane(const Vec3 &p, const Vector3 &n)
 	{
 		x = n.x;
 		y = n.y;
@@ -261,41 +260,41 @@ public:
 	}
 
 	CUDA_CALLABLE inline Vec3 GetNormal() const { return Vec3(x, y, z); }
-	CUDA_CALLABLE inline Vec3 GetPoint() const { return Vec3(x*-w, y*-w, z*-w); }
+	CUDA_CALLABLE inline Vec3 GetPoint() const { return Vec3(x * -w, y * -w, z * -w); }
 
-	CUDA_CALLABLE inline Plane(const Vec3& v) : Vec4(v.x, v.y, v.z, 1.0f) {}
-	CUDA_CALLABLE inline Plane(const Vec4& v) : Vec4(v) {}
+	CUDA_CALLABLE inline Plane(const Vec3 &v) : Vec4(v.x, v.y, v.z, 1.0f) {}
+	CUDA_CALLABLE inline Plane(const Vec4 &v) : Vec4(v) {}
 };
 
 template <typename T>
-CUDA_CALLABLE inline T Dot(const XVector4<T>& v1, const XVector4<T>& v2)
+CUDA_CALLABLE inline T Dot(const XVector4<T> &v1, const XVector4<T> &v2)
 {
-	return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z + v1.w*v2.w;
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
 }
 
 // helper function that assumes a w of 0
-CUDA_CALLABLE inline float Dot(const Plane& p, const Vector3& v)
+CUDA_CALLABLE inline float Dot(const Plane &p, const Vector3 &v)
 {
-	return p.x*v.x + p.y*v.y + p.z*v.z;
+	return p.x * v.x + p.y * v.y + p.z * v.z;
 }
 
-CUDA_CALLABLE inline float Dot(const Vector3& v, const Plane& p)
+CUDA_CALLABLE inline float Dot(const Vector3 &v, const Plane &p)
 {
 	return Dot(p, v);
 }
 
 // helper function that assumes a w of 1
-CUDA_CALLABLE inline float Dot(const Plane& p, const Point3& v)
+CUDA_CALLABLE inline float Dot(const Plane &p, const Point3 &v)
 {
-	return p.x*v.x + p.y*v.y + p.z*v.z + p.w;
+	return p.x * v.x + p.y * v.y + p.z * v.z + p.w;
 }
 
 // ensures that the normal component of the plane is unit magnitude
-CUDA_CALLABLE inline Vec4 NormalizePlane(const Vec4& p)
+CUDA_CALLABLE inline Vec4 NormalizePlane(const Vec4 &p)
 {
 	float l = Length(Vec3(p));
 
-	return (1.0f/l)*p;
+	return (1.0f / l) * p;
 }
 
 //----------------------------------------------------------------------------
@@ -331,8 +330,8 @@ void RandInit();
 // random number generator
 inline uint32_t Rand()
 {
-	seed1 = ( seed2 ^ ( ( seed1 << 5 ) | ( seed1 >> 27 ) ) ) ^ ( seed1*seed2 );
-	seed2 = seed1 ^ ( ( seed2 << 12 ) | ( seed2 >> 20 ) );
+	seed1 = (seed2 ^ ((seed1 << 5) | (seed1 >> 27))) ^ (seed1 * seed2);
+	seed2 = seed1 ^ ((seed2 << 12) | (seed2 >> 20));
 
 	return seed1;
 }
@@ -340,7 +339,7 @@ inline uint32_t Rand()
 // returns a random number in the range [min, max)
 inline uint32_t Rand(uint32_t min, uint32_t max)
 {
-	return min + Rand()%(max-min);
+	return min + Rand() % (max - min);
 }
 
 // returns random number between 0-1
@@ -349,7 +348,7 @@ inline float Randf()
 	uint32_t value = Rand();
 	uint32_t limit = 0xffffffff;
 
-	return ( float )value*( 1.0f/( float )limit );
+	return (float)value * (1.0f / (float)limit);
 }
 
 // returns random number between min and max
@@ -357,28 +356,28 @@ inline float Randf(float min, float max)
 {
 	//	return Lerp(min, max, ParticleRandf());
 	float t = Randf();
-	return (1.0f-t)*min + t*(max);
+	return (1.0f - t) * min + t * (max);
 }
 
 // returns random number between 0-max
 inline float Randf(float max)
 {
-	return Randf()*max;
+	return Randf() * max;
 }
 
 // returns a random unit vector (also can add an offset to generate around an off axis vector)
 inline Vec3 RandomUnitVector()
 {
-	float phi = Randf(kPi*2.0f);
-	float theta = Randf(kPi*2.0f);
+	float phi = Randf(kPi * 2.0f);
+	float theta = Randf(kPi * 2.0f);
 
 	float cosTheta = Cos(theta);
 	float sinTheta = Sin(theta);
 
-	float cosPhi = Cos(phi);	
+	float cosPhi = Cos(phi);
 	float sinPhi = Sin(phi);
 
-	return Vec3(cosTheta*sinPhi,cosPhi,sinTheta*sinPhi);
+	return Vec3(cosTheta * sinPhi, cosPhi, sinTheta * sinPhi);
 }
 
 inline Vec3 RandVec3() { return Vec3(Randf(-1.0f, 1.0f), Randf(-1.0f, 1.0f), Randf(-1.0f, 1.0f)); }
@@ -386,7 +385,7 @@ inline Vec3 RandVec3() { return Vec3(Randf(-1.0f, 1.0f), Randf(-1.0f, 1.0f), Ran
 // uniformly sample volume of a sphere using dart throwing
 inline Vec3 UniformSampleSphereVolume()
 {
-	for(;;)
+	for (;;)
 	{
 		Vec3 v = RandVec3();
 		if (Dot(v, v) < 1.0f)
@@ -400,7 +399,7 @@ inline Vec3 UniformSampleSphere()
 	float u2 = Randf(0.0f, 1.0f);
 
 	float z = 1.f - 2.f * u1;
-	float r = sqrtf(Max(0.f, 1.f - z*z));
+	float r = sqrtf(Max(0.f, 1.f - z * z));
 	float phi = 2.f * kPi * u2;
 	float x = r * cosf(phi);
 	float y = r * sinf(phi);
@@ -412,11 +411,11 @@ inline Vec3 UniformSampleHemisphere()
 {
 	// generate a random z value
 	float z = Randf(0.0f, 1.0f);
-	float w = Sqrt(1.0f-z*z);
+	float w = Sqrt(1.0f - z * z);
 
-	float phi = k2Pi*Randf(0.0f, 1.0f);
-	float x = Cos(phi)*w;
-	float y = Sin(phi)*w;
+	float phi = k2Pi * Randf(0.0f, 1.0f);
+	float x = Cos(phi) * w;
+	float y = Sin(phi) * w;
 
 	return Vec3(x, y, z);
 }
@@ -424,12 +423,12 @@ inline Vec3 UniformSampleHemisphere()
 inline Vec2 UniformSampleDisc()
 {
 	float r = Sqrt(Randf(0.0f, 1.0f));
-	float theta = k2Pi*Randf(0.0f, 1.0f);
+	float theta = k2Pi * Randf(0.0f, 1.0f);
 
 	return Vec2(r * Cos(theta), r * Sin(theta));
 }
 
-inline void UniformSampleTriangle(float& u, float& v)
+inline void UniformSampleTriangle(float &u, float &v)
 {
 	float r = Sqrt(Randf());
 	u = 1.0f - r;
@@ -439,7 +438,7 @@ inline void UniformSampleTriangle(float& u, float& v)
 inline Vec3 CosineSampleHemisphere()
 {
 	Vec2 s = UniformSampleDisc();
-	float z = Sqrt(Max(0.0f, 1.0f - s.x*s.x - s.y*s.y));
+	float z = Sqrt(Max(0.0f, 1.0f - s.x * s.x - s.y * s.y));
 
 	return Vec3(s.x, s.y, z);
 }
@@ -449,81 +448,80 @@ inline Vec3 SphericalToXYZ(float theta, float phi)
 	float cosTheta = cos(theta);
 	float sinTheta = sin(theta);
 
-	return Vec3(sin(phi)*sinTheta, cosTheta, cos(phi)*sinTheta);
+	return Vec3(sin(phi) * sinTheta, cosTheta, cos(phi) * sinTheta);
 }
 
 // returns random vector between -range and range
 inline Vec4 Randf(const Vec4 &range)
 {
-	return Vec4(Randf(-range.x, range.x), 
-			    Randf(-range.y, range.y),
-			    Randf(-range.z, range.z),
-			  	Randf(-range.w, range.w));
+	return Vec4(Randf(-range.x, range.x),
+				Randf(-range.y, range.y),
+				Randf(-range.z, range.z),
+				Randf(-range.w, range.w));
 }
 
 // generates a transform matrix with v as the z axis, taken from PBRT
-inline void BasisFromVector(const Vec3& w, Vec3* u, Vec3* v)
+inline void BasisFromVector(const Vec3 &w, Vec3 *u, Vec3 *v)
 {
 	if (fabsf(w.x) > fabsf(w.y))
 	{
-		float invLen = 1.0f / sqrtf(w.x*w.x + w.z*w.z);
-		*u = Vec3(-w.z*invLen, 0.0f, w.x*invLen);
+		float invLen = 1.0f / sqrtf(w.x * w.x + w.z * w.z);
+		*u = Vec3(-w.z * invLen, 0.0f, w.x * invLen);
 	}
 	else
 	{
-		float invLen = 1.0f / sqrtf(w.y*w.y + w.z*w.z);
-		*u = Vec3(0.0f, w.z*invLen, -w.y*invLen);
+		float invLen = 1.0f / sqrtf(w.y * w.y + w.z * w.z);
+		*u = Vec3(0.0f, w.z * invLen, -w.y * invLen);
 	}
 
-	*v = Cross(w, *u);	
+	*v = Cross(w, *u);
 
-	assert(fabsf(Length(*u)-1.0f) < 0.01f);
-	assert(fabsf(Length(*v)-1.0f) < 0.01f);
+	assert(fabsf(Length(*u) - 1.0f) < 0.01f);
+	assert(fabsf(Length(*v) - 1.0f) < 0.01f);
 }
 
 // same as above but returns a matrix
-inline Mat44 TransformFromVector(const Vec3& w, const Point3& t=Point3(0.0f, 0.0f, 0.0f))
+inline Mat44 TransformFromVector(const Vec3 &w, const Point3 &t = Point3(0.0f, 0.0f, 0.0f))
 {
 	Mat44 m = Mat44::kIdentity;
 	m.SetCol(2, Vec4(w.x, w.y, w.z, 0.0));
 	m.SetCol(3, Vec4(t.x, t.y, t.z, 1.0f));
 
-	BasisFromVector(w, (Vec3*)m.columns[0], (Vec3*)m.columns[1]);
+	BasisFromVector(w, (Vec3 *)m.columns[0], (Vec3 *)m.columns[1]);
 
 	return m;
 }
 
 // todo: sort out rotations
-inline Mat44 ViewMatrix(const Point3& pos) 
+inline Mat44 ViewMatrix(const Point3 &pos)
 {
-	
-	float view[4][4] = { { 1.0f, 0.0f, 0.0f, 0.0f },
-						{ 0.0f, 1.0f, 0.0f, 0.0f },
-						{ 0.0f, 0.0f, 1.0f, 0.0f },
-						{ -pos.x, -pos.y, -pos.z, 1.0f } };
-	
+
+	float view[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
+						{0.0f, 1.0f, 0.0f, 0.0f},
+						{0.0f, 0.0f, 1.0f, 0.0f},
+						{-pos.x, -pos.y, -pos.z, 1.0f}};
+
 	return Mat44(&view[0][0]);
 }
 
-
-inline Mat44 LookAtMatrix(const Point3& viewer, const Point3& target)
+inline Mat44 LookAtMatrix(const Point3 &viewer, const Point3 &target)
 {
 	// create a basis from viewer to target (OpenGL convention looking down -z)
-	Vec3 forward = -Normalize(target-viewer);
+	Vec3 forward = -Normalize(target - viewer);
 	Vec3 up(0.0f, 1.0f, 0.0f);
 	Vec3 left = Normalize(Cross(up, forward));
 	up = Cross(forward, left);
 
-	float xform[4][4] = {  { left.x, left.y, left.z, 0.0f },
-	  					     { up.x, up.y, up.z, 0.0f},
-						     { forward.x, forward.y, forward.z, 0.0f},
-							     { viewer.x, viewer.y, viewer.z, 1.0f} };
+	float xform[4][4] = {{left.x, left.y, left.z, 0.0f},
+						 {up.x, up.y, up.z, 0.0f},
+						 {forward.x, forward.y, forward.z, 0.0f},
+						 {viewer.x, viewer.y, viewer.z, 1.0f}};
 
-	return AffineInverse(Mat44(&xform[0][0]));		
+	return AffineInverse(Mat44(&xform[0][0]));
 }
 
 // generate a rotation matrix around an axis, from PBRT p74
-inline Mat44 RotationMatrix(float angle, const Vec3& axis)
+inline Mat44 RotationMatrix(float angle, const Vec3 &axis)
 {
 	Vec3 a = Normalize(axis);
 	float s = sinf(angle);
@@ -567,7 +565,7 @@ inline Mat44 RotationMatrix(Quat q)
 	return m;
 }
 
-inline Mat44 TranslationMatrix(const Point3& t)
+inline Mat44 TranslationMatrix(const Point3 &t)
 {
 	Mat44 m(Mat44::kIdentity);
 	m.SetTranslation(t);
@@ -576,45 +574,65 @@ inline Mat44 TranslationMatrix(const Point3& t)
 
 inline Mat44 OrthographicMatrix(float left, float right, float bottom, float top, float n, float f)
 {
-	
-	float m[4][4] = { { 2.0f/(right-left), 0.0f, 0.0f, 0.0f },
-					  { 0.0f, 2.0f/(top-bottom), 0.0f, 0.0f },			
-					  { 0.0f, 0.0f, -2.0f/(f-n), 0.0f },
-					  { -(right+left)/(right-left), -(top+bottom)/(top-bottom), -(f+n)/(f-n), 1.0f } };
-	
+
+	float m[4][4] = {{2.0f / (right - left), 0.0f, 0.0f, 0.0f},
+					 {0.0f, 2.0f / (top - bottom), 0.0f, 0.0f},
+					 {0.0f, 0.0f, -2.0f / (f - n), 0.0f},
+					 {-(right + left) / (right - left), -(top + bottom) / (top - bottom), -(f + n) / (f - n), 1.0f}};
 
 	return Mat44(&m[0][0]);
 }
 
 // this is designed as a drop in replacement for gluPerspective
-inline Mat44 ProjectionMatrix(float fov, float aspect, float znear, float zfar) 
+inline Mat44 ProjectionMatrix(float fov, float aspect, float znear, float zfar)
 {
-	float f = 1.0f / tanf(DegToRad(fov*0.5f));
-	float zd = znear-zfar;
+	float f = 1.0f / tanf(DegToRad(fov * 0.5f));
+	float zd = znear - zfar;
 
-	float view[4][4] = { { f/aspect, 0.0f, 0.0f, 0.0f },
-						 { 0.0f, f, 0.0f, 0.0f },
-						 { 0.0f, 0.0f, (zfar+znear)/zd, -1.0f },
-						 { 0.0f, 0.0f, (2.0f*znear*zfar)/zd, 0.0f } };
- 
+	float view[4][4] = {{f / aspect, 0.0f, 0.0f, 0.0f},
+						{0.0f, f, 0.0f, 0.0f},
+						{0.0f, 0.0f, (zfar + znear) / zd, -1.0f},
+						{0.0f, 0.0f, (2.0f * znear * zfar) / zd, 0.0f}};
+
 	return Mat44(&view[0][0]);
 }
 
-// encapsulates an orientation encoded in Euler angles, not the sexiest 
+// encapsulates an orientation encoded in Euler angles, not the sexiest
 // representation but it is convenient when manipulating objects from script
 
 class Rotation
 {
 public:
-
 	Rotation() : yaw(0), pitch(0), roll(0) {}
 	Rotation(float inYaw, float inPitch, float inRoll) : yaw(inYaw), pitch(inPitch), roll(inRoll) {}
 
-	Rotation& operator +=(const Rotation& rhs) {yaw += rhs.yaw; pitch += rhs.pitch; roll += rhs.roll; return *this;}
-	Rotation& operator -=(const Rotation& rhs) {yaw -= rhs.yaw; pitch -= rhs.pitch; roll -= rhs.roll; return *this;}
+	Rotation &operator+=(const Rotation &rhs)
+	{
+		yaw += rhs.yaw;
+		pitch += rhs.pitch;
+		roll += rhs.roll;
+		return *this;
+	}
+	Rotation &operator-=(const Rotation &rhs)
+	{
+		yaw -= rhs.yaw;
+		pitch -= rhs.pitch;
+		roll -= rhs.roll;
+		return *this;
+	}
 
-	Rotation operator + (const Rotation& rhs) const { Rotation lhs(*this); lhs += rhs; return lhs; }
-	Rotation operator - (const Rotation& rhs) const { Rotation lhs(*this); lhs -= rhs; return lhs; }
+	Rotation operator+(const Rotation &rhs) const
+	{
+		Rotation lhs(*this);
+		lhs += rhs;
+		return lhs;
+	}
+	Rotation operator-(const Rotation &rhs) const
+	{
+		Rotation lhs(*this);
+		lhs -= rhs;
+		return lhs;
+	}
 
 	// all members are in degrees (easy editing)
 	float yaw;
@@ -622,18 +640,18 @@ public:
 	float roll;
 };
 
-inline Mat44 ScaleMatrix(const Vector3& s)
+inline Mat44 ScaleMatrix(const Vector3 &s)
 {
-	float m[4][4] = { {s.x, 0.0f, 0.0f, 0.0f },
-					  { 0.0f, s.y, 0.0f, 0.0f},
-					  { 0.0f, 0.0f, s.z, 0.0f},
-					  { 0.0f, 0.0f, 0.0f, 1.0f} };
+	float m[4][4] = {{s.x, 0.0f, 0.0f, 0.0f},
+					 {0.0f, s.y, 0.0f, 0.0f},
+					 {0.0f, 0.0f, s.z, 0.0f},
+					 {0.0f, 0.0f, 0.0f, 1.0f}};
 
 	return Mat44(&m[0][0]);
 }
 
 // assumes yaw on y, then pitch on z, then roll on x
-inline Mat44 TransformMatrix(const Rotation& r, const Point3& p)
+inline Mat44 TransformMatrix(const Rotation &r, const Point3 &p)
 {
 	const float yaw = DegToRad(r.yaw);
 	const float pitch = DegToRad(r.pitch);
@@ -647,22 +665,21 @@ inline Mat44 TransformMatrix(const Rotation& r, const Point3& p)
 	const float c3 = Cos(yaw);
 
 	// interprets the angles as yaw around world-y, pitch around new z, roll around new x
-	float mr[4][4] = {	{ c2*c3, s2, -c2*s3, 0.0f},
-						{ s1*s3-c1*c3*s2, c1*c2, c3*s1+c1*s2*s3, 0.0f},
-						{ c3*s1*s2+c1*s3, -c2*s1, c1*c3-s1*s2*s3, 0.0f},	
-						{ p.x, p.y, p.z, 1.0f} };
+	float mr[4][4] = {{c2 * c3, s2, -c2 * s3, 0.0f},
+					  {s1 * s3 - c1 * c3 * s2, c1 * c2, c3 * s1 + c1 * s2 * s3, 0.0f},
+					  {c3 * s1 * s2 + c1 * s3, -c2 * s1, c1 * c3 - s1 * s2 * s3, 0.0f},
+					  {p.x, p.y, p.z, 1.0f}};
 
 	Mat44 m1(&mr[0][0]);
 
-	return m1;//m2 * m1;
+	return m1; //m2 * m1;
 }
 
 class Transform
 {
 public:
-
-	Transform() {};
-	Transform(const Point3& p, const Rotation& r) : position(p), rotation(r) {}
+	Transform(){};
+	Transform(const Point3 &p, const Rotation &r) : position(p), rotation(r) {}
 
 	Mat44 ToMatrix() const
 	{
@@ -670,25 +687,25 @@ public:
 	}
 
 	// helper function to translate object
-	void Translate(const Vec3& delta)
+	void Translate(const Vec3 &delta)
 	{
 		position += delta;
 	}
 
 	// helper function to rotate an object
-	void Rotate(const Rotation& delta)
+	void Rotate(const Rotation &delta)
 	{
 		rotation += delta;
 	}
 
-	void RotateToLookAt(const Point3& target)
+	void RotateToLookAt(const Point3 &target)
 	{
 		// get vector to point
-		Vec3 delta = target-position;
+		Vec3 delta = target - position;
 
 		// yaw
 		rotation.yaw = atan2f(delta.z, delta.x);
-		rotation.pitch = atan2f(delta.y, sqrt(delta.x*delta.x+delta.z*delta.z));
+		rotation.pitch = atan2f(delta.y, sqrt(delta.x * delta.x + delta.z * delta.z));
 		rotation.roll = 0.0f;
 	}
 
@@ -712,7 +729,7 @@ public:
 };
 
 // aligns the z axis along the vector
-inline Rotation AlignToVector(const Vec3& vector)
+inline Rotation AlignToVector(const Vec3 &vector)
 {
 	// todo: fix, see spherical->cartesian coordinates wikipedia
 	return Rotation(0.0f, RadToDeg(atan2(vector.y, vector.x)), 0.0f);
@@ -720,60 +737,59 @@ inline Rotation AlignToVector(const Vec3& vector)
 
 // creates a vector given an angle measured clockwise from horizontal (1,0)
 inline Vec2 AngleToVector(float a)
-{	
+{
 	return Vec2(Cos(a), Sin(a));
 }
 
-inline float VectorToAngle(const Vec2& v)
+inline float VectorToAngle(const Vec2 &v)
 {
 	return atan2f(v.y, v.x);
 }
 
 CUDA_CALLABLE inline float SmoothStep(float a, float b, float t)
 {
-	t = Clamp(t-a / (b-a), 0.0f, 1.0f);
-	return t*t*(3.0f-2.0f*t);
+	t = Clamp(t - a / (b - a), 0.0f, 1.0f);
+	return t * t * (3.0f - 2.0f * t);
 }
 
 // hermite spline interpolation
 template <typename T>
-T HermiteInterpolate(const T& a, const T& b, const T& t1, const T& t2, float t)
+T HermiteInterpolate(const T &a, const T &b, const T &t1, const T &t2, float t)
 {
 	// blending weights
-	const float w1 = 1.0f - 3*t*t + 2*t*t*t;
-	const float w2 = t*t*(3.0f-2.0f*t);
-	const float w3 = t*t*t - 2*t*t + t;
-	const float w4 = t*t*(t-1.0f);
+	const float w1 = 1.0f - 3 * t * t + 2 * t * t * t;
+	const float w2 = t * t * (3.0f - 2.0f * t);
+	const float w3 = t * t * t - 2 * t * t + t;
+	const float w4 = t * t * (t - 1.0f);
 
 	// return weighted combination
-	return a*w1 + b*w2 + t1*w3 + t2*w4;
-
-}
-	
-template <typename T>
-T HermiteTangent(const T& a, const T& b, const T& t1, const T& t2, float t)
-{
-	// first derivative blend weights
-	const float w1 = 6.0f*t*t-6*t;
-	const float w2 = -6.0f*t*t + 6*t;
-	const float w3 = 3*t*t - 4*t + 1;
-	const float w4 = 3*t*t - 2*t;
-
-	// weighted combination
-	return a*w1 + b*w2 + t1*w3 + t2*w4;
+	return a * w1 + b * w2 + t1 * w3 + t2 * w4;
 }
 
 template <typename T>
-T HermiteSecondDerivative(const T& a, const T& b, const T& t1, const T& t2, float t)
+T HermiteTangent(const T &a, const T &b, const T &t1, const T &t2, float t)
 {
 	// first derivative blend weights
-	const float w1 = 12*t - 6.0f;
-	const float w2 = -12.0f*t + 6;
-	const float w3 = 6*t - 4.0f;
-	const float w4 = 6*t - 2.0f;
+	const float w1 = 6.0f * t * t - 6 * t;
+	const float w2 = -6.0f * t * t + 6 * t;
+	const float w3 = 3 * t * t - 4 * t + 1;
+	const float w4 = 3 * t * t - 2 * t;
 
 	// weighted combination
-	return a*w1 + b*w2 + t1*w3 + t2*w4;
+	return a * w1 + b * w2 + t1 * w3 + t2 * w4;
+}
+
+template <typename T>
+T HermiteSecondDerivative(const T &a, const T &b, const T &t1, const T &t2, float t)
+{
+	// first derivative blend weights
+	const float w1 = 12 * t - 6.0f;
+	const float w2 = -12.0f * t + 6;
+	const float w3 = 6 * t - 4.0f;
+	const float w4 = 6 * t - 2.0f;
+
+	// weighted combination
+	return a * w1 + b * w2 + t1 * w3 + t2 * w4;
 }
 
 inline float Log(float base, float x)
@@ -799,14 +815,13 @@ template <typename T>
 T RangeMap(T value, T lower, T upper)
 {
 	assert(upper >= lower);
-	return (value-lower)/(upper-lower);
+	return (value - lower) / (upper - lower);
 }
 
 // simple colour class
-class Colour 
+class Colour
 {
 public:
-
 	enum Preset
 	{
 		kRed,
@@ -815,57 +830,117 @@ public:
 		kWhite,
 		kBlack
 	};
-	
-	Colour(float r_=0.0f, float g_=0.0f, float b_=0.0f, float a_=1.0f) : r(r_), g(g_), b(b_), a(a_) {}
-	Colour(float* p) : r(p[0]), g(p[1]), b(p[2]), a(p[3]) {}
+
+	Colour(float r_ = 0.0f, float g_ = 0.0f, float b_ = 0.0f, float a_ = 1.0f) : r(r_), g(g_), b(b_), a(a_) {}
+	Colour(float *p) : r(p[0]), g(p[1]), b(p[2]), a(p[3]) {}
 	Colour(uint32_t rgba)
 	{
-		a = ((rgba)&0xff)/255.0f;
-		r = ((rgba>>24)&0xff)/255.0f;
-		g = ((rgba>>16)&0xff)/255.0f;
-		b = ((rgba>>8)&0xff)/255.0f;
+		a = ((rgba)&0xff) / 255.0f;
+		r = ((rgba >> 24) & 0xff) / 255.0f;
+		g = ((rgba >> 16) & 0xff) / 255.0f;
+		b = ((rgba >> 8) & 0xff) / 255.0f;
 	}
 	Colour(Preset p);
 
 	// cast operator
-	operator const float*() const { return &r; }
-	operator float*() { return &r; }
+	operator const float *() const { return &r; }
+	operator float *() { return &r; }
 
-	Colour operator * (float scale) const { Colour r(*this); r *= scale; return r; }
-	Colour operator / (float scale) const { Colour r(*this); r /= scale; return r; }
-	Colour operator + (const Colour& v) const { Colour r(*this); r += v; return r; }
-	Colour operator - (const Colour& v) const { Colour r(*this); r -= v; return r; }
-	Colour operator * (const Colour& scale) const { Colour r(*this); r *= scale; return r;}
+	Colour operator*(float scale) const
+	{
+		Colour r(*this);
+		r *= scale;
+		return r;
+	}
+	Colour operator/(float scale) const
+	{
+		Colour r(*this);
+		r /= scale;
+		return r;
+	}
+	Colour operator+(const Colour &v) const
+	{
+		Colour r(*this);
+		r += v;
+		return r;
+	}
+	Colour operator-(const Colour &v) const
+	{
+		Colour r(*this);
+		r -= v;
+		return r;
+	}
+	Colour operator*(const Colour &scale) const
+	{
+		Colour r(*this);
+		r *= scale;
+		return r;
+	}
 
-	Colour& operator *=(float scale) {r *= scale; g *= scale; b*= scale; a*= scale;  return *this;}
-	Colour& operator /=(float scale) {float s(1.0f/scale); r *= s; g *= s; b *= s; a *=s; return *this;}
-	Colour& operator +=(const Colour& v) {r += v.r; g += v.g; b += v.b; a += v.a; return *this;}
-	Colour& operator -=(const Colour& v) {r -= v.r; g -= v.g; b -= v.b; a -= v.a; return *this;}
-	Colour& operator *=(const Colour& v) {r *= v.r; g *= v.g; b *= v.b; a *= v.a; return *this;}
+	Colour &operator*=(float scale)
+	{
+		r *= scale;
+		g *= scale;
+		b *= scale;
+		a *= scale;
+		return *this;
+	}
+	Colour &operator/=(float scale)
+	{
+		float s(1.0f / scale);
+		r *= s;
+		g *= s;
+		b *= s;
+		a *= s;
+		return *this;
+	}
+	Colour &operator+=(const Colour &v)
+	{
+		r += v.r;
+		g += v.g;
+		b += v.b;
+		a += v.a;
+		return *this;
+	}
+	Colour &operator-=(const Colour &v)
+	{
+		r -= v.r;
+		g -= v.g;
+		b -= v.b;
+		a -= v.a;
+		return *this;
+	}
+	Colour &operator*=(const Colour &v)
+	{
+		r *= v.r;
+		g *= v.g;
+		b *= v.b;
+		a *= v.a;
+		return *this;
+	}
 
 	float r, g, b, a;
-
 };
 
-inline bool operator == (const Colour& lhs, const Colour& rhs)
+inline bool operator==(const Colour &lhs, const Colour &rhs)
 {
 	return lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b && lhs.a == rhs.a;
 }
 
-inline bool operator != (const Colour& lhs, const Colour& rhs)
+inline bool operator!=(const Colour &lhs, const Colour &rhs)
 {
 	return !(lhs == rhs);
 }
 
-inline Colour ToneMap(const Colour& s)
+inline Colour ToneMap(const Colour &s)
 {
 	//return Colour(s.r / (s.r+1.0f),	s.g / (s.g+1.0f), s.b / (s.b+1.0f), 1.0f);
-	float Y = 0.3333f*(s.r + s.g + s.b);
+	float Y = 0.3333f * (s.r + s.g + s.b);
 	return s / (1.0f + Y);
 }
 
 // lhs scalar scale
-inline Colour operator * (float lhs, const Colour& rhs)
+inline Colour operator*(float lhs, const Colour &rhs)
 {
 	Colour r(rhs);
 	r *= lhs;
@@ -880,55 +955,57 @@ inline Colour YxyToXYZ(float Y, float x, float y)
 	return Colour(X, Y, Z, 1.0f);
 }
 
-inline Colour HSVToRGB( float h, float s, float v )
+inline Colour HSVToRGB(float h, float s, float v)
 {
 	float r, g, b;
 
 	int i;
 	float f, p, q, t;
-	if( s == 0 ) {
+	if (s == 0)
+	{
 		// achromatic (grey)
 		r = g = b = v;
 	}
 	else
 	{
-		h *= 6.0f;			// sector 0 to 5
-		i = int(floor( h ));
-		f = h - i;			// factorial part of h
-		p = v * ( 1 - s );
-		q = v * ( 1 - s * f );
-		t = v * ( 1 - s * ( 1 - f ) );
-		switch( i ) {
-			case 0:
-				r = v;
-				g = t;
-				b = p;
-				break;
-			case 1:
-				r = q;
-				g = v;
-				b = p;
-				break;
-			case 2:
-				r = p;
-				g = v;
-				b = t;
-				break;
-			case 3:
-				r = p;
-				g = q;
-				b = v;
-				break;
-			case 4:
-				r = t;
-				g = p;
-				b = v;
-				break;
-			default:		// case 5:
-				r = v;
-				g = p;
-				b = q;
-				break;
+		h *= 6.0f; // sector 0 to 5
+		i = int(floor(h));
+		f = h - i; // factorial part of h
+		p = v * (1 - s);
+		q = v * (1 - s * f);
+		t = v * (1 - s * (1 - f));
+		switch (i)
+		{
+		case 0:
+			r = v;
+			g = t;
+			b = p;
+			break;
+		case 1:
+			r = q;
+			g = v;
+			b = p;
+			break;
+		case 2:
+			r = p;
+			g = v;
+			b = t;
+			break;
+		case 3:
+			r = p;
+			g = q;
+			b = v;
+			break;
+		case 4:
+			r = t;
+			g = p;
+			b = v;
+			break;
+		default: // case 5:
+			r = v;
+			g = p;
+			b = q;
+			break;
 		};
 	}
 
@@ -938,15 +1015,15 @@ inline Colour HSVToRGB( float h, float s, float v )
 inline Colour XYZToLinear(float x, float y, float z)
 {
 	float c[4];
-	c[0] =  3.240479f * x + -1.537150f * y + -0.498535f * z;
-	c[1] = -0.969256f * x +  1.875991f * y +  0.041556f * z;
-	c[2] =  0.055648f * x + -0.204043f * y +  1.057311f * z;
+	c[0] = 3.240479f * x + -1.537150f * y + -0.498535f * z;
+	c[1] = -0.969256f * x + 1.875991f * y + 0.041556f * z;
+	c[2] = 0.055648f * x + -0.204043f * y + 1.057311f * z;
 	c[3] = 1.0f;
 
 	return Colour(c);
 }
 
-inline uint32_t ColourToRGBA8(const Colour& c)
+inline uint32_t ColourToRGBA8(const Colour &c)
 {
 	union SmallColor
 	{
@@ -963,50 +1040,50 @@ inline uint32_t ColourToRGBA8(const Colour& c)
 	return s.u32;
 }
 
-inline Colour LinearToSrgb(const Colour& c)
+inline Colour LinearToSrgb(const Colour &c)
 {
-	const float kInvGamma = 1.0f/2.2f;
-	return Colour(powf(c.r, kInvGamma), powf(c.g, kInvGamma), powf(c.b, kInvGamma), c.a); 
+	const float kInvGamma = 1.0f / 2.2f;
+	return Colour(powf(c.r, kInvGamma), powf(c.g, kInvGamma), powf(c.b, kInvGamma), c.a);
 }
 
-inline Colour SrgbToLinear(const Colour& c)
+inline Colour SrgbToLinear(const Colour &c)
 {
 	const float kInvGamma = 2.2f;
-	return Colour(powf(c.r, kInvGamma), powf(c.g, kInvGamma), powf(c.b, kInvGamma), c.a); 
+	return Colour(powf(c.r, kInvGamma), powf(c.g, kInvGamma), powf(c.b, kInvGamma), c.a);
 }
 
 // intersection routines
-inline bool IntersectRaySphere(const Point3& sphereOrigin, float sphereRadius, const Point3& rayOrigin, const Vec3& rayDir, float& t, Vec3* hitNormal=NULL)
+inline bool IntersectRaySphere(const Point3 &sphereOrigin, float sphereRadius, const Point3 &rayOrigin, const Vec3 &rayDir, float &t, Vec3 *hitNormal = NULL)
 {
-	Vec3 d(sphereOrigin-rayOrigin);
+	Vec3 d(sphereOrigin - rayOrigin);
 	float deltaSq = LengthSq(d);
-	float radiusSq = sphereRadius*sphereRadius;
+	float radiusSq = sphereRadius * sphereRadius;
 
 	// if the origin is inside the sphere return no intersection
 	if (deltaSq > radiusSq)
 	{
 		float dprojr = Dot(d, rayDir);
-		
+
 		// if ray pointing away from sphere no intersection
 		if (dprojr < 0.0f)
 			return false;
 
 		// bit of Pythagoras to get closest point on ray
-		float dSq = deltaSq-dprojr*dprojr;
-		
+		float dSq = deltaSq - dprojr * dprojr;
+
 		if (dSq > radiusSq)
 			return false;
 		else
 		{
 			// length of the half cord
-			float thc = sqrt(radiusSq-dSq);
-			
+			float thc = sqrt(radiusSq - dSq);
+
 			// closest intersection
 			t = dprojr - thc;
 
 			// calculate normal if requested
 			if (hitNormal)
-				*hitNormal = Normalize((rayOrigin+rayDir*t)-sphereOrigin);
+				*hitNormal = Normalize((rayOrigin + rayDir * t) - sphereOrigin);
 
 			return true;
 		}
@@ -1018,7 +1095,7 @@ inline bool IntersectRaySphere(const Point3& sphereOrigin, float sphereRadius, c
 }
 
 template <typename T>
-CUDA_CALLABLE inline bool SolveQuadratic(T a, T b, T c, T& minT, T& maxT)
+CUDA_CALLABLE inline bool SolveQuadratic(T a, T b, T c, T &minT, T &maxT)
 {
 	if (a == 0.0f && b == 0.0f)
 	{
@@ -1026,7 +1103,7 @@ CUDA_CALLABLE inline bool SolveQuadratic(T a, T b, T c, T& minT, T& maxT)
 		return true;
 	}
 
-	T discriminant = b*b - T(4.0)*a*c;
+	T discriminant = b * b - T(4.0) * a * c;
 
 	if (discriminant < 0.0f)
 	{
@@ -1034,7 +1111,7 @@ CUDA_CALLABLE inline bool SolveQuadratic(T a, T b, T c, T& minT, T& maxT)
 	}
 
 	// numerical receipes 5.6 (this method ensures numerical accuracy is preserved)
-	T t = T(-0.5) * (b + Sign(b)*Sqrt(discriminant));
+	T t = T(-0.5) * (b + Sign(b) * Sqrt(discriminant));
 	minT = t / a;
 	maxT = c / t;
 
@@ -1047,13 +1124,13 @@ CUDA_CALLABLE inline bool SolveQuadratic(T a, T b, T c, T& minT, T& maxT)
 }
 
 // alternative ray sphere intersect, returns closest and furthest t values
-inline bool IntersectRaySphere(const Point3& sphereOrigin, float sphereRadius, const Point3& rayOrigin, const Vector3& rayDir, float& minT, float &maxT, Vec3* hitNormal=NULL)
+inline bool IntersectRaySphere(const Point3 &sphereOrigin, float sphereRadius, const Point3 &rayOrigin, const Vector3 &rayDir, float &minT, float &maxT, Vec3 *hitNormal = NULL)
 {
-	Vector3 q = rayOrigin-sphereOrigin;
+	Vector3 q = rayOrigin - sphereOrigin;
 
 	float a = 1.0f;
-	float b = 2.0f*Dot(q, rayDir);
-	float c = Dot(q, q)-(sphereRadius*sphereRadius);
+	float b = 2.0f * Dot(q, rayDir);
+	float c = Dot(q, q) - (sphereRadius * sphereRadius);
 
 	bool r = SolveQuadratic(a, b, c, minT, maxT);
 
@@ -1063,29 +1140,29 @@ inline bool IntersectRaySphere(const Point3& sphereOrigin, float sphereRadius, c
 	// calculate the normal of the closest hit
 	if (hitNormal && r)
 	{
-		*hitNormal = Normalize((rayOrigin+rayDir*minT)-sphereOrigin);
+		*hitNormal = Normalize((rayOrigin + rayDir * minT) - sphereOrigin);
 	}
 
 	return r;
 }
 
-inline bool IntersectRayPlane(const Point3& p, const Vector3& dir, const Plane& plane, float& t)
+inline bool IntersectRayPlane(const Point3 &p, const Vector3 &dir, const Plane &plane, float &t)
 {
-    float d = Dot(plane, dir);
-    
-    if (d == 0.0f)
-    {
-        return false;
-    }
-	else
-    {
-        t = -Dot(plane, p) / d;
-    }
+	float d = Dot(plane, dir);
 
-	return (t > 0.0f);	
+	if (d == 0.0f)
+	{
+		return false;
+	}
+	else
+	{
+		t = -Dot(plane, p) / d;
+	}
+
+	return (t > 0.0f);
 }
 
-inline bool IntersectLineSegmentPlane(const Vec3& start, const Vec3& end, const Plane& plane, Vec3& out)
+inline bool IntersectLineSegmentPlane(const Vec3 &start, const Vec3 &end, const Plane &plane, Vec3 &out)
 {
 	Vec3 u(end - start);
 
@@ -1101,43 +1178,41 @@ inline bool IntersectLineSegmentPlane(const Vec3& start, const Vec3& end, const 
 }
 
 // Moller and Trumbore's method
-inline bool IntersectRayTriTwoSided(const Vec3& p, const Vec3& dir, const Vec3& a, const Vec3& b, const Vec3& c, float& t, float& u, float& v, float& w, float& sign)//Vec3* normal)
+inline bool IntersectRayTriTwoSided(const Vec3 &p, const Vec3 &dir, const Vec3 &a, const Vec3 &b, const Vec3 &c, float &t, float &u, float &v, float &w, float &sign) //Vec3* normal)
 {
-    Vector3 ab = b - a;
-    Vector3 ac = c - a;
-    Vector3 n = Cross(ab, ac);
+	Vector3 ab = b - a;
+	Vector3 ac = c - a;
+	Vector3 n = Cross(ab, ac);
 
-    float d = Dot(-dir, n);
-    float ood = 1.0f / d; // No need to check for division by zero here as infinity aritmetic will save us...
-    Vector3 ap = p - a;
+	float d = Dot(-dir, n);
+	float ood = 1.0f / d; // No need to check for division by zero here as infinity aritmetic will save us...
+	Vector3 ap = p - a;
 
-    t = Dot(ap, n) * ood;
-    if (t < 0.0f)
-        return false;
+	t = Dot(ap, n) * ood;
+	if (t < 0.0f)
+		return false;
 
-    Vector3 e = Cross(-dir, ap);
-    v = Dot(ac, e) * ood;
-    if (v < 0.0f || v > 1.0f) // ...here...
-        return false;
-    w = -Dot(ab, e) * ood;
-    if (w < 0.0f || v + w > 1.0f) // ...and here
-        return false;
+	Vector3 e = Cross(-dir, ap);
+	v = Dot(ac, e) * ood;
+	if (v < 0.0f || v > 1.0f) // ...here...
+		return false;
+	w = -Dot(ab, e) * ood;
+	if (w < 0.0f || v + w > 1.0f) // ...and here
+		return false;
 
-    u = 1.0f - v - w;
-    //if (normal)
-        //*normal = n;
+	u = 1.0f - v - w;
+	//if (normal)
+	//*normal = n;
 	sign = d;
 
-    return true;
+	return true;
 }
 
-
-
 // mostly taken from Real Time Collision Detection - p192
-inline bool IntersectRayTri(const Point3& p, const Vec3& dir, const Point3& a, const Point3& b, const Point3& c,  float& t, float& u, float& v, float& w, Vec3* normal)
+inline bool IntersectRayTri(const Point3 &p, const Vec3 &dir, const Point3 &a, const Point3 &b, const Point3 &c, float &t, float &u, float &v, float &w, Vec3 *normal)
 {
-	const Vec3 ab = b-a;
-	const Vec3 ac = c-a;
+	const Vec3 ab = b - a;
+	const Vec3 ac = c - a;
 
 	// calculate normal
 	Vec3 n = Cross(ab, ac);
@@ -1145,30 +1220,32 @@ inline bool IntersectRayTri(const Point3& p, const Vec3& dir, const Point3& a, c
 	// need to solve a system of three equations to give t, u, v
 	float d = Dot(-dir, n);
 
-	// if dir is parallel to triangle plane or points away from triangle 
+	// if dir is parallel to triangle plane or points away from triangle
 	if (d <= 0.0f)
-        return false;
+		return false;
 
-	Vec3 ap = p-a;
+	Vec3 ap = p - a;
 	t = Dot(ap, n);
 
-	// ignores tris behind 
+	// ignores tris behind
 	if (t < 0.0f)
 		return false;
 
 	// compute barycentric coordinates
 	Vec3 e = Cross(-dir, ap);
 	v = Dot(ac, e);
-	if (v < 0.0f || v > d) return false;
+	if (v < 0.0f || v > d)
+		return false;
 
 	w = -Dot(ab, e);
-	if (w < 0.0f || v + w > d) return false;
+	if (w < 0.0f || v + w > d)
+		return false;
 
 	float ood = 1.0f / d;
 	t *= ood;
 	v *= ood;
 	w *= ood;
-	u = 1.0f-v-w;
+	u = 1.0f - v - w;
 
 	// optionally write out normal (todo: this branch is a performance concern, should probably remove)
 	if (normal)
@@ -1178,11 +1255,11 @@ inline bool IntersectRayTri(const Point3& p, const Vec3& dir, const Point3& a, c
 }
 
 //mostly taken from Real Time Collision Detection - p192
-CUDA_CALLABLE inline bool IntersectSegmentTri(const Vec3& p, const Vec3& q, const Vec3& a, const Vec3& b, const Vec3& c,  float& t, float& u, float& v, float& w, Vec3* normal, float expand)
+CUDA_CALLABLE inline bool IntersectSegmentTri(const Vec3 &p, const Vec3 &q, const Vec3 &a, const Vec3 &b, const Vec3 &c, float &t, float &u, float &v, float &w, Vec3 *normal, float expand)
 {
-	const Vec3 ab = b-a;
-	const Vec3 ac = c-a;
-	const Vec3 qp = p-q;
+	const Vec3 ab = b - a;
+	const Vec3 ac = c - a;
+	const Vec3 qp = p - q;
 
 	// calculate normal
 	Vec3 n = Cross(ab, ac);
@@ -1190,14 +1267,14 @@ CUDA_CALLABLE inline bool IntersectSegmentTri(const Vec3& p, const Vec3& q, cons
 	// need to solve a system of three equations to give t, u, v
 	float d = Dot(qp, n);
 
-	// if dir is parallel to triangle plane or points away from triangle 
+	// if dir is parallel to triangle plane or points away from triangle
 	if (d <= 0.0f)
-        return false;
+		return false;
 
-	Vec3 ap = p-a;
+	Vec3 ap = p - a;
 	t = Dot(ap, n);
 
-	// ignores tris behind 
+	// ignores tris behind
 	if (t < 0.0f)
 		return false;
 
@@ -1208,16 +1285,18 @@ CUDA_CALLABLE inline bool IntersectSegmentTri(const Vec3& p, const Vec3& q, cons
 	// compute barycentric coordinates
 	Vec3 e = Cross(qp, ap);
 	v = Dot(ac, e);
-	if (v < 0.0f || v > d) return false;
+	if (v < 0.0f || v > d)
+		return false;
 
 	w = -Dot(ab, e);
-	if (w < 0.0f || v + w > d) return false;
+	if (w < 0.0f || v + w > d)
+		return false;
 
 	float ood = 1.0f / d;
 	t *= ood;
 	v *= ood;
 	w *= ood;
-	u = 1.0f-v-w;
+	u = 1.0f - v - w;
 
 	// optionally write out normal (todo: this branch is a performance concern, should probably remove)
 	if (normal)
@@ -1226,52 +1305,56 @@ CUDA_CALLABLE inline bool IntersectSegmentTri(const Vec3& p, const Vec3& q, cons
 	return true;
 }
 
-CUDA_CALLABLE inline float ScalarTriple(const Vec3& a, const Vec3& b, const Vec3& c) { return Dot(Cross(a, b), c); }
+CUDA_CALLABLE inline float ScalarTriple(const Vec3 &a, const Vec3 &b, const Vec3 &c) { return Dot(Cross(a, b), c); }
 
 // intersects a line (through points p and q, against a triangle a, b, c - mostly taken from Real Time Collision Detection - p186
-CUDA_CALLABLE inline bool IntersectLineTri(const Vec3& p, const Vec3& q, const Vec3& a, const Vec3& b, const Vec3& c)//,  float& t, float& u, float& v, float& w, Vec3* normal, float expand)
+CUDA_CALLABLE inline bool IntersectLineTri(const Vec3 &p, const Vec3 &q, const Vec3 &a, const Vec3 &b, const Vec3 &c) //,  float& t, float& u, float& v, float& w, Vec3* normal, float expand)
 {
-	const Vec3 pq = q-p;
-	const Vec3 pa = a-p;
-	const Vec3 pb = b-p;
-	const Vec3 pc = c-p;
+	const Vec3 pq = q - p;
+	const Vec3 pa = a - p;
+	const Vec3 pb = b - p;
+	const Vec3 pc = c - p;
 
 	Vec3 m = Cross(pq, pc);
 	float u = Dot(pb, m);
-	if (u< 0.0f) return false;
+	if (u < 0.0f)
+		return false;
 
 	float v = -Dot(pa, m);
-	if (v < 0.0f) return false;
-	
+	if (v < 0.0f)
+		return false;
+
 	float w = ScalarTriple(pq, pb, pa);
-	if (w < 0.0f) return false;
+	if (w < 0.0f)
+		return false;
 
 	return true;
 }
 
-CUDA_CALLABLE inline Vec3 ClosestPointToAABB(const Vec3& p, const Vec3& lower, const Vec3& upper)
+CUDA_CALLABLE inline Vec3 ClosestPointToAABB(const Vec3 &p, const Vec3 &lower, const Vec3 &upper)
 {
 	Vec3 c;
 
-	for (int i=0; i < 3; ++i)
+	for (int i = 0; i < 3; ++i)
 	{
 		float v = p[i];
-		if (v < lower[i]) v = lower[i];
-		if (v > upper[i]) v = upper[i];
+		if (v < lower[i])
+			v = lower[i];
+		if (v > upper[i])
+			v = upper[i];
 		c[i] = v;
 	}
 
 	return c;
 }
 
-
 // RTCD 5.1.5, page 142
-CUDA_CALLABLE inline  Vec3 ClosestPointOnTriangle(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& p, float& v, float& w)
+CUDA_CALLABLE inline Vec3 ClosestPointOnTriangle(const Vec3 &a, const Vec3 &b, const Vec3 &c, const Vec3 &p, float &v, float &w)
 {
-	Vec3 ab = b-a;
-	Vec3 ac = c-a;
-	Vec3 ap = p-a;
-	
+	Vec3 ab = b - a;
+	Vec3 ac = c - a;
+	Vec3 ap = p - a;
+
 	float d1 = Dot(ab, ap);
 	float d2 = Dot(ac, ap);
 	if (d1 <= 0.0f && d2 <= 0.0f)
@@ -1281,7 +1364,7 @@ CUDA_CALLABLE inline  Vec3 ClosestPointOnTriangle(const Vec3& a, const Vec3& b, 
 		return a;
 	}
 
-	Vec3 bp = p-b;
+	Vec3 bp = p - b;
 	float d3 = Dot(ab, bp);
 	float d4 = Dot(ac, bp);
 	if (d3 >= 0.0f && d4 <= d3)
@@ -1291,15 +1374,15 @@ CUDA_CALLABLE inline  Vec3 ClosestPointOnTriangle(const Vec3& a, const Vec3& b, 
 		return b;
 	}
 
-	float vc = d1*d4 - d3*d2;
+	float vc = d1 * d4 - d3 * d2;
 	if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f)
 	{
-		v = d1 / (d1-d3);
+		v = d1 / (d1 - d3);
 		w = 0.0f;
-		return a + v*ab;
+		return a + v * ab;
 	}
 
-	Vec3 cp =p-c;
+	Vec3 cp = p - c;
 	float d5 = Dot(ab, cp);
 	float d6 = Dot(ac, cp);
 	if (d6 >= 0.0f && d5 <= d6)
@@ -1309,7 +1392,7 @@ CUDA_CALLABLE inline  Vec3 ClosestPointOnTriangle(const Vec3& a, const Vec3& b, 
 		return c;
 	}
 
-	float vb = d5*d2 - d1*d6;
+	float vb = d5 * d2 - d1 * d6;
 	if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f)
 	{
 		v = 0.0f;
@@ -1317,39 +1400,40 @@ CUDA_CALLABLE inline  Vec3 ClosestPointOnTriangle(const Vec3& a, const Vec3& b, 
 		return a + w * ac;
 	}
 
-	float va = d3*d6 - d5*d4;
-	if (va <= 0.0f && (d4 -d3) >= 0.0f && (d5-d6) >= 0.0f)
+	float va = d3 * d6 - d5 * d4;
+	if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 - d6) >= 0.0f)
 	{
-		w = (d4-d3)/((d4-d3) + (d5-d6));
-		v = 1.0f-w;		
-		return b + w * (c-b);
+		w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+		v = 1.0f - w;
+		return b + w * (c - b);
 	}
 
 	float denom = 1.0f / (va + vb + vc);
 	v = vb * denom;
 	w = vc * denom;
-	return a + ab*v + ac*w;
+	return a + ab * v + ac * w;
 }
-
 
 CUDA_CALLABLE inline float SqDistPointSegment(Vec3 a, Vec3 b, Vec3 c)
 {
-	Vec3 ab = b-a, ac=c-a, bc=c-b;
+	Vec3 ab = b - a, ac = c - a, bc = c - b;
 	float e = Dot(ac, ab);
 
 	if (e <= 0.0f)
 		return Dot(ac, ac);
 	float f = Dot(ab, ab);
-	
+
 	if (e >= f)
 		return Dot(bc, bc);
 
-	return Dot(ac, ac) - e*e/f;
+	return Dot(ac, ac) - e * e / f;
 }
 
 CUDA_CALLABLE inline bool PointInTriangle(Vec3 a, Vec3 b, Vec3 c, Vec3 p)
 {
-	a -= p; b -= p; c-= p;
+	a -= p;
+	b -= p;
+	c -= p;
 
 	/*
 	float eps = 0.0f;
@@ -1379,94 +1463,92 @@ CUDA_CALLABLE inline bool PointInTriangle(Vec3 a, Vec3 b, Vec3 c, Vec3 p)
 
 	if (Dot(u, w) <= 0.0f)
 		return false;
-	
+
 	return true;
 }
 
-CUDA_CALLABLE inline void ClosestPointBetweenLineSegments(const Vec3& p, const Vec3& q, const Vec3& r, const Vec3& s, float& u, float& v)
+CUDA_CALLABLE inline void ClosestPointBetweenLineSegments(const Vec3 &p, const Vec3 &q, const Vec3 &r, const Vec3 &s, float &u, float &v)
+{
+	Vec3 d1 = q - p;
+	Vec3 d2 = s - r;
+	Vec3 rp = p - r;
+	float a = Dot(d1, d1);
+	float c = Dot(d1, rp);
+	float e = Dot(d2, d2);
+	float f = Dot(d2, rp);
+
+	float b = Dot(d1, d2);
+	float denom = a * e - b * b;
+	if (denom != 0.0f)
+		u = Clamp((b * f - c * e) / denom, 0.0f, 1.0f);
+	else
 	{
-		Vec3 d1 = q-p;
-		Vec3 d2 = s-r;
-		Vec3 rp = p-r;
-		float a = Dot(d1, d1);
-		float c = Dot(d1, rp);
-		float e = Dot(d2, d2);
-		float f = Dot(d2, rp);
-
-		float b = Dot(d1, d2);
-		float denom = a*e - b*b;
-		if (denom != 0.0f)
-			u = Clamp((b*f - c*e)/denom, 0.0f, 1.0f);
-		else
-		{
-			u = 0.0f;
-		}
-
-		v = (b*u + f)/e;
-
-		if (v < 0.0f)
-		{
-			v = 0.0f;
-			u = Clamp(-c/a, 0.0f, 1.0f);
-		}
-		else if (v > 1.0f)
-		{
-			v = 1.0f;
-			u = Clamp((b-c)/a, 0.0f, 1.0f);
-		}
+		u = 0.0f;
 	}
 
+	v = (b * u + f) / e;
 
+	if (v < 0.0f)
+	{
+		v = 0.0f;
+		u = Clamp(-c / a, 0.0f, 1.0f);
+	}
+	else if (v > 1.0f)
+	{
+		v = 1.0f;
+		u = Clamp((b - c) / a, 0.0f, 1.0f);
+	}
+}
 
 CUDA_CALLABLE inline float minf(const float a, const float b) { return a < b ? a : b; }
 CUDA_CALLABLE inline float maxf(const float a, const float b) { return a > b ? a : b; }
 
-CUDA_CALLABLE inline bool IntersectRayAABBOmpf(const Vec3& pos, const Vector3& rcp_dir, const Vector3& min, const Vector3& max, float& t) {
-       
-    float
-        l1	= (min.x - pos.x) * rcp_dir.x,
-        l2	= (max.x - pos.x) * rcp_dir.x,
-        lmin	= minf(l1,l2),
-        lmax	= maxf(l1,l2);
+CUDA_CALLABLE inline bool IntersectRayAABBOmpf(const Vec3 &pos, const Vector3 &rcp_dir, const Vector3 &min, const Vector3 &max, float &t)
+{
 
-    l1	= (min.y - pos.y) * rcp_dir.y;
-    l2	= (max.y - pos.y) * rcp_dir.y;
-    lmin	= maxf(minf(l1,l2), lmin);
-    lmax	= minf(maxf(l1,l2), lmax);
+	float
+		l1 = (min.x - pos.x) * rcp_dir.x,
+		l2 = (max.x - pos.x) * rcp_dir.x,
+		lmin = minf(l1, l2),
+		lmax = maxf(l1, l2);
 
-    l1	= (min.z - pos.z) * rcp_dir.z;
-    l2	= (max.z - pos.z) * rcp_dir.z;
-    lmin	= maxf(minf(l1,l2), lmin);
-    lmax	= minf(maxf(l1,l2), lmax);
+	l1 = (min.y - pos.y) * rcp_dir.y;
+	l2 = (max.y - pos.y) * rcp_dir.y;
+	lmin = maxf(minf(l1, l2), lmin);
+	lmax = minf(maxf(l1, l2), lmax);
 
-    //return ((lmax > 0.f) & (lmax >= lmin));
-    //return ((lmax > 0.f) & (lmax > lmin));
-    bool hit = ((lmax >= 0.f) & (lmax >= lmin));
-    if (hit)
-        t = lmin;
-    return hit;
+	l1 = (min.z - pos.z) * rcp_dir.z;
+	l2 = (max.z - pos.z) * rcp_dir.z;
+	lmin = maxf(minf(l1, l2), lmin);
+	lmax = minf(maxf(l1, l2), lmax);
+
+	//return ((lmax > 0.f) & (lmax >= lmin));
+	//return ((lmax > 0.f) & (lmax > lmin));
+	bool hit = ((lmax >= 0.f) & (lmax >= lmin));
+	if (hit)
+		t = lmin;
+	return hit;
 }
 
-
-CUDA_CALLABLE inline bool IntersectRayAABB(const Vec3& start, const Vector3& dir, const Vector3& min, const Vector3& max, float& t, Vector3* normal)
+CUDA_CALLABLE inline bool IntersectRayAABB(const Vec3 &start, const Vector3 &dir, const Vector3 &min, const Vector3 &max, float &t, Vector3 *normal)
 {
 	//! calculate candidate plane on each axis
 	float tx = -1.0f, ty = -1.0f, tz = -1.0f;
 	bool inside = true;
-			
+
 	//! use unrolled loops
 
 	//! x
 	if (start.x < min.x)
 	{
 		if (dir.x != 0.0f)
-			tx = (min.x-start.x)/dir.x;
+			tx = (min.x - start.x) / dir.x;
 		inside = false;
 	}
 	else if (start.x > max.x)
 	{
 		if (dir.x != 0.0f)
-			tx = (max.x-start.x)/dir.x;
+			tx = (max.x - start.x) / dir.x;
 		inside = false;
 	}
 
@@ -1474,13 +1556,13 @@ CUDA_CALLABLE inline bool IntersectRayAABB(const Vec3& start, const Vector3& dir
 	if (start.y < min.y)
 	{
 		if (dir.y != 0.0f)
-			ty = (min.y-start.y)/dir.y;
+			ty = (min.y - start.y) / dir.y;
 		inside = false;
 	}
 	else if (start.y > max.y)
 	{
 		if (dir.y != 0.0f)
-			ty = (max.y-start.y)/dir.y;
+			ty = (max.y - start.y) / dir.y;
 		inside = false;
 	}
 
@@ -1488,22 +1570,22 @@ CUDA_CALLABLE inline bool IntersectRayAABB(const Vec3& start, const Vector3& dir
 	if (start.z < min.z)
 	{
 		if (dir.z != 0.0f)
-			tz = (min.z-start.z)/dir.z;
+			tz = (min.z - start.z) / dir.z;
 		inside = false;
 	}
 	else if (start.z > max.z)
 	{
 		if (dir.z != 0.0f)
-			tz = (max.z-start.z)/dir.z;
+			tz = (max.z - start.z) / dir.z;
 		inside = false;
 	}
 
 	//! if point inside all planes
 	if (inside)
-    {
-        t = 0.0f;
+	{
+		t = 0.0f;
 		return true;
-    }
+	}
 
 	//! we now have t values for each of possible intersection planes
 	//! find the maximum to get the intersection point
@@ -1530,35 +1612,35 @@ CUDA_CALLABLE inline bool IntersectRayAABB(const Vec3& start, const Vector3& dir
 	//! no eps for now
 	float eps = 0.0f;
 
-	Vec3 hit = start + dir*tmax;
+	Vec3 hit = start + dir * tmax;
 
-	if ((hit.x < min.x-eps || hit.x > max.x+eps) && taxis != 0)
+	if ((hit.x < min.x - eps || hit.x > max.x + eps) && taxis != 0)
 		return false;
-	if ((hit.y < min.y-eps || hit.y > max.y+eps) && taxis != 1)
+	if ((hit.y < min.y - eps || hit.y > max.y + eps) && taxis != 1)
 		return false;
-	if ((hit.z < min.z-eps || hit.z > max.z+eps) && taxis != 2)
+	if ((hit.z < min.z - eps || hit.z > max.z + eps) && taxis != 2)
 		return false;
 
 	//! output results
 	t = tmax;
-			
+
 	return true;
 }
 
 // construct a plane equation such that ax + by + cz + dw = 0
-CUDA_CALLABLE inline Vec4 PlaneFromPoints(const Vec3& p, const Vec3& q, const Vec3& r)
+CUDA_CALLABLE inline Vec4 PlaneFromPoints(const Vec3 &p, const Vec3 &q, const Vec3 &r)
 {
-	Vec3 e0 = q-p;
-	Vec3 e1 = r-p;
+	Vec3 e0 = q - p;
+	Vec3 e1 = r - p;
 
 	Vec3 n = SafeNormalize(Cross(e0, e1));
-	
+
 	return Vec4(n.x, n.y, n.z, -Dot(p, n));
 }
 
-CUDA_CALLABLE inline bool IntersectPlaneAABB(const Vec4& plane, const Vec3& center, const Vec3& extents)
+CUDA_CALLABLE inline bool IntersectPlaneAABB(const Vec4 &plane, const Vec3 &center, const Vec3 &extents)
 {
-	float radius = Abs(extents.x*plane.x) + Abs(extents.y*plane.y) + Abs(extents.z*plane.z);
+	float radius = Abs(extents.x * plane.x) + Abs(extents.y * plane.y) + Abs(extents.z * plane.z);
 	float delta = Dot(center, Vec3(plane)) + plane.w;
 
 	return Abs(delta) <= radius;
@@ -1568,13 +1650,12 @@ CUDA_CALLABLE inline bool IntersectPlaneAABB(const Vec4& plane, const Vec3& cent
 class Rect
 {
 public:
-
 	Rect() : m_left(0), m_right(0), m_top(0), m_bottom(0) {}
 
 	Rect(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom) : m_left(left), m_right(right), m_top(top), m_bottom(bottom)
 	{
 		assert(left <= right);
-		assert(top <= bottom);	
+		assert(top <= bottom);
 	}
 
 	uint32_t Width() const { return m_right - m_left; }
@@ -1612,22 +1693,21 @@ void RandomShuffle(T begin, T end)
 	assert(end > begin);
 	uint32_t n = distance(begin, end);
 
-	for (uint32_t i=0; i < n; ++i)
+	for (uint32_t i = 0; i < n; ++i)
 	{
 		// pick a random number between 0 and n-1
-		uint32_t r = Rand() % (n-i);
+		uint32_t r = Rand() % (n - i);
 
 		// swap that location with the current randomly selected position
-		swap(*(begin+i), *(begin+(i+r)));
+		swap(*(begin + i), *(begin + (i + r)));
 	}
 }
 
-
-CUDA_CALLABLE inline Quat QuatFromAxisAngle(const Vec3& axis, float angle)
+CUDA_CALLABLE inline Quat QuatFromAxisAngle(const Vec3 &axis, float angle)
 {
 	Vec3 v = Normalize(axis);
 
-	float half = angle*0.5f;
+	float half = angle * 0.5f;
 	float w = cosf(half);
 
 	const float sin_theta_over_two = sinf(half);
@@ -1636,20 +1716,19 @@ CUDA_CALLABLE inline Quat QuatFromAxisAngle(const Vec3& axis, float angle)
 	return Quat(v.x, v.y, v.z, w);
 }
 
-
 // rotate by quaternion (q, w)
-CUDA_CALLABLE inline Vec3 rotate(const Vec3& q, float w, const Vec3& x)
+CUDA_CALLABLE inline Vec3 rotate(const Vec3 &q, float w, const Vec3 &x)
 {
-	return 2.0f*(x*(w*w-0.5f) + Cross(q, x)*w + q*Dot(q, x));
+	return 2.0f * (x * (w * w - 0.5f) + Cross(q, x) * w + q * Dot(q, x));
 }
 
 // rotate x by inverse transform in (q, w)
-CUDA_CALLABLE inline Vec3 rotateInv(const Vec3& q, float w, const Vec3& x)
+CUDA_CALLABLE inline Vec3 rotateInv(const Vec3 &q, float w, const Vec3 &x)
 {
-	return 2.0f*(x*(w*w-0.5f) - Cross(q, x)*w + q*Dot(q, x));
+	return 2.0f * (x * (w * w - 0.5f) - Cross(q, x) * w + q * Dot(q, x));
 }
 
-CUDA_CALLABLE inline void TransformBounds(const Quat& q, Vec3 extents, Vec3& newExtents)
+CUDA_CALLABLE inline void TransformBounds(const Quat &q, Vec3 extents, Vec3 &newExtents)
 {
 	Matrix33 transform(q);
 
@@ -1664,11 +1743,11 @@ CUDA_CALLABLE inline void TransformBounds(const Quat& q, Vec3 extents, Vec3& new
 	newExtents = Vec3(ex, ey, ez);
 }
 
-CUDA_CALLABLE inline void TransformBounds(const Vec3& localLower, const Vec3& localUpper, const Vec3& translation, const Quat& rotation, float scale, Vec3& lower, Vec3& upper)
+CUDA_CALLABLE inline void TransformBounds(const Vec3 &localLower, const Vec3 &localUpper, const Vec3 &translation, const Quat &rotation, float scale, Vec3 &lower, Vec3 &upper)
 {
 	Matrix33 transform(rotation);
 
-	Vec3 extents = (localUpper-localLower)*scale;
+	Vec3 extents = (localUpper - localLower) * scale;
 
 	transform.cols[0] *= extents.x;
 	transform.cols[1] *= extents.y;
@@ -1678,14 +1757,14 @@ CUDA_CALLABLE inline void TransformBounds(const Vec3& localLower, const Vec3& lo
 	float ey = fabsf(transform.cols[0].y) + fabsf(transform.cols[1].y) + fabsf(transform.cols[2].y);
 	float ez = fabsf(transform.cols[0].z) + fabsf(transform.cols[1].z) + fabsf(transform.cols[2].z);
 
-	Vec3 center = (localUpper+localLower)*0.5f*scale;
+	Vec3 center = (localUpper + localLower) * 0.5f * scale;
 
-	lower = rotation*center + translation - Vec3(ex, ey, ez)*0.5f;
-	upper = rotation*center + translation + Vec3(ex, ey, ez)*0.5f;
+	lower = rotation * center + translation - Vec3(ex, ey, ez) * 0.5f;
+	upper = rotation * center + translation + Vec3(ex, ey, ez) * 0.5f;
 }
 
 // Poisson sample the volume of a sphere with given separation
-inline int PoissonSample3D(float radius, float separation, Vec3* points, int maxPoints, int maxAttempts)
+inline int PoissonSample3D(float radius, float separation, Vec3 *points, int maxPoints, int maxAttempts)
 {
 	// naive O(n^2) dart throwing algorithm to generate a Poisson distribution
 	int c = 0;
@@ -1694,16 +1773,16 @@ inline int PoissonSample3D(float radius, float separation, Vec3* points, int max
 		int a = 0;
 		while (a < maxAttempts)
 		{
-			const Vec3 p = UniformSampleSphereVolume()*radius;
+			const Vec3 p = UniformSampleSphereVolume() * radius;
 
 			// test against points already generated
-			int i=0;
+			int i = 0;
 			for (; i < c; ++i)
 			{
-				Vec3 d = p-points[i];
+				Vec3 d = p - points[i];
 
 				// reject if closer than separation
-				if (LengthSq(d) < separation*separation)
+				if (LengthSq(d) < separation * separation)
 					break;
 			}
 
@@ -1727,21 +1806,21 @@ inline int PoissonSample3D(float radius, float separation, Vec3* points, int max
 }
 
 // Generates an optimally dense sphere packing at the origin (implicit sphere at the origin)
-inline int TightPack3D(float radius, float separation, Vec3* points, int maxPoints)
-{	
-	int dim = int(ceilf(radius/separation));
+inline int TightPack3D(float radius, float separation, Vec3 *points, int maxPoints)
+{
+	int dim = int(ceilf(radius / separation));
 
 	int c = 0;
 
-	for (int z=-dim; z <= dim; ++z)
+	for (int z = -dim; z <= dim; ++z)
 	{
-		for (int y=-dim; y <= dim; ++y)
+		for (int y = -dim; y <= dim; ++y)
 		{
-			for (int x=-dim; x <= dim; ++x)
+			for (int x = -dim; x <= dim; ++x)
 			{
-				float xpos = x*separation + (((y+z)&1)?separation*0.5f:0.0f);
-				float ypos = y*sqrtf(0.75f)*separation;
-				float zpos = z*sqrtf(0.75f)*separation;
+				float xpos = x * separation + (((y + z) & 1) ? separation * 0.5f : 0.0f);
+				float ypos = y * sqrtf(0.75f) * separation;
+				float zpos = z * sqrtf(0.75f) * separation;
 
 				Vec3 p(xpos, ypos, zpos);
 
@@ -1761,16 +1840,14 @@ inline int TightPack3D(float radius, float separation, Vec3* points, int maxPoin
 	return c;
 }
 
-
 struct Bounds
 {
-	CUDA_CALLABLE inline Bounds() : lower( FLT_MAX)
-						   , upper(-FLT_MAX) {}
+	CUDA_CALLABLE inline Bounds() : lower(FLT_MAX), upper(-FLT_MAX) {}
 
-	CUDA_CALLABLE inline Bounds(const Vec3& lower, const Vec3& upper) : lower(lower), upper(upper) {}
+	CUDA_CALLABLE inline Bounds(const Vec3 &lower, const Vec3 &upper) : lower(lower), upper(upper) {}
 
-	CUDA_CALLABLE inline Vec3 GetCenter() const { return 0.5f*(lower+upper); }
-	CUDA_CALLABLE inline Vec3 GetEdges() const { return upper-lower; }
+	CUDA_CALLABLE inline Vec3 GetCenter() const { return 0.5f * (lower + upper); }
+	CUDA_CALLABLE inline Vec3 GetEdges() const { return upper - lower; }
 
 	CUDA_CALLABLE inline void Expand(float r)
 	{
@@ -1778,7 +1855,7 @@ struct Bounds
 		upper += Vec3(r);
 	}
 
-	CUDA_CALLABLE inline void Expand(const Vec3& r)
+	CUDA_CALLABLE inline void Expand(const Vec3 &r)
 	{
 		lower -= r;
 		upper += r;
@@ -1786,7 +1863,7 @@ struct Bounds
 
 	CUDA_CALLABLE inline bool Empty() const { return lower.x >= upper.x || lower.y >= upper.y || lower.z >= upper.z; }
 
-	CUDA_CALLABLE inline bool Overlaps(const Vec3& p) const
+	CUDA_CALLABLE inline bool Overlaps(const Vec3 &p) const
 	{
 		if (p.x < lower.x ||
 			p.y < lower.y ||
@@ -1803,7 +1880,7 @@ struct Bounds
 		}
 	}
 
-	CUDA_CALLABLE inline bool Overlaps(const Bounds& b) const
+	CUDA_CALLABLE inline bool Overlaps(const Bounds &b) const
 	{
 		if (lower.x > b.upper.x ||
 			lower.y > b.upper.y ||
@@ -1824,17 +1901,17 @@ struct Bounds
 	Vec3 upper;
 };
 
-CUDA_CALLABLE inline Bounds Union(const Bounds& a, const Vec3& b) 
+CUDA_CALLABLE inline Bounds Union(const Bounds &a, const Vec3 &b)
 {
 	return Bounds(Min(a.lower, b), Max(a.upper, b));
 }
 
-CUDA_CALLABLE inline Bounds Union(const Bounds& a, const Bounds& b) 
+CUDA_CALLABLE inline Bounds Union(const Bounds &a, const Bounds &b)
 {
 	return Bounds(Min(a.lower, b.lower), Max(a.upper, b.upper));
 }
 
-CUDA_CALLABLE inline Bounds Intersection(const Bounds& a, const Bounds& b)
+CUDA_CALLABLE inline Bounds Intersection(const Bounds &a, const Bounds &b)
 {
 	return Bounds(Max(a.lower, b.lower), Min(a.upper, b.upper));
 }

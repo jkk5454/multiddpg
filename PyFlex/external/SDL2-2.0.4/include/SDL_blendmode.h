@@ -31,26 +31,27 @@
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/**
+   /**
  *  \brief The blend mode used in SDL_RenderCopy() and drawing operations.
  */
-typedef enum
-{
-    SDL_BLENDMODE_NONE = 0x00000000,     /**< no blending
+   typedef enum
+   {
+      SDL_BLENDMODE_NONE = 0x00000000,  /**< no blending
                                               dstRGBA = srcRGBA */
-    SDL_BLENDMODE_BLEND = 0x00000001,    /**< alpha blending
+      SDL_BLENDMODE_BLEND = 0x00000001, /**< alpha blending
                                               dstRGB = (srcRGB * srcA) + (dstRGB * (1-srcA))
                                               dstA = srcA + (dstA * (1-srcA)) */
-    SDL_BLENDMODE_ADD = 0x00000002,      /**< additive blending
+      SDL_BLENDMODE_ADD = 0x00000002,   /**< additive blending
                                               dstRGB = (srcRGB * srcA) + dstRGB
                                               dstA = dstA */
-    SDL_BLENDMODE_MOD = 0x00000004       /**< color modulate
+      SDL_BLENDMODE_MOD = 0x00000004    /**< color modulate
                                               dstRGB = srcRGB * dstRGB
                                               dstA = dstA */
-} SDL_BlendMode;
+   } SDL_BlendMode;
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

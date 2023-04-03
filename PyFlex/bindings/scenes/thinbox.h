@@ -3,8 +3,7 @@
 class ThinBox : public Scene
 {
 public:
-
-	ThinBox(const char* name) : Scene(name) {}
+	ThinBox(const char *name) : Scene(name) {}
 
 	int base;
 	int width;
@@ -28,14 +27,14 @@ public:
 		Vec3 upper;
 		Vec3 lower;
 		GetParticleBounds(lower, upper);
-		lower -= Vec3(radius*0.5f);
-		upper += Vec3(radius*0.5f);
+		lower -= Vec3(radius * 0.5f);
+		upper += Vec3(radius * 0.5f);
 
-		Vec3 center = 0.5f*(upper + lower);
+		Vec3 center = 0.5f * (upper + lower);
 
-		float width = (upper - lower).x*0.5f;
-		float depth = (upper - lower).z*0.5f;
-		float edge = 0.0075f*0.5f;
+		float width = (upper - lower).x * 0.5f;
+		float depth = (upper - lower).z * 0.5f;
+		float edge = 0.0075f * 0.5f;
 		float height = 8 * radius;
 
 		AddBox(Vec3(edge, height, depth), center + Vec3(-width, height / 2, 0.0f));
@@ -51,7 +50,7 @@ public:
 		g_params.numPlanes = 1;
 		g_params.restitution = 0.0f;
 		g_params.collisionDistance = radius;
-		g_params.particleCollisionMargin = radius*0.5f;
+		g_params.particleCollisionMargin = radius * 0.5f;
 
 		g_params.relaxationFactor = 0.0f;
 		g_numSubsteps = 2;

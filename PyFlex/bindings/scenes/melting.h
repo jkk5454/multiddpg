@@ -2,8 +2,7 @@
 class Melting : public Scene
 {
 public:
-
-	Melting(const char* name) : Scene(name) {}
+	Melting(const char *name) : Scene(name) {}
 
 	virtual void Initialize()
 	{
@@ -14,19 +13,19 @@ public:
 		g_params.dissipation = 0.0f;
 		g_params.viscosity = 0.0f;
 		g_params.cohesion = 0.0f;
-		g_params.fluidRestDistance = g_params.radius*0.6f;
+		g_params.fluidRestDistance = g_params.radius * 0.6f;
 		g_params.smoothing = 0.5f;
 
-		const float spacing = g_params.radius*0.5f;
+		const float spacing = g_params.radius * 0.5f;
 
-		Mesh* mesh = ImportMesh(GetFilePathByPlatform("../../data/bunny.ply").c_str());
+		Mesh *mesh = ImportMesh(GetFilePathByPlatform("../../data/bunny.ply").c_str());
 
 		int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
 		float size = 1.2f;
 
 		for (int i = 0; i < 1; ++i)
 			for (int j = 0; j < 3; ++j)
-				CreateParticleShape(mesh, Vec3(-2.0f + j*size, 3.0f + j*size, i*size), size, 0.0f, spacing, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, phase, false, 0.0f);
+				CreateParticleShape(mesh, Vec3(-2.0f + j * size, 3.0f + j * size, i * size), size, 0.0f, spacing, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, phase, false, 0.0f);
 
 		delete mesh;
 
@@ -35,7 +34,7 @@ public:
 
 		g_numSubsteps = 2;
 
-		// draw options		
+		// draw options
 		g_drawPoints = true;
 		g_drawMesh = false;
 

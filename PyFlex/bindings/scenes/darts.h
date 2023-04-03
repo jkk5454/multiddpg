@@ -2,8 +2,7 @@
 class Darts : public Scene
 {
 public:
-
-	Darts(const char* name) : Scene(name) {}
+	Darts(const char *name) : Scene(name) {}
 
 	void Initialize()
 	{
@@ -37,7 +36,7 @@ public:
 			CreateSpring(1, 2, 1.0f);
 			CreateSpring(2, 0, 1.0f);
 
-			g_buffers->positions[0].y -= radius*2.5f;
+			g_buffers->positions[0].y -= radius * 2.5f;
 			//g_buffers->positions[0].x = 1.0f;
 			//g_buffers->positions[1].y += radius;
 		}

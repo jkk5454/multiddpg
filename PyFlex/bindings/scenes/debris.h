@@ -2,8 +2,7 @@
 class RigidDebris : public Scene
 {
 public:
-
-	RigidDebris(const char* name) : Scene(name) {}
+	RigidDebris(const char *name) : Scene(name) {}
 
 	struct Instance
 	{
@@ -19,15 +18,15 @@ public:
 
 	struct MeshBatch
 	{
-		GpuMesh* mMesh;
-		NvFlexExtAsset* mAsset;
+		GpuMesh *mMesh;
+		NvFlexExtAsset *mAsset;
 
 		std::vector<Matrix44> mInstanceTransforms;
 	};
 
 	struct MeshAsset
 	{
-		const char* file;
+		const char *file;
 		float scale;
 	};
 
@@ -37,33 +36,33 @@ public:
 
 		const int numMeshes = 8;
 		MeshAsset meshes[numMeshes] =
-		{
-			{ "../../data/rocka.ply", 0.2f },
-			{ "../../data/box.ply", 0.1f },
-			{ "../../data/torus.obj", 0.3f },
-			{ "../../data/rockd.ply", 0.2f },
-			{ "../../data/banana.obj", 0.3f },
-			{ "../../data/rocka.ply", 0.2f },
-			{ "../../data/box.ply", 0.1f },
-			{ "../../data/rockd.ply", 0.2f },
-			//"../../data/rockf.ply"
-		};
+			{
+				{"../../data/rocka.ply", 0.2f},
+				{"../../data/box.ply", 0.1f},
+				{"../../data/torus.obj", 0.3f},
+				{"../../data/rockd.ply", 0.2f},
+				{"../../data/banana.obj", 0.3f},
+				{"../../data/rocka.ply", 0.2f},
+				{"../../data/box.ply", 0.1f},
+				{"../../data/rockd.ply", 0.2f},
+				//"../../data/rockf.ply"
+			};
 
 		for (int i = 0; i < numMeshes; ++i)
 		{
-			Mesh* mesh = ImportMesh(GetFilePathByPlatform(meshes[i].file).c_str());
+			Mesh *mesh = ImportMesh(GetFilePathByPlatform(meshes[i].file).c_str());
 			mesh->Normalize(meshes[i].scale);
 
-			const float spacing = radius*0.5f;
+			const float spacing = radius * 0.5f;
 
 			MeshBatch b;
-			b.mAsset = NvFlexExtCreateRigidFromMesh((float*)&mesh->m_positions[0], int(mesh->m_positions.size()), (int*)&mesh->m_indices[0], mesh->m_indices.size(), spacing, -spacing*0.5f);
+			b.mAsset = NvFlexExtCreateRigidFromMesh((float *)&mesh->m_positions[0], int(mesh->m_positions.size()), (int *)&mesh->m_indices[0], mesh->m_indices.size(), spacing, -spacing * 0.5f);
 			b.mMesh = CreateGpuMesh(mesh);
 
 			mBatches.push_back(b);
 		}
 
-		Mesh* level = ImportMeshFromBin(GetFilePathByPlatform("../../data/testzone.bin").c_str());
+		Mesh *level = ImportMeshFromBin(GetFilePathByPlatform("../../data/testzone.bin").c_str());
 		level->Transform(TranslationMatrix(Point3(-10.0f, 0.0f, 10.0f)));
 
 		NvFlexTriangleMeshId mesh = CreateTriangleMesh(level);
@@ -81,8 +80,8 @@ public:
 		g_params.drag = 0.0f;
 		g_params.lift = 0.0f;
 		g_params.numPlanes = 0;
-		g_params.collisionDistance = radius*0.5f;
-		g_params.particleCollisionMargin = radius*0.25f;
+		g_params.collisionDistance = radius * 0.5f;
+		g_params.particleCollisionMargin = radius * 0.25f;
 
 		g_numExtraParticles = 32000;
 
@@ -110,7 +109,7 @@ public:
 		if (g_emit)
 		{
 			// emit new debris
-			int numToEmit = 1;//Rand()%8;
+			int numToEmit = 1; //Rand()%8;
 
 			int particleOffset = NvFlexGetActiveCount(g_solver);
 
@@ -119,23 +118,23 @@ public:
 				// choose a random mesh to emit
 				const int meshIndex = Rand() % mBatches.size();
 
-				NvFlexExtAsset* asset = mBatches[meshIndex].mAsset;
+				NvFlexExtAsset *asset = mBatches[meshIndex].mAsset;
 
 				// check we can fit in the container
 				if (int(g_buffers->positions.size()) - particleOffset < asset->numParticles)
 					break;
 
 				Instance inst;
-				inst.mLifetime = 1000.0f;// Randf(5.0f, 60.0f);
+				inst.mLifetime = 1000.0f; // Randf(5.0f, 60.0f);
 				inst.mParticleOffset = particleOffset;
-				inst.mRotation = QuatFromAxisAngle(UniformSampleSphere(), Randf()*k2Pi);
+				inst.mRotation = QuatFromAxisAngle(UniformSampleSphere(), Randf() * k2Pi);
 
 				float spread = 0.2f;
 				inst.mTranslation = g_emitters[0].mPos + Vec3(Randf(-spread, spread), Randf(-spread, spread), 0.0f);
 				inst.mMeshIndex = meshIndex;
 
-				Vec3 linearVelocity = g_emitters[0].mDir*15.0f;//*Randf(5.0f, 10.0f);//Vec3(Randf(0.0f, 10.0f), 0.0f, 0.0f);
-				Vec3 angularVelocity = Vec3(UniformSampleSphere()*Randf()*k2Pi);
+				Vec3 linearVelocity = g_emitters[0].mDir * 15.0f; //*Randf(5.0f, 10.0f);//Vec3(Randf(0.0f, 10.0f), 0.0f, 0.0f);
+				Vec3 angularVelocity = Vec3(UniformSampleSphere() * Randf() * k2Pi);
 
 				inst.mGroup = mGroupCounter++;
 
@@ -146,7 +145,7 @@ public:
 				{
 					Vec3 localPos = Vec3(&asset->particles[j * 4]) - Vec3(&asset->shapeCenters[0]);
 
-					g_buffers->positions[inst.mParticleOffset + j] = Vec4(inst.mTranslation + inst.mRotation*localPos, 1.0f);
+					g_buffers->positions[inst.mParticleOffset + j] = Vec4(inst.mTranslation + inst.mRotation * localPos, 1.0f);
 					g_buffers->velocities[inst.mParticleOffset + j] = linearVelocity + Cross(angularVelocity, localPos);
 					g_buffers->phases[inst.mParticleOffset + j] = phase;
 				}
@@ -160,7 +159,7 @@ public:
 		// destroy old debris pieces
 		for (int i = 0; i < int(mInstances.size());)
 		{
-			Instance& inst = mInstances[i];
+			Instance &inst = mInstances[i];
 
 			inst.mLifetime -= g_dt;
 
@@ -175,7 +174,7 @@ public:
 			}
 		}
 
-		// compact instances 
+		// compact instances
 		static std::vector<Vec4> particles(g_buffers->positions.size());
 		static std::vector<Vec3> velocities(g_buffers->velocities.size());
 		static std::vector<int> phases(g_buffers->phases.size());
@@ -198,9 +197,9 @@ public:
 
 		for (int i = 0; i < int(mInstances.size()); ++i)
 		{
-			Instance& inst = mInstances[i];
+			Instance &inst = mInstances[i];
 
-			NvFlexExtAsset* asset = mBatches[inst.mMeshIndex].mAsset;
+			NvFlexExtAsset *asset = mBatches[inst.mMeshIndex].mAsset;
 
 			for (int j = 0; j < asset->numParticles; ++j)
 			{
@@ -224,7 +223,7 @@ public:
 			mInstances[i].mParticleOffset = numActive;
 
 			// Draw transform
-			Matrix44 xform = TranslationMatrix(Point3(inst.mTranslation - inst.mRotation*Vec3(asset->shapeCenters)))*RotationMatrix(inst.mRotation);
+			Matrix44 xform = TranslationMatrix(Point3(inst.mTranslation - inst.mRotation * Vec3(asset->shapeCenters))) * RotationMatrix(inst.mRotation);
 			mBatches[inst.mMeshIndex].mInstanceTransforms.push_back(xform);
 
 			numActive += asset->numParticles;
@@ -242,9 +241,9 @@ public:
 
 		if (mAttractForce != 0.0f)
 		{
-			const Vec3 forward(-sinf(g_camAngle.x)*cosf(g_camAngle.y), sinf(g_camAngle.y), -cosf(g_camAngle.x)*cosf(g_camAngle.y));
+			const Vec3 forward(-sinf(g_camAngle.x) * cosf(g_camAngle.y), sinf(g_camAngle.y), -cosf(g_camAngle.x) * cosf(g_camAngle.y));
 
-			Vec3 attractPos = g_camPos + forward*5.0f;
+			Vec3 attractPos = g_camPos + forward * 5.0f;
 			float invRadius = 1.0f / 5.0f;
 
 			for (int i = 0; i < int(g_buffers->velocities.size()); ++i)
@@ -252,7 +251,7 @@ public:
 				Vec3 dir = Vec3(g_buffers->positions[i]) - attractPos;
 				float d = Length(dir);
 
-				g_buffers->velocities[i] += Normalize(dir)*Randf(0.0, 1.0f)*mAttractForce*Max(0.0f, 1.0f - d*invRadius);
+				g_buffers->velocities[i] += Normalize(dir) * Randf(0.0, 1.0f) * mAttractForce * Max(0.0f, 1.0f - d * invRadius);
 			}
 		}
 	}
@@ -265,7 +264,7 @@ public:
 
 	virtual void Sync()
 	{
-		NvFlexSetRigids(g_solver, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidPlasticThresholds.buffer, g_buffers->rigidPlasticCreeps.buffer,   g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
+		NvFlexSetRigids(g_solver, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidPlasticThresholds.buffer, g_buffers->rigidPlasticCreeps.buffer, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
 	}
 
 	virtual void KeyDown(int key)
@@ -274,14 +273,14 @@ public:
 		{
 			float bombStrength = 10.0f;
 
-			Vec3 bombPos = g_emitters[0].mPos + g_emitters[0].mDir*5.0f;
+			Vec3 bombPos = g_emitters[0].mPos + g_emitters[0].mDir * 5.0f;
 			bombPos.y -= 5.0f;
 
 			for (int i = 0; i < int(g_buffers->velocities.size()); ++i)
 			{
 				Vec3 dir = Vec3(g_buffers->positions[i]) - bombPos;
 
-				g_buffers->velocities[i] += Normalize(dir)*bombStrength*Randf(0.0, 1.0f);
+				g_buffers->velocities[i] += Normalize(dir) * bombStrength * Randf(0.0, 1.0f);
 			}
 		}
 

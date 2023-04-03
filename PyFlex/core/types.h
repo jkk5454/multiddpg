@@ -29,5 +29,3 @@
 
 #include <cstddef>
 #include "stdint.h"
-
-

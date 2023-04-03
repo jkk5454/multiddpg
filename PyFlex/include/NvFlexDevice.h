@@ -71,5 +71,4 @@ NV_FLEX_API bool NvFlexDeviceCreateCudaContext(int ordinal);
  */
 NV_FLEX_API void NvFlexDeviceDestroyCudaContext();
 
-
 #endif // NV_FLEX_DEVICE_H

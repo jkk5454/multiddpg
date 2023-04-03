@@ -2,7 +2,12 @@
 #include <iostream>
 #include <vector>
 
-inline void swap(int &a, int &b) {int tmp =a ; a = b; b=tmp;}
+inline void swap(int &a, int &b)
+{
+    int tmp = a;
+    a = b;
+    b = tmp;
+}
 
 class SoftgymCloth : public Scene
 {
@@ -16,27 +21,31 @@ public:
     int cam_width;
     int cam_height;
 
-	SoftgymCloth(const char* name) : Scene(name) {}
+    SoftgymCloth(const char *name) : Scene(name) {}
 
     float get_param_float(py::array_t<float> scene_params, int idx)
     {
-        auto ptr = (float *) scene_params.request().ptr;
+        auto ptr = (float *)scene_params.request().ptr;
         float out = ptr[idx];
         return out;
     }
 
-    //params ordering: xpos, ypos, zpos, xsize, zsize, stretch, bend, shear
-    // render_type, cam_X, cam_y, cam_z, angle_x, angle_y, angle_z, width, height
-	void Initialize(py::array_t<float> scene_params, int thread_idx=0)
+    void Initialize(py::array_t<float> scene_params, 
+                    py::array_t<float> vertices,
+                    py::array_t<int> stretch_edges,
+                    py::array_t<int> bend_edges,
+                    py::array_t<int> shear_edges,
+                    py::array_t<int> faces,
+                    int thread_idx = 0)
     {
-        auto ptr = (float *) scene_params.request().ptr;
-	    float initX = ptr[0];
-	    float initY = ptr[1];
-	    float initZ = ptr[2];
+        auto ptr = (float *)scene_params.request().ptr;
+        float initX = ptr[0];
+        float initY = ptr[1];
+        float initZ = ptr[2];
 
-		int dimx = (int)ptr[3];
-		int dimz = (int)ptr[4];
-		float radius = 0.00625f;
+        int dimx = (int)ptr[3];
+        int dimz = (int)ptr[4];
+        float radius = 0.00625f;
 
         int render_type = ptr[8]; // 0: only points, 1: only mesh, 2: points + mesh
 
@@ -49,102 +58,122 @@ public:
         cam_width = int(ptr[15]);
         cam_height = int(ptr[16]);
 
-        // Cloth
-        float stretchStiffness = ptr[5]; //0.9f;
-		float bendStiffness = ptr[6]; //1.0f;
-		float shearStiffness = ptr[7]; //0.9f;
-		int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseSelfCollideFilter);
-		float mass = float(ptr[17])/(dimx*dimz);	// avg bath towel is 500-700g
-        int flip_mesh = int(ptr[18]); // Flip half
-	    CreateSpringGrid(Vec3(initX, -initY, initZ), dimx, dimz, 1, radius, phase, stretchStiffness, bendStiffness, shearStiffness, 0.0f, 1.0f/mass);
-	    // Flip the last half of the mesh for the folding task
-	    if (flip_mesh)
-	    {
-	        int size = g_buffers->triangles.size();
-//	        for (int j=int((dimz-1)*3/8); j<int((dimz-1)*5/8); ++j)
-//	            for (int i=int((dimx-1)*1/8); i<int((dimx-1)*3/8); ++i)
-//	            {
-//	                int idx = j *(dimx-1) + i;
-//
-//	                if ((i!=int((dimx-1)*3/8-1)) && (j!=int((dimz-1)*3/8)))
-//	                    swap(g_buffers->triangles[idx* 3 * 2], g_buffers->triangles[idx*3*2+1]);
-//	                if ((i != int((dimx-1)*1/8)) && (j!=int((dimz-1)*5/8)-1))
-//	                    swap(g_buffers->triangles[idx* 3 * 2 +3], g_buffers->triangles[idx*3*2+4]);
-//                }
-	        for (int j=0; j<int((dimz-1)); ++j)
-	            for (int i=int((dimx-1)*1/8); i<int((dimx-1)*1/8)+5; ++i)
-	            {
-	                int idx = j *(dimx-1) + i;
+        float stretchStiffness = ptr[5];
+        float bendStiffness = ptr[6];
+        float shearStiffness = ptr[7];
+        int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseSelfCollideFilter);
 
-	                if ((i!=int((dimx-1)*1/8+4)))
-	                    swap(g_buffers->triangles[idx* 3 * 2], g_buffers->triangles[idx*3*2+1]);
-	                if ((i != int((dimx-1)*1/8)))
-	                    swap(g_buffers->triangles[idx* 3 * 2 +3], g_buffers->triangles[idx*3*2+4]);
+        int flip_mesh = int(ptr[18]); // Flip half
+
+        // Cloth
+        auto verts_buf = vertices.request();
+        size_t num_verts = verts_buf.shape[0] / 3;
+        if (num_verts > 0)
+        {
+            // If a mesh is passed, then use passed in mesh
+            float mass = float(ptr[17]) / num_verts;
+            float invMass = 1.0f / mass;
+            auto lower = Vec4(initX, -initY, initZ, 0);
+            int baseIndex = int(g_buffers->positions.size());
+            Vec3 velocity = Vec3(0, 0, 0);
+
+            auto verts_ptr = (float *)verts_buf.ptr;
+            for (size_t idx = 0; idx < num_verts; idx++)
+            {
+                g_buffers->positions.push_back(
+                    Vec4(verts_ptr[3 * idx], verts_ptr[3 * idx + 1], verts_ptr[3 * idx + 2], invMass) + lower);
+                g_buffers->velocities.push_back(velocity);
+                g_buffers->phases.push_back(phase);
+            }
+
+            auto faces_buf = faces.request();
+            auto faces_ptr = (int *)faces_buf.ptr;
+            size_t num_faces = int(faces_buf.shape[0] / 3);
+            for (size_t idx = 0; idx < num_faces; idx++)
+            {
+                g_buffers->triangles.push_back(baseIndex + faces_ptr[3 * idx]);
+                g_buffers->triangles.push_back(baseIndex + faces_ptr[3 * idx + 1]);
+                g_buffers->triangles.push_back(baseIndex + faces_ptr[3 * idx + 2]);
+                auto p1 = g_buffers->positions[baseIndex + faces_ptr[3 * idx]];
+                auto p2 = g_buffers->positions[baseIndex + faces_ptr[3 * idx + 1]];
+                auto p3 = g_buffers->positions[baseIndex + faces_ptr[3 * idx + 2]];
+                auto U = p2 - p1;
+                auto V = p3 - p1;
+                auto normal = Vec3(
+                    U.y * V.z - U.z * V.y,
+                    U.z * V.x - U.x * V.z,
+                    U.x * V.y - U.y * V.x);
+                g_buffers->triangleNormals.push_back(normal / Length(normal));
+            }
+            
+            auto stretch_edges_buf = stretch_edges.request();
+            auto stretch_edges_ptr = (int *)stretch_edges_buf.ptr;
+            size_t num_stretch_edges = int(stretch_edges_buf.shape[0] / 2);
+            for (size_t idx = 0; idx < num_stretch_edges; idx++)
+            {
+                CreateSpring(baseIndex + stretch_edges_ptr[2 * idx], baseIndex + stretch_edges_ptr[2 * idx + 1], stretchStiffness);
+            }
+
+            auto bend_edges_buf = bend_edges.request();
+            auto bend_edges_ptr = (int *)bend_edges_buf.ptr;
+            size_t num_bend_edges = int(bend_edges_buf.shape[0] / 2);
+            for (size_t idx = 0; idx < num_bend_edges; idx++)
+            {
+                CreateSpring(baseIndex + bend_edges_ptr[2 * idx], baseIndex + bend_edges_ptr[2 * idx + 1], bendStiffness);
+            }
+
+            auto shear_edges_buf = shear_edges.request();
+            auto shear_edges_ptr = (int *)shear_edges_buf.ptr;
+            size_t num_shear_edges = int(shear_edges_buf.shape[0] / 2);
+            for (size_t idx = 0; idx < num_shear_edges; idx++)
+            {
+                CreateSpring(baseIndex + shear_edges_ptr[2 * idx], baseIndex + shear_edges_ptr[2 * idx + 1], shearStiffness);
+            }
+        }
+        else
+        {
+            float mass = float(ptr[17]) / (dimx * dimz); // avg bath towel is 500-700g
+            CreateSpringGrid(Vec3(initX, -initY, initZ), dimx, dimz, 1, radius, phase, stretchStiffness, bendStiffness, shearStiffness, 0.0f, 1.0f / mass);
+        }
+        // Flip the last half of the mesh for the folding task
+        if (flip_mesh)
+        {
+            int size = g_buffers->triangles.size();
+            for (int j = 0; j < int((dimz - 1)); ++j)
+                for (int i = int((dimx - 1) * 1 / 8); i < int((dimx - 1) * 1 / 8) + 5; ++i)
+                {
+                    int idx = j * (dimx - 1) + i;
+
+                    if ((i != int((dimx - 1) * 1 / 8 + 4)))
+                        swap(g_buffers->triangles[idx * 3 * 2], g_buffers->triangles[idx * 3 * 2 + 1]);
+                    if ((i != int((dimx - 1) * 1 / 8)))
+                        swap(g_buffers->triangles[idx * 3 * 2 + 3], g_buffers->triangles[idx * 3 * 2 + 4]);
                 }
         }
-		g_numSubsteps = 4;
-		g_params.numIterations = 30;
 
-		g_params.dynamicFriction = 0.75f;
-		g_params.particleFriction = 1.0f;
-		g_params.damping = 1.0f;
-		g_params.sleepThreshold = 0.02f;
+        g_numSubsteps = 4;
+        g_params.numIterations = 30;
 
-		g_params.relaxationFactor = 1.0f;
-		g_params.shapeCollisionMargin = 0.04f;
+        //g_params.dynamicFriction = 0.75f;
+        g_params.dynamicFriction = 0.0001f;
+        g_params.staticFriction = 0.0001f;
+        g_params.particleFriction = 0.0001f;
+        g_params.damping = 1.0f;
+        g_params.sleepThreshold = 0.02f;
 
-		g_sceneLower = Vec3(-1.0f);
-		g_sceneUpper = Vec3(1.0f);
-		g_drawPoints = false;
+        g_params.relaxationFactor = 1.0f;
+        g_params.shapeCollisionMargin = 0.04f;
 
-        g_params.radius = radius*1.8f;
+        g_sceneLower = Vec3(-1.0f);
+        g_sceneUpper = Vec3(1.0f);
+        g_drawPoints = false;
+
+        g_params.radius = radius * 1.8f;
         g_params.collisionDistance = 0.005f;
 
         g_drawPoints = render_type & 1;
-        g_drawCloth = (render_type & 2) >>1;
+        g_drawCloth = (render_type & 2) >> 1;
         g_drawSprings = false;
-
-
-        // table
-//        NvFlexRigidShape table;
-        // Half x, y, z
-//        NvFlexMakeRigidBoxShape(&table, -1, 0.27f, 0.55f, 0.3f, NvFlexMakeRigidPose(Vec3(-0.04f, 0.0f, 0.0f), Quat()));
-//        table.filter = 0;
-//        table.material.friction = 0.95f;
-//		table.user = UnionCast<void*>(AddRenderMaterial(Vec3(0.35f, 0.45f, 0.65f)));
-
-//        float density = 1000.0f;
-//        NvFlexRigidBody body;
-//		NvFlexMakeRigidBody(g_flexLib, &body, Vec3(1.0f, 1.0f, 0.0f), Quat(), &table, &density, 1);
-//
-//        g_buffers->rigidShapes.push_back(table);
-//        g_buffers->rigidBodies.push_back(body);
-
-        // Box object
-//        float scaleBox = 0.05f;
-//        float densityBox = 2000000000.0f;
-
-//        Mesh* boxMesh = ImportMesh(make_path(boxMeshPath, "/data/box.ply"));
-//        boxMesh->Transform(ScaleMatrix(scaleBox));
-//
-//        NvFlexTriangleMeshId boxId = CreateTriangleMesh(boxMesh, 0.00125f);
-//
-//        NvFlexRigidShape box;
-//        NvFlexMakeRigidTriangleMeshShape(&box, g_buffers->rigidBodies.size(), boxId, NvFlexMakeRigidPose(0, 0), 1.0f, 1.0f, 1.0f);
-//        box.filter = 0x0;
-//        box.material.friction = 1.0f;
-//        box.material.torsionFriction = 0.1;
-//        box.material.rollingFriction = 0.0f;
-//        box.thickness = 0.00125f;
-//
-//        NvFlexRigidBody boxBody;
-//        NvFlexMakeRigidBody(g_flexLib, &boxBody, Vec3(0.21f, 0.7f, -0.1375f), Quat(), &box, &density, 1);
-//
-//        g_buffers->rigidBodies.push_back(boxBody);
-//        g_buffers->rigidShapes.push_back(box);
-
-//        g_params.numPostCollisionIterations = 15;
-
     }
 
     virtual void CenterCamera(void)
@@ -154,4 +183,38 @@ public:
         g_screenHeight = cam_height;
         g_screenWidth = cam_width;
     }
+
+    virtual void Update(py::array_t<float> update_params)
+	{
+        static bool update_param_flag = false;
+		if(update_params){
+            if (get_param_float(update_params, 0)>0)
+            {
+                /*printf("%d...\r\n",update_params.itemsize());
+                printf("%f.. \r\n", get_param_float(update_params, 0));
+                printf("%f.. \r\n", get_param_float(update_params, 1));
+                printf("%f.. \r\n", get_param_float(update_params, 2));
+                printf("%f.. \r\n", get_param_float(update_params, 3));
+                printf("%f.. \r\n", get_param_float(update_params, 4));*/
+                g_params.dynamicFriction=0.7f;
+                g_params.staticFriction = 0.7f;
+                if (!update_param_flag)
+                {
+                    update_param_flag = true;
+                    g_step = true;
+                }
+                
+            }
+            
+            /*std::cout << "current parameter is: ";
+            for ( size_t i; i < update_params.itemsize(); i++)
+            {
+                std::cout<<update_params.data(i) << " \t";  
+            }
+            std::cout << std::endl;*/
+            /*g_params.dynamicFriction=0.7f;
+            g_params.staticFriction = 0.7f;*/
+        }
+        
+	}
 };

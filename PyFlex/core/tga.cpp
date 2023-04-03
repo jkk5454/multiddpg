@@ -36,39 +36,37 @@ using namespace std;
 
 struct TgaHeader
 {
-    uint8_t  identsize;          // size of ID field that follows 18 uint8_t header (0 usually)
-    uint8_t  colourmaptype;      // type of colour map 0=none, 1=has palette
-    uint8_t  imagetype;          // type of image 0=none,1=indexed,2=rgb,3=grey,+8=rle packed
+	uint8_t identsize;	   // size of ID field that follows 18 uint8_t header (0 usually)
+	uint8_t colourmaptype; // type of colour map 0=none, 1=has palette
+	uint8_t imagetype;	   // type of image 0=none,1=indexed,2=rgb,3=grey,+8=rle packed
 
-    uint16_t colourmapstart;     // first colour map entry in palette
-    uint16_t colourmaplength;    // number of colours in palette
-    uint8_t  colourmapbits;      // number of bits per palette entry 15,16,24,32
+	uint16_t colourmapstart;  // first colour map entry in palette
+	uint16_t colourmaplength; // number of colours in palette
+	uint8_t colourmapbits;	  // number of bits per palette entry 15,16,24,32
 
-    uint16_t xstart;             // image x origin
-    uint16_t ystart;             // image y origin
-    uint16_t width;              // image width in pixels
-	uint16_t height;             // image height in pixels
-    uint8_t  bits;               // image bits per pixel 8,16,24,32
-    uint8_t  descriptor;         // image descriptor bits (vh flip bits)
-    
-    // pixel data follows header  
+	uint16_t xstart;	// image x origin
+	uint16_t ystart;	// image y origin
+	uint16_t width;		// image width in pixels
+	uint16_t height;	// image height in pixels
+	uint8_t bits;		// image bits per pixel 8,16,24,32
+	uint8_t descriptor; // image descriptor bits (vh flip bits)
+
+	// pixel data follows header
 };
 
 namespace
 {
 
-	void memwrite(void* src, uint32_t size, unsigned char*& buffer)
+	void memwrite(void *src, uint32_t size, unsigned char *&buffer)
 	{
 		memcpy(buffer, src, size);
 		buffer += size;
 	}
-}
+} // namespace
 
-
-
-bool TgaSave(const char* filename, const TgaImage& image, bool rle)
+bool TgaSave(const char *filename, const TgaImage &image, bool rle)
 {
-	FILE* f = fopen(filename, "wb");
+	FILE *f = fopen(filename, "wb");
 	if (f)
 	{
 		bool b = TgaSave(f, image, rle);
@@ -80,13 +78,13 @@ bool TgaSave(const char* filename, const TgaImage& image, bool rle)
 	return false;
 }
 
-bool TgaSave(FILE* f, const TgaImage& image, bool rle)
+bool TgaSave(FILE *f, const TgaImage &image, bool rle)
 {
 	TgaHeader header;
 
 	header.identsize = 0;
 	header.colourmaptype = 0;
-	header.imagetype = rle?9:2;
+	header.imagetype = rle ? 9 : 2;
 	header.colourmapstart = 0;
 	header.colourmaplength = 0;
 	header.colourmapbits = 0;
@@ -95,13 +93,13 @@ bool TgaSave(FILE* f, const TgaImage& image, bool rle)
 	header.width = image.m_width;
 	header.height = image.m_height;
 	header.bits = 32;
-	header.descriptor = 0;//uint16((1<<3)|(1<<5));
+	header.descriptor = 0; //uint16((1<<3)|(1<<5));
 
 	if (f)
 	{
-		unsigned char* data = (unsigned char*)new uint32_t[image.m_width*image.m_height + sizeof(header)];
-		unsigned char* writeptr = data;
-				
+		unsigned char *data = (unsigned char *)new uint32_t[image.m_width * image.m_height + sizeof(header)];
+		unsigned char *writeptr = data;
+
 		memwrite(&header.identsize, sizeof(header.identsize), writeptr);
 		memwrite(&header.colourmaptype, sizeof(header.colourmaptype), writeptr);
 		memwrite(&header.imagetype, sizeof(header.imagetype), writeptr);
@@ -120,35 +118,34 @@ bool TgaSave(FILE* f, const TgaImage& image, bool rle)
 			uint32_t u32;
 			uint8_t u8[4];
 		};
-		
-		texel* t = (texel*)image.m_data;
-		for (int i=0; i < image.m_width*image.m_height; ++i)
+
+		texel *t = (texel *)image.m_data;
+		for (int i = 0; i < image.m_width * image.m_height; ++i)
 		{
 			texel tmp = t[i];
 			swap(tmp.u8[0], tmp.u8[2]);
 			memwrite(&tmp.u32, 4, writeptr);
 		}
-			 
-		fwrite(data, writeptr-data, 1, f);
-		//fclose(f); 
+
+		fwrite(data, writeptr - data, 1, f);
+		//fclose(f);
 
 		delete[] data;
 
 		return true;
-	}	
+	}
 	else
 	{
 		return false;
 	}
 }
 
-
-bool TgaLoad(const char* filename, TgaImage& image)
+bool TgaLoad(const char *filename, TgaImage &image)
 {
 	if (!filename)
 		return false;
 
-	FILE* aTGAFile = fopen(filename, "rb");
+	FILE *aTGAFile = fopen(filename, "rb");
 	if (aTGAFile == NULL)
 	{
 		printf("Texture: could not open %s for reading.\n", filename);
@@ -161,7 +158,7 @@ bool TgaLoad(const char* filename, TgaImage& image)
 
 	char aColorMapType;
 	err = fread(&aColorMapType, sizeof(uint8_t), 1, aTGAFile);
-	
+
 	char anImageType;
 	err = fread(&anImageType, sizeof(uint8_t), 1, aTGAFile);
 
@@ -172,7 +169,7 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	err = fread(&aColorMapLen, sizeof(uint16_t), 1, aTGAFile);
 
 	char aColorMapEntrySize;
-	err = fread(&aColorMapEntrySize, sizeof(uint8_t), 1, aTGAFile);	
+	err = fread(&aColorMapEntrySize, sizeof(uint8_t), 1, aTGAFile);
 
 	short anXOrigin;
 	err = fread(&anXOrigin, sizeof(uint16_t), 1, aTGAFile);
@@ -181,17 +178,17 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	err = fread(&aYOrigin, sizeof(uint16_t), 1, aTGAFile);
 
 	short anImageWidth;
-	err = fread(&anImageWidth, sizeof(uint16_t), 1, aTGAFile);	
+	err = fread(&anImageWidth, sizeof(uint16_t), 1, aTGAFile);
 
 	short anImageHeight;
-	err = fread(&anImageHeight, sizeof(uint16_t), 1, aTGAFile);	
+	err = fread(&anImageHeight, sizeof(uint16_t), 1, aTGAFile);
 
 	char aBitCount = 32;
-	err = fread(&aBitCount, sizeof(uint8_t), 1, aTGAFile);	
+	err = fread(&aBitCount, sizeof(uint8_t), 1, aTGAFile);
 
-	char anImageDescriptor;// = 8 | (1<<5);
-	err = fread((char*)&anImageDescriptor, sizeof(uint8_t), 1, aTGAFile);
-	
+	char anImageDescriptor; // = 8 | (1<<5);
+	err = fread((char *)&anImageDescriptor, sizeof(uint8_t), 1, aTGAFile);
+
 	// supress warning
 	(void)err;
 
@@ -205,7 +202,7 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	image.m_data = new uint32_t[numTexels];
 
 	// load the image pixels
-	for (uint32_t i=0; i < numTexels; ++i)
+	for (uint32_t i = 0; i < numTexels; ++i)
 	{
 		union texel
 		{
@@ -224,7 +221,6 @@ bool TgaLoad(const char* filename, TgaImage& image)
 		// stores it as BGR(A) so we'll have to swap R and B.
 		swap(t.u8[0], t.u8[2]);
 
-
 		image.m_data[i] = t.u32;
 	}
 
@@ -233,12 +229,12 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	{
 
 		// swap all the rows
-		int rowSize = image.m_width*4;	
+		int rowSize = image.m_width * 4;
 
-		uint8_t* buf = new uint8_t[image.m_width*4];
-		uint8_t* start = (uint8_t*)image.m_data;
-		uint8_t* end = &((uint8_t*)image.m_data)[rowSize*(image.m_height-1)];
-		
+		uint8_t *buf = new uint8_t[image.m_width * 4];
+		uint8_t *start = (uint8_t *)image.m_data;
+		uint8_t *end = &((uint8_t *)image.m_data)[rowSize * (image.m_height - 1)];
+
 		while (start < end)
 		{
 			memcpy(buf, end, rowSize);
@@ -253,11 +249,11 @@ bool TgaLoad(const char* filename, TgaImage& image)
 	}
 
 	fclose(aTGAFile);
-	
+
 	return true;
 }
 
-void TgaFree(const TgaImage& image)
+void TgaFree(const TgaImage &image)
 {
 	delete[] image.m_data;
 }

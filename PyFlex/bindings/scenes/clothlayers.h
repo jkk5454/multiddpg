@@ -3,9 +3,7 @@
 class ClothLayers : public Scene
 {
 public:
-
-	ClothLayers(const char* name) :
-		Scene(name) {}
+	ClothLayers(const char *name) : Scene(name) {}
 
 	virtual void Initialize()
 	{
@@ -28,7 +26,7 @@ public:
 		Vec3 lower, upper;
 		GetParticleBounds(lower, upper);
 
-		Mesh* sphere = ImportMesh(GetFilePathByPlatform("../../data/sphere.ply").c_str());
+		Mesh *sphere = ImportMesh(GetFilePathByPlatform("../../data/sphere.ply").c_str());
 		sphere->Normalize();
 
 		NvFlexTriangleMeshId mesh = CreateTriangleMesh(sphere);
@@ -43,14 +41,14 @@ public:
 		Vec3 lower, upper;
 		GetParticleBounds(lower, upper);
 
-		Mesh* disc = CreateDiscMesh(2.0f, 300);
+		Mesh *disc = CreateDiscMesh(2.0f, 300);
 		disc->m_positions[0].y -= 0.25f;
 		disc->CalculateNormals();
 		NvFlexTriangleMeshId mesh = CreateTriangleMesh(disc);
 		AddTriangleMesh(mesh, Vec3(0.0f, 2.88f, 1.0f), Quat(), 1.0f);
 		delete disc;
 
-		Mesh* disc1 = CreateDiscMesh(2.0f, 250);
+		Mesh *disc1 = CreateDiscMesh(2.0f, 250);
 		disc1->m_positions[0].y -= 0.25f;
 		disc1->CalculateNormals();
 		NvFlexTriangleMeshId mesh1 = CreateTriangleMesh(disc1);
@@ -58,18 +56,17 @@ public:
 		delete disc1;
 #endif
 
-		g_params.radius = radius*1.0f;
+		g_params.radius = radius * 1.0f;
 		g_params.dynamicFriction = 0.1625f;
 		g_params.dissipation = 0.0f;
 		g_params.numIterations = 8;
 		g_params.viscosity = 0.0f;
 		g_params.drag = 0.05f;
 		g_params.collisionDistance = radius;
-		g_params.shapeCollisionMargin = radius*0.1f;
+		g_params.shapeCollisionMargin = radius * 0.1f;
 		g_params.relaxationFactor = 1.3f;
 
 		g_numSubsteps = 3;
-
 
 		g_windStrength = 0.0f;
 
@@ -78,4 +75,3 @@ public:
 		g_drawSprings = false;
 	}
 };
-

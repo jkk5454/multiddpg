@@ -3,8 +3,7 @@
 class RigidRotation : public Scene
 {
 public:
-
-	RigidRotation(const char* name) : Scene(name)
+	RigidRotation(const char *name) : Scene(name)
 	{
 	}
 
@@ -16,7 +15,7 @@ public:
 		float dimy = 3.0f;
 		float dimz = 3.0f;
 
-		CreateParticleShape(GetFilePathByPlatform("../../data/box.ply").c_str(), Vec3(0.0f, 1.0f, 0.0f), Vec3(dimx, dimy, dimz)*radius, 0.0f, radius, Vec3(0.0f), 1.0f, true, 1.0f, 0, true, 0.0f, 0.0f, 0.0f);
+		CreateParticleShape(GetFilePathByPlatform("../../data/box.ply").c_str(), Vec3(0.0f, 1.0f, 0.0f), Vec3(dimx, dimy, dimz) * radius, 0.0f, radius, Vec3(0.0f), 1.0f, true, 1.0f, 0, true, 0.0f, 0.0f, 0.0f);
 
 		g_params.radius = radius;
 		g_params.gravity[1] = 0;
@@ -37,7 +36,7 @@ public:
 			Vec3 lower, upper;
 			GetParticleBounds(lower, upper);
 
-			Vec3 center = (lower + upper)*0.5f;
+			Vec3 center = (lower + upper) * 0.5f;
 
 			//Matrix44 rotation = RotationMatrix(DegToRad(40.0f), Vec3(0.0f, 0.0f, 1.0f));
 
@@ -51,7 +50,7 @@ public:
 				//g_buffers->positions[i].y = center.y + delta.y;
 				//g_buffers->positions[i].z = center.z + delta.z;
 
-				g_buffers->velocities[i] = Cross(delta, Vec3(0.0f, 0.0f, 1.0f))*10.0f;
+				g_buffers->velocities[i] = Cross(delta, Vec3(0.0f, 0.0f, 1.0f)) * 10.0f;
 			}
 		}
 	}

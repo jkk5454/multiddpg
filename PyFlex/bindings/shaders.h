@@ -34,7 +34,7 @@
 
 #include "../include/NvFlex.h"
 
-void GetRenderDevice(void** device, void** context);
+void GetRenderDevice(void **device, void **context);
 
 struct DiffuseRenderBuffers;
 struct FluidRenderBuffers;
@@ -43,23 +43,23 @@ struct SDL_Window;
 
 struct RenderInitOptions
 {
-	RenderInitOptions():
-		defaultFontHeight(-1),
-		asyncComputeBenchmark(false),
-		fullscreen(false),
-		numMsaaSamples(1),
-		window(nullptr)
-	{}
-	int defaultFontHeight;					///< Set to -1 for the default
-	bool asyncComputeBenchmark;				///< When set, will configure renderer to perform extra (unnecessary) rendering work to make sure async compute can take place.  
+	RenderInitOptions() : defaultFontHeight(-1),
+						  asyncComputeBenchmark(false),
+						  fullscreen(false),
+						  numMsaaSamples(0),
+						  window(nullptr)
+	{
+	}
+	int defaultFontHeight;		///< Set to -1 for the default
+	bool asyncComputeBenchmark; ///< When set, will configure renderer to perform extra (unnecessary) rendering work to make sure async compute can take place.
 	bool fullscreen;
 	int numMsaaSamples;
-	SDL_Window* window;
+	SDL_Window *window;
 };
 
-void InitRender(const RenderInitOptions& options);
+void InitRender(const RenderInitOptions &options);
 void DestroyRender();
-void ReshapeRender(SDL_Window* window);
+void ReshapeRender(SDL_Window *window);
 
 void StartFrame(Vec4 clearColor);
 void EndFrame();
@@ -72,10 +72,10 @@ void FlushGraphicsAndWait();
 // set to true to enable vsync
 void PresentFrame(bool fullsync);
 
-void GetViewRay(int x, int y, Vec3& origin, Vec3& dir);
+void GetViewRay(int x, int y, Vec3 &origin, Vec3 &dir);
 
 // read back pixel values
-void ReadFrame(int* backbuffer, int width, int height);
+void ReadFrame(int *backbuffer, int width, int height);
 
 void SetView(Matrix44 view, Matrix44 proj);
 void SetFillMode(bool wireframe);
@@ -83,31 +83,29 @@ void SetCullMode(bool enabled);
 
 // debug draw methods
 void BeginLines();
-void DrawLine(const Vec3& p, const Vec3& q, const Vec4& color);
+void DrawLine(const Vec3 &p, const Vec3 &q, const Vec4 &color);
 void EndLines();
 
 // shadowing
 struct ShadowMap;
-ShadowMap* ShadowCreate();
-void ShadowDestroy(ShadowMap* map);
-void ShadowBegin(ShadowMap* map);
+ShadowMap *ShadowCreate();
+void ShadowDestroy(ShadowMap *map);
+void ShadowBegin(ShadowMap *map);
 void ShadowEnd();
 
 struct RenderTexture;
-RenderTexture* CreateRenderTexture(const char* filename);
-RenderTexture* CreateRenderTarget(int width, int height, bool depth);
-void CreateRenderTarget(int width, int height, bool depth, RenderTexture** res);
-void DestroyRenderTexture(RenderTexture* tex);
+RenderTexture *CreateRenderTexture(const char *filename);
+RenderTexture *CreateRenderTarget(int with, int height, bool depth);
+void DestroyRenderTexture(RenderTexture *tex);
 
-void SetRenderTarget(RenderTexture* target, int x, int y, int width, int height);
-void ReadRenderTarget(const RenderTexture* target, float* rgba, int x, int y, int width, int height);
+void SetRenderTarget(RenderTexture *target);
 
 struct RenderMaterial
 {
 	RenderMaterial()
 	{
-		frontColor = 0.5f;//Vec4(SrgbToLinear(Colour(71.0f/255.0f, 165.0f/255.0f, 1.0f)));
-		backColor = 0.5f;//Vec4(SrgbToLinear(Colour(165.0f/255.0f, 71.0f/255.0f, 1.0f)));
+		frontColor = 0.5f; //Vec4(SrgbToLinear(Colour(71.0f/255.0f, 165.0f/255.0f, 1.0f)));
+		backColor = 0.5f;  //Vec4(SrgbToLinear(Colour(165.0f/255.0f, 71.0f/255.0f, 1.0f)));
 
 		roughness = 0.5f;
 		metallic = 0.0f;
@@ -120,98 +118,89 @@ struct RenderMaterial
 
 	Vec3 frontColor;
 	Vec3 backColor;
-	
+
 	float roughness;
 	float metallic;
 	float specular;
 
 	bool hidden;
 
-	RenderTexture* colorTex;
+	RenderTexture *colorTex;
 };
 
-
 struct RenderMesh;
-RenderMesh* CreateRenderMesh(const Mesh* m);
-void DestroyRenderMesh(RenderMesh* m);
-void DrawRenderMesh(RenderMesh* m, const Matrix44& xform, const RenderMaterial& mat);
-void DrawRenderMeshInstances(RenderMesh* m, const Matrix44* xforms, int n, const RenderMaterial& mat);
+RenderMesh *CreateRenderMesh(const Mesh *m);
+void DestroyRenderMesh(RenderMesh *m);
+void DrawRenderMesh(RenderMesh *m, const Matrix44 &xform, const RenderMaterial &mat);
+void DrawRenderMeshInstances(RenderMesh *m, const Matrix44 *xforms, int n, const RenderMaterial &mat);
 
 // primitive draw methods
-void DrawPlanes(Vec4* planes, int n, float bias);
-void DrawPoints(FluidRenderBuffers* buffer, int n, int offset, float radius, float screenWidth, float screenAspect, float fov, Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap* shadowTex, bool showDensity);
-void DrawMesh(const Mesh*, Vec3 color);
-void DrawCloth(const Vec4* positions, const Vec4* normals, const float* uvs, const int* indices, int numTris, int numPositions, int colorIndex=3, float expand=0.0f, bool twosided=true, bool smooth=true);
-void DrawBuffer(float* buffer, Vec3 camPos, Vec3 lightPos);
-void DrawRope(Vec4* positions, int* indices, int numIndices, float radius, int color);
+void DrawPlanes(Vec4 *planes, int n, float bias);
+void DrawPoints(FluidRenderBuffers *buffer, int n, int offset, float radius, float screenWidth, float screenAspect, float fov, Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap *shadowTex, bool showDensity);
+void DrawMesh(const Mesh *, Vec3 color);
+void DrawCloth(const Vec4 *positions, const Vec4 *normals, const float *uvs, const int *indices, int numTris, int numPositions, int colorIndex = 3, float expand = 0.0f, bool twosided = true, bool smooth = true);
+void DrawBuffer(float *buffer, Vec3 camPos, Vec3 lightPos);
+void DrawRope(Vec4 *positions, int *indices, int numIndices, float radius, int color);
 
 struct GpuMesh;
 
-GpuMesh* CreateGpuMesh(const Mesh* m);
-void DestroyGpuMesh(GpuMesh* m);
-void DrawGpuMesh(GpuMesh* m, const Matrix44& xform, const Vec3& color);
-void DrawGpuMeshInstances(GpuMesh* m, const Matrix44* xforms, int n, const Vec3& color);
+GpuMesh *CreateGpuMesh(const Mesh *m);
+void DestroyGpuMesh(GpuMesh *m);
+void DrawGpuMesh(GpuMesh *m, const Matrix44 &xform, const Vec3 &color);
+void DrawGpuMeshInstances(GpuMesh *m, const Matrix44 *xforms, int n, const Vec3 &color);
 
 // main lighting shader
-void BindSolidShader(Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap* shadowTex, float bias, Vec4 fogColor);
+void BindSolidShader(Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap *shadowTex, float bias, Vec4 fogColor);
 void UnbindSolidShader();
 
-
-float RendererGetDeviceTimestamps(unsigned long long* begin, unsigned long long* end, unsigned long long* freq);
-void* GetGraphicsCommandQueue();
+float RendererGetDeviceTimestamps(unsigned long long *begin, unsigned long long *end, unsigned long long *freq);
+void *GetGraphicsCommandQueue();
 void GraphicsTimerBegin();
 void GraphicsTimerEnd();
-
-// Profiles on rendering depth for sensors
-struct DepthRenderProfile {
-	float minRange;
-	float maxRange;
-};
-void SetDepthRenderProfile(DepthRenderProfile profile);
 
 // new fluid renderer
 struct FluidRenderer;
 
 // owns render targets and shaders associated with fluid rendering
-FluidRenderer* CreateFluidRenderer(uint32_t width, uint32_t height);
-void DestroyFluidRenderer(FluidRenderer*);
+FluidRenderer *CreateFluidRenderer(uint32_t width, uint32_t height);
+void DestroyFluidRenderer(FluidRenderer *);
 
-FluidRenderBuffers* CreateFluidRenderBuffers(int numParticles, bool enableInterop);
-void DestroyFluidRenderBuffers(FluidRenderBuffers* buffers);
+FluidRenderBuffers *CreateFluidRenderBuffers(int numParticles, bool enableInterop);
+void DestroyFluidRenderBuffers(FluidRenderBuffers *buffers);
 
 // update fluid particle buffers from a FlexSovler
-void UpdateFluidRenderBuffers(FluidRenderBuffers* buffers, NvFlexSolver* flex, bool anisotropy, bool density);
+void UpdateFluidRenderBuffers(FluidRenderBuffers *buffers, NvFlexSolver *flex, bool anisotropy, bool density);
 
 // update fluid particle buffers from host memory
-void UpdateFluidRenderBuffers(FluidRenderBuffers* buffers, 
-	Vec4* particles, 
-	float* densities, 
-	Vec4* anisotropy1, 
-	Vec4* anisotropy2, 
-	Vec4* anisotropy3, 
-	int numParticles, 
-	int* indices, 
-	int numIndices);
+void UpdateFluidRenderBuffers(FluidRenderBuffers *buffers,
+							  Vec4 *particles,
+							  float *densities,
+							  Vec4 *anisotropy1,
+							  Vec4 *anisotropy2,
+							  Vec4 *anisotropy3,
+							  int numParticles,
+							  int *indices,
+							  int numIndices);
 
 // owns diffuse particle vertex buffers
-DiffuseRenderBuffers* CreateDiffuseRenderBuffers(int numDiffuseParticles, bool& enableInterop);
-void DestroyDiffuseRenderBuffers(DiffuseRenderBuffers* buffers);
+DiffuseRenderBuffers *CreateDiffuseRenderBuffers(int numDiffuseParticles, bool &enableInterop);
+void DestroyDiffuseRenderBuffers(DiffuseRenderBuffers *buffers);
 
 // update diffuse particle vertex buffers from a NvFlexSolver
-void UpdateDiffuseRenderBuffers(DiffuseRenderBuffers* buffers, NvFlexSolver* solver);
+void UpdateDiffuseRenderBuffers(DiffuseRenderBuffers *buffers, NvFlexSolver *solver);
 
 // update diffuse particle vertex buffers from host memory
-void UpdateDiffuseRenderBuffers(DiffuseRenderBuffers* buffers,
-	Vec4* diffusePositions,
-	Vec4* diffuseVelocities,
-	int numDiffuseParticles);
+void UpdateDiffuseRenderBuffers(DiffuseRenderBuffers *buffers,
+								Vec4 *diffusePositions,
+								Vec4 *diffuseVelocities,
+								int numDiffuseParticles);
 
 // Returns the number of particles in the diffuse buffers
-int GetNumDiffuseRenderParticles(DiffuseRenderBuffers* buffers);
+int GetNumDiffuseRenderParticles(DiffuseRenderBuffers *buffers);
 
 // screen space fluid rendering
-void RenderEllipsoids(FluidRenderer* render, FluidRenderBuffers* buffers, int n, int offset, float radius, float screenWidth, float screenAspect, float fov, Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap* shadowTex, Vec4 color, float blur, float ior, bool debug);
-void RenderDiffuse(FluidRenderer* render, DiffuseRenderBuffers* buffer, int n, float radius, float screenWidth, float screenAspect, float fov, Vec4 color, Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap* shadowTex, float motionBlur,  float inscatter, float outscatter, bool shadow, bool front);
+void RenderEllipsoids(FluidRenderer *render, FluidRenderBuffers *buffers, int n, int offset, float radius, float screenWidth, float screenAspect, float fov, Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap *shadowTex, Vec4 color, float blur, float ior, bool debug);
+void RenderDiffuse(FluidRenderer *render, DiffuseRenderBuffers *buffer, int n, float radius, float screenWidth, float screenAspect, float fov, Vec4 color, Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, ShadowMap *shadowTex, float motionBlur, float inscatter, float outscatter, bool shadow, bool front);
 
 // UI rendering
 void DrawImguiGraph();

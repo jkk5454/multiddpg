@@ -15,5 +15,5 @@
 #include "demoContext.h"
 
 // This file implements the Shaders.h 'interface' through the DemoContext interface
-void CreateDemoContext(int type);	// 0 = OpenGL, 1 = DX11, 2 = DX12
-DemoContext* GetDemoContext();
+void CreateDemoContext(int type); // 0 = OpenGL, 1 = DX11, 2 = DX12
+DemoContext *GetDemoContext();

@@ -2,11 +2,16 @@ import os.path as osp
 import argparse
 import numpy as np
 
+import sys
+sys.path.append('/home/armsim/softgym')
+
 from softgym.registered_env import env_arg_dict, SOFTGYM_ENVS
 from softgym.utils.normalized_env import normalize
 from softgym.utils.visualization import save_numpy_as_gif
 import pyflex
 from matplotlib import pyplot as plt
+
+
 
 
 def show_depth():
@@ -16,6 +21,8 @@ def show_depth():
     depth = depth.reshape((720, 720))[::-1]
     # get foreground mask
     rgb, depth = pyflex.render_cloth()
+    wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
+    center_x, center_y=pyflex.center_inf()
     depth = depth.reshape(720, 720)[::-1]
     # mask = mask[:, :, 3]
     # depth[mask == 0] = 0
@@ -25,7 +32,7 @@ def show_depth():
     axes[0].imshow(img)
     axes[1].imshow(depth)
     plt.show()
-
+    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -52,16 +59,43 @@ def main():
         print('Waiting to generate environment variations. May take 1 minute for each variation...')
     env = normalize(SOFTGYM_ENVS[args.env_name](**env_kwargs))
     env.reset()
-
-    frames = [env.get_image(args.img_size, args.img_size)]
+    
+    frames = [env.get_image(args.img_size, args.img_size)]  
     for i in range(env.horizon):
-        action = env.action_space.sample()
+    #for i in range(80):
+        if i < 20:
+            action = np.array([[-0.001, 0.000, 0.000, 0.001],
+                          [-0.001, 0.000, 0.000, 0.001]])
+        elif 19<i<50:
+            action = np.array([[-0.00, 0.002, 0.000, 0.001],
+                          [-0.00, 0.002, 0.000, 0.001]])
+        elif 49<i<101:
+            action = np.array([[0.00111, -0.0001, 0.000, 0.001],
+                          [0.00111, -0.0001, 0.000, 0.001]])
+        elif 100<i<115:
+            action = np.array([[0.000, 0.0000, 0.000, 0.001],
+                        [0.000, 0.0000, 0.000, 0.001]])
+        elif 114<i<env.horizon:
+            action = np.array([[0.000, 0.0000, 0.000, 0.00],
+                        [0.000, 0.0000, 0.000, 0.00]])
+        
+        #action = env.action_space.sample()
         # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all
         # intermediate frames. Only use this option for visualization as it increases computation.
+        
         _, _, _, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
         frames.extend(info['flex_env_recorded_frames'])
-        if args.test_depth:
-            show_depth()
+    if args.test_depth:
+        #top vision
+        cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+        pyflex.set_camera_params(
+            np.array([*cam_pos1,*cam_angle1,720,720]))
+        show_depth()
+        #size vision
+        cam_pos2, cam_angle2 = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+        pyflex.set_camera_params(
+            np.array([*cam_pos2,*cam_angle2,720,720]))
+        show_depth()
 
     if args.save_video_dir is not None:
         save_name = osp.join(args.save_video_dir, args.env_name + '.gif')

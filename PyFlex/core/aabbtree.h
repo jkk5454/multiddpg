@@ -34,52 +34,46 @@
 
 class AABBTree
 {
-	AABBTree(const AABBTree&);
-	AABBTree& operator=(const AABBTree&);
+    AABBTree(const AABBTree &);
+    AABBTree &operator=(const AABBTree &);
 
 public:
+    AABBTree(const Vec3 *vertices, uint32_t numVerts, const uint32_t *indices, uint32_t numFaces);
 
-    AABBTree(const Vec3* vertices, uint32_t numVerts, const uint32_t* indices, uint32_t numFaces);
-
-	bool TraceRaySlow(const Vec3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32_t& faceIndex) const;
-    bool TraceRay(const Vec3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32_t& faceIndex) const;
+    bool TraceRaySlow(const Vec3 &start, const Vector3 &dir, float &outT, float &u, float &v, float &w, float &faceSign, uint32_t &faceIndex) const;
+    bool TraceRay(const Vec3 &start, const Vector3 &dir, float &outT, float &u, float &v, float &w, float &faceSign, uint32_t &faceIndex) const;
 
     void DebugDraw();
-    
-    Vector3 GetCenter() const { return (m_nodes[0].m_minExtents+m_nodes[0].m_maxExtents)*0.5f; }
+
+    Vector3 GetCenter() const { return (m_nodes[0].m_minExtents + m_nodes[0].m_maxExtents) * 0.5f; }
     Vector3 GetMinExtents() const { return m_nodes[0].m_minExtents; }
     Vector3 GetMaxExtents() const { return m_nodes[0].m_maxExtents; }
-	
+
 #if _WIN32
     // stats (reset each trace)
     static uint32_t GetTraceDepth() { return s_traceDepth; }
 #endif
-	
-private:
 
+private:
     void DebugDrawRecursive(uint32_t nodeIndex, uint32_t depth);
 
     struct Node
     {
-        Node() 	
-            : m_numFaces(0)
-            , m_faces(NULL)
-            , m_minExtents(0.0f)
-            , m_maxExtents(0.0f)
+        Node()
+            : m_numFaces(0), m_faces(NULL), m_minExtents(0.0f), m_maxExtents(0.0f)
         {
         }
 
-		union
-		{
-			uint32_t m_children;
-			uint32_t m_numFaces;			
-		};
+        union
+        {
+            uint32_t m_children;
+            uint32_t m_numFaces;
+        };
 
-		uint32_t* m_faces;        
+        uint32_t *m_faces;
         Vector3 m_minExtents;
         Vector3 m_maxExtents;
     };
-
 
     struct Bounds
     {
@@ -87,23 +81,23 @@ private:
         {
         }
 
-        Bounds(const Vector3& min, const Vector3& max) : m_min(min), m_max(max)
+        Bounds(const Vector3 &min, const Vector3 &max) : m_min(min), m_max(max)
         {
         }
 
         inline float GetVolume() const
         {
-            Vector3 e = m_max-m_min;
-            return (e.x*e.y*e.z);
+            Vector3 e = m_max - m_min;
+            return (e.x * e.y * e.z);
         }
 
         inline float GetSurfaceArea() const
         {
-            Vector3 e = m_max-m_min;
-            return 2.0f*(e.x*e.y + e.x*e.z + e.y*e.z);
+            Vector3 e = m_max - m_min;
+            return 2.0f * (e.x * e.y + e.x * e.z + e.y * e.z);
         }
 
-        inline void Union(const Bounds& b)
+        inline void Union(const Bounds &b)
         {
             m_min = Min(m_min, b.m_min);
             m_max = Max(m_max, b.m_max);
@@ -119,37 +113,37 @@ private:
     typedef std::vector<uint32_t> FaceArray;
     typedef std::vector<Bounds> FaceBoundsArray;
 
-	// partition the objects and return the number of objects in the lower partition
-	uint32_t PartitionMedian(Node& n, uint32_t* faces, uint32_t numFaces);
-	uint32_t PartitionSAH(Node& n, uint32_t* faces, uint32_t numFaces);
+    // partition the objects and return the number of objects in the lower partition
+    uint32_t PartitionMedian(Node &n, uint32_t *faces, uint32_t numFaces);
+    uint32_t PartitionSAH(Node &n, uint32_t *faces, uint32_t numFaces);
 
     void Build();
-    void BuildRecursive(uint32_t nodeIndex, uint32_t* faces, uint32_t numFaces);
-    void TraceRecursive(uint32_t nodeIndex, const Vec3& start, const Vector3& dir, float& outT, float& u, float& v, float& w, float& faceSign, uint32_t& faceIndex) const;
- 
-    void CalculateFaceBounds(uint32_t* faces, uint32_t numFaces, Vector3& outMinExtents, Vector3& outMaxExtents);
+    void BuildRecursive(uint32_t nodeIndex, uint32_t *faces, uint32_t numFaces);
+    void TraceRecursive(uint32_t nodeIndex, const Vec3 &start, const Vector3 &dir, float &outT, float &u, float &v, float &w, float &faceSign, uint32_t &faceIndex) const;
+
+    void CalculateFaceBounds(uint32_t *faces, uint32_t numFaces, Vector3 &outMinExtents, Vector3 &outMaxExtents);
     uint32_t GetNumFaces() const { return m_numFaces; }
-	uint32_t GetNumNodes() const { return uint32_t(m_nodes.size()); }
+    uint32_t GetNumNodes() const { return uint32_t(m_nodes.size()); }
 
-	// track the next free node
-	uint32_t m_freeNode;
+    // track the next free node
+    uint32_t m_freeNode;
 
-    const Vec3* m_vertices;
+    const Vec3 *m_vertices;
     const uint32_t m_numVerts;
 
-    const uint32_t* m_indices;
+    const uint32_t *m_indices;
     const uint32_t m_numFaces;
 
     FaceArray m_faces;
     NodeArray m_nodes;
-    FaceBoundsArray m_faceBounds;    
+    FaceBoundsArray m_faceBounds;
 
     // stats
     uint32_t m_treeDepth;
     uint32_t m_innerNodes;
-    uint32_t m_leafNodes; 
-	
+    uint32_t m_leafNodes;
+
 #if _WIN32
-   _declspec (thread) static uint32_t s_traceDepth;
+    _declspec(thread) static uint32_t s_traceDepth;
 #endif
 };

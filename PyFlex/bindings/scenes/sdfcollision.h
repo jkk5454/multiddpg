@@ -2,8 +2,7 @@
 class SDFCollision : public Scene
 {
 public:
-
-	SDFCollision(const char* name) : Scene(name)
+	SDFCollision(const char *name) : Scene(name)
 	{
 	}
 
@@ -26,12 +25,12 @@ public:
 		float radius = 0.05f;
 		int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseSelfCollideFilter);
 
-		CreateSpringGrid(Vec3(-0.6f, 2.9f, -0.6f), dimx, dimz, 1, radius*0.75f, phase, stretchStiffness, bendStiffness, shearStiffness, 0.0f, 1.0f);
+		CreateSpringGrid(Vec3(-0.6f, 2.9f, -0.6f), dimx, dimz, 1, radius * 0.75f, phase, stretchStiffness, bendStiffness, shearStiffness, 0.0f, 1.0f);
 
 		Vec3 lower, upper;
 		GetParticleBounds(lower, upper);
 
-		g_params.radius = radius*1.0f;
+		g_params.radius = radius * 1.0f;
 		g_params.dynamicFriction = 0.4f;
 		g_params.staticFriction = 0.4f;
 		g_params.particleFriction = 0.25f;
@@ -40,7 +39,7 @@ public:
 		g_params.viscosity = 0.0f;
 		g_params.drag = 0.02f;
 		g_params.lift = 0.1f;
-		g_params.collisionDistance = radius*0.5f;
+		g_params.collisionDistance = radius * 0.5f;
 		g_params.relaxationFactor = 1.3f;
 
 		g_numSubsteps = 3;

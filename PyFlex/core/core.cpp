@@ -26,4 +26,3 @@
 // Copyright (c) 2013-2016 NVIDIA Corporation. All rights reserved.
 
 #include "core.h"
-

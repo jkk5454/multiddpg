@@ -29,20 +29,20 @@ namespace OGL_Renderer
 	// Some math headers don't have PI defined.
 	static const float PI = 3.14159265f;
 
-	void imguifree(void* ptr, void* userptr);
-	void* imguimalloc(size_t size, void* userptr);
+	void imguifree(void *ptr, void *userptr);
+	void *imguimalloc(size_t size, void *userptr);
 
-#define STBTT_malloc(x,y)    imguimalloc(x,y)
-#define STBTT_free(x,y)      imguifree(x,y)
+#define STBTT_malloc(x, y) imguimalloc(x, y)
+#define STBTT_free(x, y) imguifree(x, y)
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "../stb_truetype.h"
 
-	void imguifree(void* ptr, void* /*userptr*/)
+	void imguifree(void *ptr, void * /*userptr*/)
 	{
 		free(ptr);
 	}
 
-	void* imguimalloc(size_t size, void* /*userptr*/)
+	void *imguimalloc(size_t size, void * /*userptr*/)
 	{
 		return malloc(size);
 	}
@@ -62,17 +62,18 @@ namespace OGL_Renderer
 		return (r) | (g << 8) | (b << 16) | (a << 24);
 	}
 
-	static void drawPolygon(const float* coords, unsigned numCoords, float r, unsigned int col)
+	static void drawPolygon(const float *coords, unsigned numCoords, float r, unsigned int col)
 	{
-		if (numCoords > TEMP_COORD_COUNT) numCoords = TEMP_COORD_COUNT;
+		if (numCoords > TEMP_COORD_COUNT)
+			numCoords = TEMP_COORD_COUNT;
 
 		for (unsigned i = 0, j = numCoords - 1; i < numCoords; j = i++)
 		{
-			const float* v0 = &coords[j * 2];
-			const float* v1 = &coords[i * 2];
+			const float *v0 = &coords[j * 2];
+			const float *v1 = &coords[i * 2];
 			float dx = v1[0] - v0[0];
 			float dy = v1[1] - v0[1];
-			float d = sqrtf(dx*dx + dy*dy);
+			float d = sqrtf(dx * dx + dy * dy);
 			if (d > 0)
 			{
 				d = 1.0f / d;
@@ -91,39 +92,40 @@ namespace OGL_Renderer
 			float dly1 = g_tempNormals[i * 2 + 1];
 			float dmx = (dlx0 + dlx1) * 0.5f;
 			float dmy = (dly0 + dly1) * 0.5f;
-			float	dmr2 = dmx*dmx + dmy*dmy;
+			float dmr2 = dmx * dmx + dmy * dmy;
 			if (dmr2 > 0.000001f)
 			{
-				float	scale = 1.0f / dmr2;
-				if (scale > 10.0f) scale = 10.0f;
+				float scale = 1.0f / dmr2;
+				if (scale > 10.0f)
+					scale = 10.0f;
 				dmx *= scale;
 				dmy *= scale;
 			}
-			g_tempCoords[i * 2 + 0] = coords[i * 2 + 0] + dmx*r;
-			g_tempCoords[i * 2 + 1] = coords[i * 2 + 1] + dmy*r;
+			g_tempCoords[i * 2 + 0] = coords[i * 2 + 0] + dmx * r;
+			g_tempCoords[i * 2 + 1] = coords[i * 2 + 1] + dmy * r;
 		}
 
 		unsigned int colTrans = RGBA(col & 0xff, (col >> 8) & 0xff, (col >> 16) & 0xff, 0);
 
 		glBegin(GL_TRIANGLES);
 
-		glColor4ubv((GLubyte*)&col);
+		glColor4ubv((GLubyte *)&col);
 
 		for (unsigned i = 0, j = numCoords - 1; i < numCoords; j = i++)
 		{
 			glVertex2fv(&coords[i * 2]);
 			glVertex2fv(&coords[j * 2]);
-			glColor4ubv((GLubyte*)&colTrans);
+			glColor4ubv((GLubyte *)&colTrans);
 			glVertex2fv(&g_tempCoords[j * 2]);
 
 			glVertex2fv(&g_tempCoords[j * 2]);
 			glVertex2fv(&g_tempCoords[i * 2]);
 
-			glColor4ubv((GLubyte*)&col);
+			glColor4ubv((GLubyte *)&col);
 			glVertex2fv(&coords[i * 2]);
 		}
 
-		glColor4ubv((GLubyte*)&col);
+		glColor4ubv((GLubyte *)&col);
 		for (unsigned i = 2; i < numCoords; ++i)
 		{
 			glVertex2fv(&coords[0]);
@@ -137,12 +139,16 @@ namespace OGL_Renderer
 	static void drawRect(float x, float y, float w, float h, float fth, unsigned int col)
 	{
 		float verts[4 * 2] =
-		{
-			x + 0.5f, y + 0.5f,
-			x + w - 0.5f, y + 0.5f,
-			x + w - 0.5f, y + h - 0.5f,
-			x + 0.5f, y + h - 0.5f,
-		};
+			{
+				x + 0.5f,
+				y + 0.5f,
+				x + w - 0.5f,
+				y + 0.5f,
+				x + w - 0.5f,
+				y + h - 0.5f,
+				x + 0.5f,
+				y + h - 0.5f,
+			};
 		drawPolygon(verts, 4, fth, col);
 	}
 
@@ -167,8 +173,8 @@ namespace OGL_Renderer
 	{
 		const unsigned n = CIRCLE_VERTS / 4;
 		float verts[(n + 1) * 4 * 2];
-		const float* cverts = g_circleVerts;
-		float* v = verts;
+		const float *cverts = g_circleVerts;
+		float *v = verts;
 
 		for (unsigned i = 0; i <= n; ++i)
 		{
@@ -199,12 +205,11 @@ namespace OGL_Renderer
 		drawPolygon(verts, (n + 1) * 4, fth, col);
 	}
 
-
 	static void drawLine(float x0, float y0, float x1, float y1, float r, float fth, unsigned int col)
 	{
 		float dx = x1 - x0;
 		float dy = y1 - y0;
-		float d = sqrtf(dx*dx + dy*dy);
+		float d = sqrtf(dx * dx + dy * dy);
 		if (d > 0.0001f)
 		{
 			d = 1.0f / d;
@@ -216,7 +221,8 @@ namespace OGL_Renderer
 		float verts[4 * 2];
 		r -= fth;
 		r *= 0.5f;
-		if (r < 0.01f) r = 0.01f;
+		if (r < 0.01f)
+			r = 0.01f;
 		dx *= r;
 		dy *= r;
 		nx *= r;
@@ -237,7 +243,7 @@ namespace OGL_Renderer
 		drawPolygon(verts, 4, fth, col);
 	}
 
-	bool imguiRenderGLInit(const char* fontpath)
+	bool imguiRenderGLInit(const char *fontpath)
 	{
 		for (int i = 0; i < CIRCLE_VERTS; ++i)
 		{
@@ -247,13 +253,14 @@ namespace OGL_Renderer
 		}
 
 		// Load font.
-		FILE* fp = fopen(fontpath, "rb");
-		if (!fp) return false;
+		FILE *fp = fopen(fontpath, "rb");
+		if (!fp)
+			return false;
 		fseek(fp, 0, SEEK_END);
 		int size = ftell(fp);
 		fseek(fp, 0, SEEK_SET);
 
-		unsigned char* ttfBuffer = (unsigned char*)malloc(size);
+		unsigned char *ttfBuffer = (unsigned char *)malloc(size);
 		if (!ttfBuffer)
 		{
 			fclose(fp);
@@ -266,7 +273,7 @@ namespace OGL_Renderer
 		fclose(fp);
 		fp = 0;
 
-		unsigned char* bmap = (unsigned char*)malloc(512 * 512);
+		unsigned char *bmap = (unsigned char *)malloc(512 * 512);
 		if (!bmap)
 		{
 			free(ttfBuffer);
@@ -298,7 +305,7 @@ namespace OGL_Renderer
 	}
 
 	static void getBakedQuad(stbtt_bakedchar *chardata, int pw, int ph, int char_index,
-		float *xpos, float *ypos, stbtt_aligned_quad *q)
+							 float *xpos, float *ypos, stbtt_aligned_quad *q)
 	{
 		stbtt_bakedchar *b = chardata + char_index;
 		int round_x = STBTT_ifloor(*xpos + b->xoff);
@@ -317,9 +324,9 @@ namespace OGL_Renderer
 		*xpos += b->xadvance;
 	}
 
-	static const float g_tabStops[4] = { 150, 210, 270, 330 };
+	static const float g_tabStops[4] = {150, 210, 270, 330};
 
-	static float getTextLength(stbtt_bakedchar *chardata, const char* text)
+	static float getTextLength(stbtt_bakedchar *chardata, const char *text)
 	{
 		float xpos = 0;
 		float len = 0;
@@ -351,8 +358,10 @@ namespace OGL_Renderer
 
 	static void drawText(float x, float y, const char *text, int align, unsigned int col)
 	{
-		if (!g_ftex) return;
-		if (!text) return;
+		if (!g_ftex)
+			return;
+		if (!text)
+			return;
 
 		if (align == IMGUI_ALIGN_CENTER)
 			x -= getTextLength(g_cdata, text) / 2;
@@ -410,10 +419,9 @@ namespace OGL_Renderer
 		glDisable(GL_TEXTURE_2D);
 	}
 
-
 	void imguiRenderGLDraw()
 	{
-		const imguiGfxCmd* q = imguiGetRenderQueue();
+		const imguiGfxCmd *q = imguiGetRenderQueue();
 		int nq = imguiGetRenderQueueSize();
 
 		const float s = 1.0f / 8.0f;
@@ -421,46 +429,52 @@ namespace OGL_Renderer
 		glDisable(GL_SCISSOR_TEST);
 		for (int i = 0; i < nq; ++i)
 		{
-			const imguiGfxCmd& cmd = q[i];
+			const imguiGfxCmd &cmd = q[i];
 			if (cmd.type == IMGUI_GFXCMD_RECT)
 			{
 				if (cmd.rect.r == 0)
 				{
-					drawRect((float)cmd.rect.x*s + 0.5f, (float)cmd.rect.y*s + 0.5f,
-						(float)cmd.rect.w*s - 1, (float)cmd.rect.h*s - 1,
-						1.0f, cmd.col);
+					drawRect((float)cmd.rect.x * s + 0.5f, (float)cmd.rect.y * s + 0.5f,
+							 (float)cmd.rect.w * s - 1, (float)cmd.rect.h * s - 1,
+							 1.0f, cmd.col);
 				}
 				else
 				{
-					drawRoundedRect((float)cmd.rect.x*s + 0.5f, (float)cmd.rect.y*s + 0.5f,
-						(float)cmd.rect.w*s - 1, (float)cmd.rect.h*s - 1,
-						(float)cmd.rect.r*s, 1.0f, cmd.col);
+					drawRoundedRect((float)cmd.rect.x * s + 0.5f, (float)cmd.rect.y * s + 0.5f,
+									(float)cmd.rect.w * s - 1, (float)cmd.rect.h * s - 1,
+									(float)cmd.rect.r * s, 1.0f, cmd.col);
 				}
 			}
 			else if (cmd.type == IMGUI_GFXCMD_LINE)
 			{
-				drawLine(cmd.line.x0*s, cmd.line.y0*s, cmd.line.x1*s, cmd.line.y1*s, cmd.line.r*s, 1.0f, cmd.col);
+				drawLine(cmd.line.x0 * s, cmd.line.y0 * s, cmd.line.x1 * s, cmd.line.y1 * s, cmd.line.r * s, 1.0f, cmd.col);
 			}
 			else if (cmd.type == IMGUI_GFXCMD_TRIANGLE)
 			{
 				if (cmd.flags == 1)
 				{
 					const float verts[3 * 2] =
-					{
-						(float)cmd.rect.x*s + 0.5f, (float)cmd.rect.y*s + 0.5f,
-						(float)cmd.rect.x*s + 0.5f + (float)cmd.rect.w*s - 1, (float)cmd.rect.y*s + 0.5f + (float)cmd.rect.h*s / 2 - 0.5f,
-						(float)cmd.rect.x*s + 0.5f, (float)cmd.rect.y*s + 0.5f + (float)cmd.rect.h*s - 1,
-					};
+						{
+							(float)cmd.rect.x * s + 0.5f,
+							(float)cmd.rect.y * s + 0.5f,
+							(float)cmd.rect.x * s + 0.5f + (float)cmd.rect.w * s - 1,
+							(float)cmd.rect.y * s + 0.5f + (float)cmd.rect.h * s / 2 - 0.5f,
+							(float)cmd.rect.x * s + 0.5f,
+							(float)cmd.rect.y * s + 0.5f + (float)cmd.rect.h * s - 1,
+						};
 					drawPolygon(verts, 3, 1.0f, cmd.col);
 				}
 				if (cmd.flags == 2)
 				{
 					const float verts[3 * 2] =
-					{
-						(float)cmd.rect.x*s + 0.5f, (float)cmd.rect.y*s + 0.5f + (float)cmd.rect.h*s - 1,
-						(float)cmd.rect.x*s + 0.5f + (float)cmd.rect.w*s / 2 - 0.5f, (float)cmd.rect.y*s + 0.5f,
-						(float)cmd.rect.x*s + 0.5f + (float)cmd.rect.w*s - 1, (float)cmd.rect.y*s + 0.5f + (float)cmd.rect.h*s - 1,
-					};
+						{
+							(float)cmd.rect.x * s + 0.5f,
+							(float)cmd.rect.y * s + 0.5f + (float)cmd.rect.h * s - 1,
+							(float)cmd.rect.x * s + 0.5f + (float)cmd.rect.w * s / 2 - 0.5f,
+							(float)cmd.rect.y * s + 0.5f,
+							(float)cmd.rect.x * s + 0.5f + (float)cmd.rect.w * s - 1,
+							(float)cmd.rect.y * s + 0.5f + (float)cmd.rect.h * s - 1,
+						};
 					drawPolygon(verts, 3, 1.0f, cmd.col);
 				}
 			}
@@ -483,4 +497,4 @@ namespace OGL_Renderer
 		}
 		glDisable(GL_SCISSOR_TEST);
 	}
-}
+} // namespace OGL_Renderer

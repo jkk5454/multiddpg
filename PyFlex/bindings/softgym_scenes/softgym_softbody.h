@@ -2,23 +2,21 @@ class SoftgymSoftBody : public Scene
 {
 
 public:
-	SoftgymSoftBody(const char* name) :
-		Scene(name),
-		mRadius(0.02f),
-		mRelaxationFactor(1.0f),
-		mPlinth(false),
-		plasticDeformation(false)
+	SoftgymSoftBody(const char *name) : Scene(name),
+										mRadius(0.02f),
+										mRelaxationFactor(1.0f),
+										mPlinth(false),
+										plasticDeformation(false)
 	{
 		const Vec3 colorPicker[7] =
-		{
-			Vec3(0.0f, 0.5f, 1.0f),
-			Vec3(0.797f, 0.354f, 0.000f),
-			Vec3(0.000f, 0.349f, 0.173f),
-			Vec3(0.875f, 0.782f, 0.051f),
-			Vec3(0.01f, 0.170f, 0.453f),
-			Vec3(0.673f, 0.111f, 0.000f),
-			Vec3(0.612f, 0.194f, 0.394f)
-		};
+			{
+				Vec3(0.0f, 0.5f, 1.0f),
+				Vec3(0.797f, 0.354f, 0.000f),
+				Vec3(0.000f, 0.349f, 0.173f),
+				Vec3(0.875f, 0.782f, 0.051f),
+				Vec3(0.01f, 0.170f, 0.453f),
+				Vec3(0.673f, 0.111f, 0.000f),
+				Vec3(0.612f, 0.194f, 0.394f)};
 		memcpy(mColorPicker, colorPicker, sizeof(Vec3) * 7);
 	}
 
@@ -30,34 +28,35 @@ public:
 
 	struct Instance
 	{
-		Instance(const char* mesh) :
+		Instance(const char *mesh) :
 
-			mFile(mesh),
-			mColor(0.5f, 0.5f, 1.0f),
+									 mFile(mesh),
+									 mColor(0.5f, 0.5f, 1.0f),
 
-			mScale(2.0f),
-			mTranslation(0.0f, 1.0f, 0.0f),
+									 mScale(2.0f),
+									 mTranslation(0.0f, 1.0f, 0.0f),
 
-			mClusterSpacing(1.0f),
-			mClusterRadius(0.0f),
-			mClusterStiffness(0.5f),
+									 mClusterSpacing(1.0f),
+									 mClusterRadius(0.0f),
+									 mClusterStiffness(0.5f),
 
-			mLinkRadius(0.0f),
-			mLinkStiffness(1.0f),
+									 mLinkRadius(0.0f),
+									 mLinkStiffness(1.0f),
 
-			mGlobalStiffness(0.0f),
+									 mGlobalStiffness(0.0f),
 
-			mSurfaceSampling(0.0f),
-			mVolumeSampling(4.0f),
+									 mSurfaceSampling(0.0f),
+									 mVolumeSampling(4.0f),
 
-			mSkinningFalloff(2.0f),
-			mSkinningMaxDistance(100.0f),
+									 mSkinningFalloff(2.0f),
+									 mSkinningMaxDistance(100.0f),
 
-			mClusterPlasticThreshold(0.0f),
-			mClusterPlasticCreep(0.0f)
-		{}
+									 mClusterPlasticThreshold(0.0f),
+									 mClusterPlasticCreep(0.0f)
+		{
+		}
 
-		const char* mFile;
+		const char *mFile;
 		Vec3 mColor;
 
 		Vec3 mScale;
@@ -85,10 +84,9 @@ public:
 	std::vector<Instance> mInstances;
 
 private:
-
 	struct RenderingInstance
 	{
-		Mesh* mMesh;
+		Mesh *mMesh;
 		std::vector<int> mSkinningIndices;
 		std::vector<float> mSkinningWeights;
 		vector<Vec3> mRigidRestPoses;
@@ -99,7 +97,6 @@ private:
 	std::vector<RenderingInstance> mRenderingInstances;
 
 	bool plasticDeformation;
-
 
 public:
 	virtual void AddInstance(Instance instance)
@@ -116,9 +113,10 @@ public:
 			{
 				for (int z = 0; z < zStack; ++z)
 				{
-					instance.mTranslation = translation + Vec3(x*(instance.mScale.x + 1), y*(instance.mScale.y + 1), z*(instance.mScale.z + 1))*mRadius;
-					if (rotateColors) {
-						instance.mColor = mColorPicker[(x*yStack*zStack + y*zStack + z) % 7];
+					instance.mTranslation = translation + Vec3(x * (instance.mScale.x + 1), y * (instance.mScale.y + 1), z * (instance.mScale.z + 1)) * mRadius;
+					if (rotateColors)
+					{
+						instance.mColor = mColorPicker[(x * yStack * zStack + y * zStack + z) % 7];
 					}
 					this->mInstances.push_back(instance);
 				}
@@ -130,20 +128,21 @@ public:
 	{
 
 		float radius = mRadius;
-		auto ptr = (float *) scene_params.request().ptr;
+		auto ptr = (float *)scene_params.request().ptr;
 		int paramNum = (int)ptr[0];
 
-        // Update all instances with scene_params
-        for (int i = 0; i < int(mInstances.size()); i++)
-        {
-            mInstances[i].mClusterSpacing = ptr[1];
-            mInstances[i].mClusterRadius = ptr[2];
-            mInstances[i].mClusterStiffness = ptr[3];
-			if (paramNum > 5) {
+		// Update all instances with scene_params
+		for (int i = 0; i < int(mInstances.size()); i++)
+		{
+			mInstances[i].mClusterSpacing = ptr[1];
+			mInstances[i].mClusterRadius = ptr[2];
+			mInstances[i].mClusterStiffness = ptr[3];
+			if (paramNum > 5)
+			{
 				mInstances[i].mClusterPlasticThreshold = ptr[6];
 				mInstances[i].mClusterPlasticCreep = ptr[7];
 			}
-        }
+		}
 		// no fluids or sdf based collision
 		g_solverDesc.featureMode = eNvFlexFeatureModeSimpleSolids;
 
@@ -151,7 +150,7 @@ public:
 		g_params.dynamicFriction = ptr[4];
 		g_params.particleFriction = ptr[5];
 		g_params.numIterations = 4;
-		g_params.collisionDistance = radius*0.75f;
+		g_params.collisionDistance = radius * 0.75f;
 
 		g_params.relaxationFactor = mRelaxationFactor;
 
@@ -191,9 +190,9 @@ public:
 	{
 		RenderingInstance renderingInstance;
 
-		Mesh* mesh = ImportMesh(GetFilePathByPlatform(instance.mFile).c_str());
+		Mesh *mesh = ImportMesh(GetFilePathByPlatform(instance.mFile).c_str());
 		mesh->Normalize();
-		mesh->Transform(TranslationMatrix(Point3(instance.mTranslation))*ScaleMatrix(instance.mScale*mRadius));
+		mesh->Transform(TranslationMatrix(Point3(instance.mTranslation)) * ScaleMatrix(instance.mScale * mRadius));
 
 		renderingInstance.mMesh = mesh;
 		renderingInstance.mColor = instance.mColor;
@@ -202,18 +201,18 @@ public:
 		double createStart = GetSeconds();
 
 		// create soft body definition
-		NvFlexExtAsset* asset = NvFlexExtCreateSoftFromMesh(
-			(float*)&renderingInstance.mMesh->m_positions[0],
+		NvFlexExtAsset *asset = NvFlexExtCreateSoftFromMesh(
+			(float *)&renderingInstance.mMesh->m_positions[0],
 			renderingInstance.mMesh->m_positions.size(),
-			(int*)&renderingInstance.mMesh->m_indices[0],
+			(int *)&renderingInstance.mMesh->m_indices[0],
 			renderingInstance.mMesh->m_indices.size(),
 			mRadius,
 			instance.mVolumeSampling,
 			instance.mSurfaceSampling,
-			instance.mClusterSpacing*mRadius,
-			instance.mClusterRadius*mRadius,
+			instance.mClusterSpacing * mRadius,
+			instance.mClusterRadius * mRadius,
 			instance.mClusterStiffness,
-			instance.mLinkRadius*mRadius,
+			instance.mLinkRadius * mRadius,
 			instance.mLinkStiffness,
 			instance.mGlobalStiffness,
 			instance.mClusterPlasticThreshold,
@@ -224,8 +223,8 @@ public:
 		// create skinning
 		const int maxWeights = 4;
 
-		renderingInstance.mSkinningIndices.resize(renderingInstance.mMesh->m_positions.size()*maxWeights);
-		renderingInstance.mSkinningWeights.resize(renderingInstance.mMesh->m_positions.size()*maxWeights);
+		renderingInstance.mSkinningIndices.resize(renderingInstance.mMesh->m_positions.size() * maxWeights);
+		renderingInstance.mSkinningWeights.resize(renderingInstance.mMesh->m_positions.size() * maxWeights);
 
 		for (int i = 0; i < asset->numShapes; ++i)
 			renderingInstance.mRigidRestPoses.push_back(Vec3(&asset->shapeCenters[i * 3]));
@@ -233,7 +232,7 @@ public:
 		double skinStart = GetSeconds();
 
 		NvFlexExtCreateSoftMeshSkinning(
-			(float*)&renderingInstance.mMesh->m_positions[0],
+			(float *)&renderingInstance.mMesh->m_positions[0],
 			renderingInstance.mMesh->m_positions.size(),
 			asset->shapeCenters,
 			asset->numShapes,
@@ -244,7 +243,7 @@ public:
 
 		double skinEnd = GetSeconds();
 
-//		printf("Created soft in %f ms Skinned in %f\n", (createEnd - createStart)*1000.0f, (skinEnd - skinStart)*1000.0f);
+		//		printf("Created soft in %f ms Skinned in %f\n", (createEnd - createStart)*1000.0f, (skinEnd - skinStart)*1000.0f);
 
 		const int particleOffset = g_buffers->positions.size();
 		const int indexOffset = g_buffers->rigidOffsets.back();
@@ -270,7 +269,6 @@ public:
 			g_buffers->rigidRotations.push_back(Quat());
 			g_buffers->rigidCoefficients.push_back(asset->shapeCoefficients[i]);
 		}
-
 
 		// add plastic deformation data to solver, if at least one asset has non-zero plastic deformation coefficients, leave the according pointers at NULL otherwise
 		if (plasticDeformation)
@@ -332,14 +330,14 @@ public:
 		mRenderingInstances.push_back(renderingInstance);
 	}
 
-	 void Draw(int pass)
+	void Draw(int pass)
 	{
 		if (!g_drawMesh)
 			return;
 
 		for (int s = 0; s < int(mRenderingInstances.size()); ++s)
 		{
-			const RenderingInstance& instance = mRenderingInstances[s];
+			const RenderingInstance &instance = mRenderingInstances[s];
 
 			Mesh m;
 			m.m_positions.resize(instance.mMesh->m_positions.size());
@@ -366,8 +364,8 @@ public:
 						Vec3 skinnedPos = g_buffers->rigidTranslations[rigidIndex] + Rotate(g_buffers->rigidRotations[rigidIndex], localPos);
 						Vec3 skinnedNormal = Rotate(g_buffers->rigidRotations[rigidIndex], instance.mMesh->m_normals[i]);
 
-						softPos += skinnedPos*weight;
-						softNormal += skinnedNormal*weight;
+						softPos += skinnedPos * weight;
+						softNormal += skinnedNormal * weight;
 					}
 				}
 

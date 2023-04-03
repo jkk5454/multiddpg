@@ -39,15 +39,13 @@
 class ClothMesh
 {
 public:
-
 	struct Edge
 	{
 		int vertices[2];
 		int tris[2];
-		
+
 		int stretchConstraint;
 		int bendingConstraint;
-
 
 		Edge(int a, int b)
 		{
@@ -58,7 +56,7 @@ public:
 
 			tris[0] = -1;
 			tris[1] = -1;
-			
+
 			stretchConstraint = -1;
 			bendingConstraint = -1;
 		}
@@ -101,7 +99,7 @@ public:
 			{
 				// check tri not referencing same edge
 				if (index == tris[0])
-					return false;		
+					return false;
 				else
 				{
 					tris[1] = index;
@@ -112,7 +110,7 @@ public:
 				return false;
 		}
 
-		bool operator < (const Edge& rhs) const
+		bool operator<(const Edge &rhs) const
 		{
 			if (vertices[0] != rhs.vertices[0])
 				return vertices[0] < rhs.vertices[0];
@@ -153,21 +151,20 @@ public:
 
 		void ReplaceEdge(int oldIndex, int newIndex)
 		{
-			for (int i=0; i < 3; ++i)
+			for (int i = 0; i < 3; ++i)
 			{
 				if (edges[i] == oldIndex)
 				{
 					edges[i] = newIndex;
 					return;
 				}
-
 			}
 			assert(0);
 		}
 
 		int ReplaceVertex(int oldIndex, int newIndex)
 		{
-			for (int i=0; i < 3; ++i)
+			for (int i = 0; i < 3; ++i)
 			{
 				if (vertices[i] == oldIndex)
 				{
@@ -182,7 +179,7 @@ public:
 
 		int GetOppositeVertex(int v0, int v1) const
 		{
-			for (int i=0; i < 3; ++i)
+			for (int i = 0; i < 3; ++i)
 			{
 				if (vertices[i] != v0 && vertices[i] != v1)
 					return vertices[i];
@@ -202,10 +199,10 @@ public:
 		mutable int component;
 	};
 
-	ClothMesh(const Vec4* vertices, int numVertices, 
-			  const int* indices, int numIndices,
+	ClothMesh(const Vec4 *vertices, int numVertices,
+			  const int *indices, int numIndices,
 			  float stretchStiffness,
-			  float bendStiffness, bool tearable=true)
+			  float bendStiffness, bool tearable = true)
 	{
 		mValid = false;
 
@@ -218,16 +215,16 @@ public:
 			EdgeSet edges;
 
 			// build unique edge list
-			for (int i=0; i < numIndices; i += 3)
+			for (int i = 0; i < numIndices; i += 3)
 			{
-				mTris.push_back(Triangle(indices[i+0], indices[i+1], indices[i+2]));
+				mTris.push_back(Triangle(indices[i + 0], indices[i + 1], indices[i + 2]));
 
-				const int triIndex = i/3;
+				const int triIndex = i / 3;
 
 				// breaking the rules
-				Edge& e1 = const_cast<Edge&>(*edges.insert(Edge(indices[i+0], indices[i+1])).first);
-				Edge& e2 = const_cast<Edge&>(*edges.insert(Edge(indices[i+1], indices[i+2])).first);
-				Edge& e3 = const_cast<Edge&>(*edges.insert(Edge(indices[i+2], indices[i+0])).first);
+				Edge &e1 = const_cast<Edge &>(*edges.insert(Edge(indices[i + 0], indices[i + 1])).first);
+				Edge &e2 = const_cast<Edge &>(*edges.insert(Edge(indices[i + 1], indices[i + 2])).first);
+				Edge &e3 = const_cast<Edge &>(*edges.insert(Edge(indices[i + 2], indices[i + 0])).first);
 
 				if (!e1.AddTri(triIndex))
 					return;
@@ -241,16 +238,15 @@ public:
 			mEdges.assign(edges.begin(), edges.end());
 
 			// second pass, set edge indices to faces
-			for (int i=0; i < numIndices; i += 3)
+			for (int i = 0; i < numIndices; i += 3)
 			{
-				int e1 = int(std::lower_bound(mEdges.begin(), mEdges.end(), Edge(indices[i+0], indices[i+1])) - mEdges.begin());
-				int e2 = int(std::lower_bound(mEdges.begin(), mEdges.end(), Edge(indices[i+1], indices[i+2])) - mEdges.begin());
-				int e3 = int(std::lower_bound(mEdges.begin(), mEdges.end(), Edge(indices[i+2], indices[i+0])) - mEdges.begin());
-
+				int e1 = int(std::lower_bound(mEdges.begin(), mEdges.end(), Edge(indices[i + 0], indices[i + 1])) - mEdges.begin());
+				int e2 = int(std::lower_bound(mEdges.begin(), mEdges.end(), Edge(indices[i + 1], indices[i + 2])) - mEdges.begin());
+				int e3 = int(std::lower_bound(mEdges.begin(), mEdges.end(), Edge(indices[i + 2], indices[i + 0])) - mEdges.begin());
 
 				if (e1 != e2 && e1 != e3 && e2 != e3)
 				{
-					const int triIndex = i/3;
+					const int triIndex = i / 3;
 
 					mTris[triIndex].edges[0] = e1;
 					mTris[triIndex].edges[1] = e2;
@@ -264,9 +260,9 @@ public:
 			}
 
 			// generate distance constraints
-			for (size_t i=0; i < mEdges.size(); ++i)
+			for (size_t i = 0; i < mEdges.size(); ++i)
 			{
-				Edge& edge = mEdges[i];
+				Edge &edge = mEdges[i];
 
 				// stretch constraint along mesh edges
 				edge.stretchConstraint = AddConstraint(vertices, edge.vertices[0], edge.vertices[1], stretchStiffness);
@@ -290,41 +286,40 @@ public:
 
 		std::vector<Vec3> gradients(numVertices);
 
-		for (int i=0; i < numIndices; i+=3)
+		for (int i = 0; i < numIndices; i += 3)
 		{
-			Vec3 v1 = Vec3(vertices[indices[i+0]]);
-			Vec3 v2 = Vec3(vertices[indices[i+1]]);
-			Vec3 v3 = Vec3(vertices[indices[i+2]]);
+			Vec3 v1 = Vec3(vertices[indices[i + 0]]);
+			Vec3 v2 = Vec3(vertices[indices[i + 1]]);
+			Vec3 v3 = Vec3(vertices[indices[i + 2]]);
 
-			const Vec3 n = Cross(v2-v1, v3-v1);
+			const Vec3 n = Cross(v2 - v1, v3 - v1);
 			const float signedVolume = Dot(v1, n);
 
 			mRestVolume += signedVolume;
 
-			gradients[indices[i+0]] += n;
-			gradients[indices[i+1]] += n;
-			gradients[indices[i+2]] += n;
+			gradients[indices[i + 0]] += n;
+			gradients[indices[i + 1]] += n;
+			gradients[indices[i + 2]] += n;
 		}
-		
-		for (int i=0; i < numVertices; ++i)
+
+		for (int i = 0; i < numVertices; ++i)
 			mConstraintScale += Dot(gradients[i], gradients[i]);
 
-		mConstraintScale = 1.0f/mConstraintScale;
+		mConstraintScale = 1.0f / mConstraintScale;
 
 		mValid = true;
-
 	}
 
-	int AddConstraint(const Vec4* vertices, int a, int b, float stiffness, float give=0.0f)
+	int AddConstraint(const Vec4 *vertices, int a, int b, float stiffness, float give = 0.0f)
 	{
 		int index = int(mConstraintRestLengths.size());
 
 		mConstraintIndices.push_back(a);
 		mConstraintIndices.push_back(b);
 
-		const float restLength = Length(Vec3(vertices[a])-Vec3(vertices[b]));
-			
-		mConstraintRestLengths.push_back(restLength*(1.0f + give));
+		const float restLength = Length(Vec3(vertices[a]) - Vec3(vertices[b]));
+
+		mConstraintRestLengths.push_back(restLength * (1.0f + give));
 		mConstraintCoefficients.push_back(stiffness);
 
 		return index;
@@ -335,7 +330,7 @@ public:
 		std::vector<int> adjacentTriangles;
 
 		// gather adjacent triangles
-		for (int i=0; i < int(mTris.size()); ++i)
+		for (int i = 0; i < int(mTris.size()); ++i)
 		{
 			if (mTris[i].Contains(vertex))
 				adjacentTriangles.push_back(i);
@@ -345,11 +340,11 @@ public:
 		int componentCount = 0;
 
 		// while connected tris not colored
-		for (int i=0; i < int(adjacentTriangles.size()); ++i)
+		for (int i = 0; i < int(adjacentTriangles.size()); ++i)
 		{
 			// pop off a triangle
 			int seed = adjacentTriangles[i];
-			
+
 			// triangle already belongs to a component
 			if (mTris[seed].component != -1)
 				continue;
@@ -362,9 +357,9 @@ public:
 				int t = stack.back();
 				stack.pop_back();
 
-				const Triangle& tri = mTris[t];
+				const Triangle &tri = mTris[t];
 
-				if (tri.component == componentCount)				
+				if (tri.component == componentCount)
 				{
 					// we're back to the beginning
 					// component is fully connected
@@ -374,16 +369,16 @@ public:
 				tri.component = componentCount;
 
 				// update mesh
-				for (int e=0; e < 3; ++e)
+				for (int e = 0; e < 3; ++e)
 				{
-					const Edge& edge = mEdges[tri.edges[e]];
+					const Edge &edge = mEdges[tri.edges[e]];
 
 					if (edge.Contains(vertex))
 					{
 						if (!edge.IsBoundary())
 						{
 							// push unprocessed neighbors on stack
-							for (int s=0; s < 2; ++s)
+							for (int s = 0; s < 2; ++s)
 							{
 								assert(mTris[edge.tris[s]].component == -1 || mTris[edge.tris[s]].component == componentCount);
 
@@ -392,19 +387,19 @@ public:
 							}
 						}
 					}
-				}	
+				}
 			}
 
 			componentCount++;
 		}
 
 		// reset component indices
-		for (int i=0; i < int(adjacentTriangles.size()); ++i)
+		for (int i = 0; i < int(adjacentTriangles.size()); ++i)
 		{
 			assert(mTris[adjacentTriangles[i]].component != -1);
 
 			mTris[adjacentTriangles[i]].component = -1;
-		} 
+		}
 
 		return componentCount;
 	}
@@ -421,12 +416,12 @@ public:
 		int destIndex;
 	};
 
-	int SeparateVertex(int singularVertex, std::vector<TriangleUpdate>& replacements, std::vector<VertexCopy>& copies, int maxCopies)
+	int SeparateVertex(int singularVertex, std::vector<TriangleUpdate> &replacements, std::vector<VertexCopy> &copies, int maxCopies)
 	{
 		std::vector<int> adjacentTriangles;
 
 		// gather adjacent triangles
-		for (int i=0; i < int(mTris.size()); ++i)
+		for (int i = 0; i < int(mTris.size()); ++i)
 		{
 			if (mTris[i].Contains(singularVertex))
 				adjacentTriangles.push_back(i);
@@ -439,14 +434,14 @@ public:
 		int newIndex = singularVertex;
 
 		// while connected tris not colored
-		for (int i=0; i < int(adjacentTriangles.size()); ++i)
+		for (int i = 0; i < int(adjacentTriangles.size()); ++i)
 		{
 			if (maxCopies == 0)
 				break;
 
 			// pop off a triangle
 			int seed = adjacentTriangles[i];
-			
+
 			// triangle already belongs to a component
 			if (mTris[seed].component != -1)
 				continue;
@@ -459,12 +454,12 @@ public:
 				int t = stack.back();
 				stack.pop_back();
 
-				Triangle& tri = mTris[t];
+				Triangle &tri = mTris[t];
 
 				// test if we're back to the beginning, in which case the component is fully connected
-				if (tri.component == componentCount)									
+				if (tri.component == componentCount)
 					break;
-				
+
 				assert(tri.component == -1);
 
 				tri.component = componentCount;
@@ -476,15 +471,15 @@ public:
 				{
 					// output replacement
 					TriangleUpdate r;
-					r.triangle = t*3 + v;
+					r.triangle = t * 3 + v;
 					r.vertex = newIndex;
 					replacements.push_back(r);
 				}
 
 				// update mesh
-				for (int e=0; e < 3; ++e)
+				for (int e = 0; e < 3; ++e)
 				{
-					Edge& edge = mEdges[tri.edges[e]];
+					Edge &edge = mEdges[tri.edges[e]];
 
 					if (edge.Contains(singularVertex))
 					{
@@ -492,17 +487,17 @@ public:
 						edge.Replace(singularVertex, newIndex);
 
 						const int stretching = edge.stretchConstraint;
-						if (mConstraintIndices[stretching*2+0] == singularVertex)
-							mConstraintIndices[stretching*2+0] = newIndex;
-						else if (mConstraintIndices[stretching*2+1] == singularVertex)
-							mConstraintIndices[stretching*2+1] = newIndex;
+						if (mConstraintIndices[stretching * 2 + 0] == singularVertex)
+							mConstraintIndices[stretching * 2 + 0] = newIndex;
+						else if (mConstraintIndices[stretching * 2 + 1] == singularVertex)
+							mConstraintIndices[stretching * 2 + 1] = newIndex;
 						else
 							assert(0);
 
 						if (!edge.IsBoundary())
 						{
 							// push unprocessed neighbors on stack
-							for (int s=0; s < 2; ++s)
+							for (int s = 0; s < 2; ++s)
 							{
 								assert(mTris[edge.tris[s]].component == -1 || mTris[edge.tris[s]].component == componentCount);
 
@@ -517,13 +512,13 @@ public:
 
 						if (bending != -1)
 						{
-							if (mConstraintIndices[bending*2+0] == singularVertex)
-								mConstraintIndices[bending*2+0] = newIndex;
-							else if (mConstraintIndices[bending*2+1] == singularVertex)
-								mConstraintIndices[bending*2+1] = newIndex;
+							if (mConstraintIndices[bending * 2 + 0] == singularVertex)
+								mConstraintIndices[bending * 2 + 0] = newIndex;
+							else if (mConstraintIndices[bending * 2 + 1] == singularVertex)
+								mConstraintIndices[bending * 2 + 1] = newIndex;
 						}
 					}
-				}	
+				}
 			}
 
 			// copy vertex
@@ -546,17 +541,17 @@ public:
 		}
 
 		// reset component indices
-		for (int i=0; i < int(adjacentTriangles.size()); ++i)
+		for (int i = 0; i < int(adjacentTriangles.size()); ++i)
 		{
 			//assert(mTris[adjacentTriangles[i]].component != -1);
 
 			mTris[adjacentTriangles[i]].component = -1;
-		} 
+		}
 
 		return componentCount;
 	}
 
-	int SplitVertex(const Vec4* vertices, int index, Vec3 splitPlane, std::vector<int>& adjacentTris, std::vector<int>& adjacentVertices, std::vector<TriangleUpdate>& replacements, std::vector<VertexCopy>& copies, int maxCopies)
+	int SplitVertex(const Vec4 *vertices, int index, Vec3 splitPlane, std::vector<int> &adjacentTris, std::vector<int> &adjacentVertices, std::vector<TriangleUpdate> &replacements, std::vector<VertexCopy> &copies, int maxCopies)
 	{
 		if (maxCopies == 0)
 			return -1;
@@ -568,11 +563,11 @@ public:
 
 		const int newIndex = mNumVertices;
 
-		// classify all tris attached to the split vertex according 
+		// classify all tris attached to the split vertex according
 		// to which side of the split plane their centroid lies on O(N)
 		for (size_t i = 0; i < mTris.size(); ++i)
 		{
-			Triangle& tri = mTris[i];
+			Triangle &tri = mTris[i];
 
 			if (tri.Contains(index))
 			{
@@ -592,7 +587,7 @@ public:
 				}
 
 				adjacentTris.push_back(int(i));
-				for (int v=0; v < 3; ++v)
+				for (int v = 0; v < 3; ++v)
 				{
 					if (std::find(adjacentVertices.begin(), adjacentVertices.end(), tri.vertices[v]) == adjacentVertices.end())
 					{
@@ -611,7 +606,7 @@ public:
 		{
 			const int triIndex = adjacentTris[i];
 
-			Triangle& tri = mTris[triIndex];
+			Triangle &tri = mTris[triIndex];
 
 			// tris on the negative side of the split plane are assigned the new index
 			if (tri.side == 0)
@@ -619,14 +614,14 @@ public:
 				int v = tri.ReplaceVertex(index, newIndex);
 
 				TriangleUpdate update;
-				update.triangle = triIndex*3 + v;
+				update.triangle = triIndex * 3 + v;
 				update.vertex = newIndex;
 				replacements.push_back(update);
 
 				// update edges and constraints
 				for (int e = 0; e < 3; ++e)
 				{
-					Edge& edge = mEdges[tri.edges[e]];
+					Edge &edge = mEdges[tri.edges[e]];
 
 					if (edge.Contains(index))
 					{
@@ -634,8 +629,8 @@ public:
 
 						if (edge.tris[0] != -1 && edge.tris[1] != -1)
 						{
-							Triangle& t1 = mTris[edge.tris[0]];
-							Triangle& t2 = mTris[edge.tris[1]];
+							Triangle &t1 = mTris[edge.tris[0]];
+							Triangle &t2 = mTris[edge.tris[1]];
 
 							// Case 1: connected tris lie on opposite sides of the split plane
 							// creating a new exposed edge, need to break bending constraint
@@ -662,7 +657,7 @@ public:
 
 								edge.bendingConstraint = -1;
 
-								// don't access Edge& after this 
+								// don't access Edge& after this
 								tri.ReplaceEdge(tri.edges[e], int(mEdges.size()));
 								mEdges.push_back(newEdge);
 
@@ -688,7 +683,7 @@ public:
 					else
 					{
 						// Case 3: tri is adjacent to split vertex but this edge is not connected to it
-						// therefore there can be a bending constraint crossing this edge connected 
+						// therefore there can be a bending constraint crossing this edge connected
 						// to vertex that needs to be remapped
 						const int bending = edge.bendingConstraint;
 
@@ -701,7 +696,6 @@ public:
 						}
 					}
 				}
-
 			}
 		}
 
@@ -723,7 +717,7 @@ public:
 
 	std::vector<Edge> mEdges;
 	std::vector<Triangle> mTris;
-	
+
 	int mNumVertices;
 
 	float mRestVolume;

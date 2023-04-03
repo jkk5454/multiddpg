@@ -50,36 +50,34 @@ double GetSeconds()
 	static LARGE_INTEGER lastTime;
 	static LARGE_INTEGER freq;
 	static bool first = true;
-	
+
 	if (first)
-	{	
+	{
 		QueryPerformanceCounter(&lastTime);
 		QueryPerformanceFrequency(&freq);
 
 		first = false;
 	}
-	
+
 	static double time = 0.0;
-	
+
 	LARGE_INTEGER t;
 	QueryPerformanceCounter(&t);
-	
-	__int64 delta = t.QuadPart-lastTime.QuadPart;
+
+	__int64 delta = t.QuadPart - lastTime.QuadPart;
 	double deltaSeconds = double(delta) / double(freq.QuadPart);
-	
+
 	time += deltaSeconds;
 
 	lastTime = t;
 
 	return time;
-
 }
 
 void Sleep(double seconds)
 {
-	::Sleep(DWORD(seconds*1000));
+	::Sleep(DWORD(seconds * 1000));
 }
-
 
 //// helper function to get exe path
 //string GetExePath()
@@ -144,7 +142,7 @@ void Sleep(double seconds)
 //			{
 //				files.push_back(info.cFileName);
 //			}
-//		} 
+//		}
 //		while (FindNextFile(h, &info));
 //
 //		if (GetLastError() != ERROR_NO_MORE_FILES)
@@ -162,7 +160,6 @@ void Sleep(double seconds)
 //	return true;
 //}
 
-
 #else
 
 // linux, mac platforms
@@ -172,7 +169,7 @@ double GetSeconds()
 {
 	// Figure out time elapsed since last call to idle function
 	static struct timeval last_idle_time;
-	static double time = 0.0;	
+	static double time = 0.0;
 
 	struct timeval time_now;
 	gettimeofday(&time_now, NULL);
@@ -180,7 +177,7 @@ double GetSeconds()
 	if (last_idle_time.tv_usec == 0)
 		last_idle_time = time_now;
 
-	float dt = (float)(time_now.tv_sec - last_idle_time.tv_sec) + 1.0e-6*(time_now.tv_usec - last_idle_time.tv_usec);
+	float dt = (float)(time_now.tv_sec - last_idle_time.tv_sec) + 1.0e-6 * (time_now.tv_usec - last_idle_time.tv_usec);
 
 	time += dt;
 	last_idle_time = time_now;
@@ -190,26 +187,25 @@ double GetSeconds()
 
 #endif
 
-
-uint8_t* LoadFileToBuffer(const char* filename, uint32_t* sizeRead)
+uint8_t *LoadFileToBuffer(const char *filename, uint32_t *sizeRead)
 {
-	FILE* file = fopen(filename, "rb");
+	FILE *file = fopen(filename, "rb");
 	if (file)
 	{
 		fseek(file, 0, SEEK_END);
 		long p = ftell(file);
-		
-		uint8_t* buf = new uint8_t[p];
+
+		uint8_t *buf = new uint8_t[p];
 		fseek(file, 0, SEEK_SET);
 		uint32_t len = uint32_t(fread(buf, 1, p, file));
-	
+
 		fclose(file);
-		
+
 		if (sizeRead)
 		{
 			*sizeRead = len;
 		}
-		
+
 		return buf;
 	}
 	else
@@ -219,72 +215,70 @@ uint8_t* LoadFileToBuffer(const char* filename, uint32_t* sizeRead)
 	}
 }
 
-string LoadFileToString(const char* filename)
+string LoadFileToString(const char *filename)
 {
 	//std::ifstream file(filename);
 	//return string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	uint32_t size;
-	uint8_t* buf = LoadFileToBuffer(filename, &size);
-	
+	uint8_t *buf = LoadFileToBuffer(filename, &size);
+
 	if (buf)
 	{
-		string s(buf, buf+size);
+		string s(buf, buf + size);
 		delete[] buf;
-		
+
 		return s;
 	}
 	else
 	{
 		return "";
-	}	
+	}
 }
 
-bool SaveStringToFile(const char* filename, const char* s)
+bool SaveStringToFile(const char *filename, const char *s)
 {
-	FILE* f = fopen(filename, "w");
+	FILE *f = fopen(filename, "w");
 	if (!f)
 	{
-		std::cout << "Could not open file for writing: " << filename << std::endl;		
+		std::cout << "Could not open file for writing: " << filename << std::endl;
 		return false;
 	}
-	else 
+	else
 	{
 		fputs(s, f);
 		fclose(f);
-		
+
 		return true;
 	}
 }
 
-
-string StripFilename(const char* path)
+string StripFilename(const char *path)
 {
-	// simply find the last 
-	const char* iter=path;
-	const char* last=NULL;
+	// simply find the last
+	const char *iter = path;
+	const char *last = NULL;
 	while (*iter)
 	{
-		if (*iter == '\\' || *iter== '/')
+		if (*iter == '\\' || *iter == '/')
 			last = iter;
-		
+
 		++iter;
 	}
-	
+
 	if (last)
 	{
-		return string(path, last+1);
+		return string(path, last + 1);
 	}
 	else
 		return string();
-	
 }
 
-string GetExtension(const char* path)
+string GetExtension(const char *path)
 {
-	const char* s = strrchr(path, '.');
+	const char *s = strrchr(path, '.');
 	if (s)
 	{
-		return string(s+1);
+		return string(s + 1);
 	}
 	else
 	{
@@ -292,9 +286,9 @@ string GetExtension(const char* path)
 	}
 }
 
-string StripExtension(const char* path)
+string StripExtension(const char *path)
 {
-	const char* s = strrchr(path, '.');
+	const char *s = strrchr(path, '.');
 	if (s)
 	{
 		return string(path, s);
@@ -305,44 +299,43 @@ string StripExtension(const char* path)
 	}
 }
 
-string NormalizePath(const char* path)
+string NormalizePath(const char *path)
 {
 	string p(path);
 	replace(p.begin(), p.end(), '\\', '/');
 	transform(p.begin(), p.end(), p.begin(), ::tolower);
-	
+
 	return p;
 }
 
 // strips the path from a file name
-string StripPath(const char* path)
+string StripPath(const char *path)
 {
-	// simply find the last 
-	const char* iter=path;
-	const char* last=NULL;
+	// simply find the last
+	const char *iter = path;
+	const char *last = NULL;
 	while (*iter)
 	{
-		if (*iter == '\\' || *iter== '/')
+		if (*iter == '\\' || *iter == '/')
 			last = iter;
-		
+
 		++iter;
 	}
-	
+
 	if (!last)
 	{
 		return string(path);
 	}
-	
+
 	// eat the last slash
 	++last;
-	
+
 	if (*last)
 	{
 		return string(last);
 	}
 	else
 	{
-		return string();	
+		return string();
 	}
 }
-

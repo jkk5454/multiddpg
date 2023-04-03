@@ -2,8 +2,7 @@
 class WaterBalloon : public Scene
 {
 public:
-
-	WaterBalloon(const char* name) : Scene(name) {}
+	WaterBalloon(const char *name) : Scene(name) {}
 
 	virtual ~WaterBalloon()
 	{
@@ -11,7 +10,7 @@ public:
 			NvFlexExtDestroyTearingCloth(mCloths[i].asset);
 	}
 
-	void AddInflatable(const Mesh* mesh, float overPressure, float invMass, int phase)
+	void AddInflatable(const Mesh *mesh, float overPressure, float invMass, int phase)
 	{
 		// create a cloth mesh using the global positions / indices
 		const int numParticles = int(mesh->m_positions.size());
@@ -49,7 +48,7 @@ public:
 		}
 
 		// create tearing asset
-		NvFlexExtAsset* cloth = NvFlexExtCreateTearingClothFromMesh((float*)&g_buffers->positions[balloon.particleOffset], numParticles, maxParticles, (int*)&mesh->m_indices[0], mesh->GetNumFaces(), 1.0f, 1.0f, 0.0f);
+		NvFlexExtAsset *cloth = NvFlexExtCreateTearingClothFromMesh((float *)&g_buffers->positions[balloon.particleOffset], numParticles, maxParticles, (int *)&mesh->m_indices[0], mesh->GetNumFaces(), 1.0f, 1.0f, 0.0f);
 		balloon.asset = cloth;
 
 		mCloths.push_back(balloon);
@@ -66,7 +65,7 @@ public:
 		// convex rocks
 		for (int i = 0; i < 4; i++)
 			for (int j = 0; j < 1; j++)
-				AddRandomConvex(10, Vec3(i*maxSize*spacing, 0.0f, j*maxSize*spacing), minSize, maxSize, Vec3(0.0f, 1.0f, 0.0f), Randf(0.0f, k2Pi));
+				AddRandomConvex(10, Vec3(i * maxSize * spacing, 0.0f, j * maxSize * spacing), minSize, maxSize, Vec3(0.0f, 1.0f, 0.0f), Randf(0.0f, k2Pi));
 
 		float radius = 0.1f;
 		int group = 0;
@@ -78,28 +77,27 @@ public:
 		g_params.dynamicFriction = 0.125f;
 		g_params.dissipation = 0.0f;
 		g_params.numIterations = 5;
-		g_params.particleCollisionMargin = g_params.radius*0.05f;
+		g_params.particleCollisionMargin = g_params.radius * 0.05f;
 		g_params.relaxationFactor = 1.0f;
 		g_params.drag = 0.0f;
 		g_params.smoothing = 1.f;
-		g_params.maxSpeed = 0.5f*g_numSubsteps*radius / g_dt;
+		g_params.maxSpeed = 0.5f * g_numSubsteps * radius / g_dt;
 		g_params.gravity[1] *= 1.0f;
 		g_params.collisionDistance = 0.01f;
 		g_params.solidPressure = 0.0f;
 
-		g_params.fluidRestDistance = radius*0.65f;
+		g_params.fluidRestDistance = radius * 0.65f;
 		g_params.viscosity = 0.0;
 		g_params.adhesion = 0.0f;
 		g_params.cohesion = 0.02f;
 
-
 		// add inflatables
-		Mesh* mesh = ImportMesh(GetFilePathByPlatform("../../data/sphere_high.ply").c_str());
+		Mesh *mesh = ImportMesh(GetFilePathByPlatform("../../data/sphere_high.ply").c_str());
 
 		for (int y = 0; y < 2; ++y)
 			for (int i = 0; i < 2; ++i)
 			{
-				Vec3 lower = Vec3(2.0f + i*2.0f, 0.4f + y*1.2f, 1.0f);
+				Vec3 lower = Vec3(2.0f + i * 2.0f, 0.4f + y * 1.2f, 1.0f);
 
 				mesh->Normalize();
 				mesh->Transform(TranslationMatrix(Point3(lower)));
@@ -112,14 +110,14 @@ public:
 
 		// fill inflatables with water
 		std::vector<Vec3> positions(10000);
-		int n = PoissonSample3D(0.45f, g_params.radius*0.42f, &positions[0], positions.size(), 10000);
+		int n = PoissonSample3D(0.45f, g_params.radius * 0.42f, &positions[0], positions.size(), 10000);
 		//int n = TightPack3D(0.45f, g_params.radius*0.42f, &positions[0], positions.size());
 
 		mNumFluidParticles = 0;
 
 		for (size_t i = 0; i < mCloths.size(); ++i)
 		{
-			const int vertStart = i*mesh->GetNumVertices();
+			const int vertStart = i * mesh->GetNumVertices();
 			const int vertEnd = vertStart + mesh->GetNumVertices();
 
 			const int phase = NvFlexMakePhase(group++, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
@@ -150,7 +148,6 @@ public:
 		g_drawSprings = 0;
 		g_drawCloth = false;
 		g_warmup = true;
-
 	}
 
 	void RebuildConstraints()
@@ -163,7 +160,7 @@ public:
 
 		for (int c = 0; c < int(mCloths.size()); ++c)
 		{
-			Balloon& balloon = mCloths[c];
+			Balloon &balloon = mCloths[c];
 
 			for (int i = 0; i < balloon.asset->numTriangles; ++i)
 			{
@@ -174,7 +171,6 @@ public:
 
 			for (int i = 0; i < balloon.asset->numSprings * 2; ++i)
 				g_buffers->springIndices.push_back(balloon.asset->springIndices[i] + balloon.particleOffset);
-
 
 			for (int i = 0; i < balloon.asset->numSprings; ++i)
 			{
@@ -212,7 +208,7 @@ public:
 
 		for (int c = 0; c < int(mCloths.size()); ++c)
 		{
-			Balloon& balloon = mCloths[c];
+			Balloon &balloon = mCloths[c];
 
 			const int destOffset = newParticles.size();
 
@@ -237,9 +233,9 @@ public:
 			int numTriangleEdits;
 
 			// update asset's copy of the particles
-			memcpy(balloon.asset->particles, &g_buffers->positions[balloon.particleOffset], sizeof(Vec4)*balloon.asset->numParticles);
+			memcpy(balloon.asset->particles, &g_buffers->positions[balloon.particleOffset], sizeof(Vec4) * balloon.asset->numParticles);
 
-			// tear 
+			// tear
 			NvFlexExtTearClothMesh(balloon.asset, balloon.splitThreshold, 1, particleCopies, &numParticleCopies, maxCopies, triangleEdits, &numTriangleEdits, maxEdits);
 
 			// resize particle data arrays
@@ -259,7 +255,7 @@ public:
 				newParticlesRest[destIndex] = g_buffers->restPositions[srcIndex];
 				newVelocities[destIndex] = g_buffers->velocities[srcIndex];
 				newPhases[destIndex] = g_buffers->phases[srcIndex];
-				newNormals[destIndex]  = g_buffers->normals[srcIndex];
+				newNormals[destIndex] = g_buffers->normals[srcIndex];
 			}
 
 			if (numParticleCopies)
@@ -301,7 +297,7 @@ public:
 		// update constraint buffers
 		RebuildConstraints();
 
-		// restore mouse mass		
+		// restore mouse mass
 		if (g_mouseParticle != -1)
 			g_buffers->positions[g_mouseParticle].w = 0.0f;
 	}
@@ -313,13 +309,13 @@ public:
 
 		for (size_t i = 0; i < mCloths.size(); ++i)
 		{
-			DrawCloth(&g_buffers->positions[0], &g_buffers->normals[0], NULL, &g_buffers->triangles[mCloths[i].triangleOffset], mCloths[i].asset->numTriangles, g_buffers->positions.size(), (i + 2) % 6);//, g_params.radius*0.25f);			
+			DrawCloth(&g_buffers->positions[0], &g_buffers->normals[0], NULL, &g_buffers->triangles[mCloths[i].triangleOffset], mCloths[i].asset->numTriangles, g_buffers->positions.size(), (i + 2) % 6); //, g_params.radius*0.25f);
 		}
 	}
 
 	struct Balloon
 	{
-		NvFlexExtAsset* asset;
+		NvFlexExtAsset *asset;
 
 		int particleOffset;
 		int triangleOffset;

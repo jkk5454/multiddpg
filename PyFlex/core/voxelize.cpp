@@ -28,29 +28,29 @@
 #include "aabbtree.h"
 #include "mesh.h"
 
-void Voxelize(const Vec3* vertices, int numVertices, const int* indices, int numTriangleIndices, uint32_t width, uint32_t height, uint32_t depth, uint32_t* volume, Vec3 minExtents, Vec3 maxExtents)
+void Voxelize(const Vec3 *vertices, int numVertices, const int *indices, int numTriangleIndices, uint32_t width, uint32_t height, uint32_t depth, uint32_t *volume, Vec3 minExtents, Vec3 maxExtents)
 {
-	memset(volume, 0, sizeof(uint32_t)*width*height*depth);
+	memset(volume, 0, sizeof(uint32_t) * width * height * depth);
 
 	// build an aabb tree of the mesh
-	AABBTree tree(vertices, numVertices, (const uint32_t*)indices, numTriangleIndices/3); 
+	AABBTree tree(vertices, numVertices, (const uint32_t *)indices, numTriangleIndices / 3);
 
 	// parity count method, single pass
-	const Vec3 extents(maxExtents-minExtents);
-	const Vec3 delta(extents.x/width, extents.y/height, extents.z/depth);
-	const Vec3 offset(0.5f*delta.x, 0.5f*delta.y, 0.5f*delta.z);
-	
-	// this is the bias we apply to step 'off' a triangle we hit, not very robust
-	const float eps = 0.00001f*extents.z;
+	const Vec3 extents(maxExtents - minExtents);
+	const Vec3 delta(extents.x / width, extents.y / height, extents.z / depth);
+	const Vec3 offset(0.5f * delta.x, 0.5f * delta.y, 0.5f * delta.z);
 
-	for (uint32_t x=0; x < width; ++x)
+	// this is the bias we apply to step 'off' a triangle we hit, not very robust
+	const float eps = 0.00001f * extents.z;
+
+	for (uint32_t x = 0; x < width; ++x)
 	{
-		for (uint32_t y=0; y < height; ++y)
+		for (uint32_t y = 0; y < height; ++y)
 		{
 			bool inside = false;
 
 			Vec3 rayDir = Vec3(0.0f, 0.0f, 1.0f);
-			Vec3 rayStart = minExtents + Vec3(x*delta.x + offset.x, y*delta.y + offset.y, 0.0f);
+			Vec3 rayStart = minExtents + Vec3(x * delta.x + offset.x, y * delta.y + offset.y, 0.0f);
 
 			uint32_t lastTri = uint32_t(-1);
 			for (;;)
@@ -62,32 +62,31 @@ void Voxelize(const Vec3* vertices, int numVertices, const int* indices, int num
 				if (tree.TraceRay(rayStart, rayDir, t, u, v, w, s, tri))
 				{
 					// calculate cell in which intersection occurred
-					const float zpos = rayStart.z + t*rayDir.z;
-					const float zhit = (zpos-minExtents.z)/delta.z;
-					
-					uint32_t z = uint32_t(floorf((rayStart.z-minExtents.z)/delta.z + 0.5f));
-					uint32_t zend = std::min(uint32_t(floorf(zhit + 0.5f)), depth-1);
+					const float zpos = rayStart.z + t * rayDir.z;
+					const float zhit = (zpos - minExtents.z) / delta.z;
+
+					uint32_t z = uint32_t(floorf((rayStart.z - minExtents.z) / delta.z + 0.5f));
+					uint32_t zend = std::min(uint32_t(floorf(zhit + 0.5f)), depth - 1);
 
 					if (inside)
 					{
-						// march along column setting bits 
-						for (uint32_t k=z; k < zend; ++k)
-							volume[k*width*height + y*width + x] = uint32_t(-1);
+						// march along column setting bits
+						for (uint32_t k = z; k < zend; ++k)
+							volume[k * width * height + y * width + x] = uint32_t(-1);
 					}
-					
+
 					inside = !inside;
-					
+
 					// we hit the tri we started from
 					if (tri == lastTri)
 						printf("Error self-intersect\n");
 					lastTri = tri;
 
-					rayStart += rayDir*(t+eps);
-
+					rayStart += rayDir * (t + eps);
 				}
 				else
 					break;
 			}
 		}
-	}	
+	}
 }

@@ -27,24 +27,22 @@
 
 #pragma once
 
-
-
 #include <iomanip>
 #include <algorithm>
 #include <stdint.h>
 
-const char* g_benchmarkFilename = "../../benchmark.txt";
+const char *g_benchmarkFilename = "../../benchmark.txt";
 std::wofstream g_benchmarkFile;
 
 const int benchmarkPhaseFrameCount = 400;
 const int benchmarkEndWarmup = 200;
 
 const int benchmarkAsyncOffDummyOnBeginFrame = benchmarkPhaseFrameCount;
-const int benchmarkAsyncOnDummyOnBeginFrame = benchmarkPhaseFrameCount*2;
-const int benchmarkEndFrame = benchmarkPhaseFrameCount*3;
-const char* benchmarkList[] = { "Env Cloth Small", "Viscosity Med", "Inflatables", "Game Mesh Particles", "Rigid4" };
-const char* benchmarkChartPrefix[] = { "EnvClothSmall", "ViscosityMed", "Inflatables", "GameMeshParticles", "Rigid4" }; //no spaces
-int numBenchmarks = sizeof(benchmarkList)/sizeof(benchmarkList[0]);
+const int benchmarkAsyncOnDummyOnBeginFrame = benchmarkPhaseFrameCount * 2;
+const int benchmarkEndFrame = benchmarkPhaseFrameCount * 3;
+const char *benchmarkList[] = {"Env Cloth Small", "Viscosity Med", "Inflatables", "Game Mesh Particles", "Rigid4"};
+const char *benchmarkChartPrefix[] = {"EnvClothSmall", "ViscosityMed", "Inflatables", "GameMeshParticles", "Rigid4"}; //no spaces
+int numBenchmarks = sizeof(benchmarkList) / sizeof(benchmarkList[0]);
 
 struct GpuTimers
 {
@@ -60,11 +58,10 @@ struct GpuTimers
 	int timerCount[benchmarkEndFrame];
 };
 
-
 struct TimerTotals
 {
 	std::vector<NvFlexDetailTimer> detailTimers;
-	
+
 	float frameTime;
 	int samples;
 
@@ -85,23 +82,23 @@ int g_benchmarkScene = 0;
 int g_benchmarkSceneNumber;
 
 #if defined(__linux__)
-int sprintf_s(char*  const buffer, size_t  const bufferCount,
-              const char*  format,...)
+int sprintf_s(char *const buffer, size_t const bufferCount,
+			  const char *format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    int retval = vsprintf(buffer, format, args);
-    va_end(args);
-    
-    return retval;	
-}	      
+	va_list args;
+	va_start(args, format);
+	int retval = vsprintf(buffer, format, args);
+	va_end(args);
+
+	return retval;
+}
 #endif
 
 //-----------------------------------------------------------------------------
-char* removeSpaces(const char* in)
+char *removeSpaces(const char *in)
 {
 	int len = strlen(in);
-	char* out = new char[len+1];
+	char *out = new char[len + 1];
 
 	int i = 0;
 	int j = 0;
@@ -161,15 +158,16 @@ void ProcessGpuTimes()
 	timerfirstTime = false;
 }
 //-----------------------------------------------------------------------------
-void UpdateTotals(TimerTotals& totals)
+void UpdateTotals(TimerTotals &totals)
 {
 	// Phase 0B, async off, dummy work off
 	if (benchmarkEndWarmup <= g_benchmarkFrame && g_benchmarkFrame < benchmarkAsyncOffDummyOnBeginFrame)
 	{
 		totals.frameTime += g_realdt * 1000.0f; //convert to milliseconds
 
-		for (int i = 0; i < g_numDetailTimers; i++) {
-			strcpy(totals.detailTimers[i].name,g_detailTimers[i].name);
+		for (int i = 0; i < g_numDetailTimers; i++)
+		{
+			strcpy(totals.detailTimers[i].name, g_detailTimers[i].name);
 			totals.detailTimers[i].time += g_detailTimers[i].time;
 		}
 
@@ -194,7 +192,7 @@ void UpdateTotals(TimerTotals& totals)
 	}
 }
 //-----------------------------------------------------------------------------
-void BeginNewPhaseIfNecessary(int& sceneToSwitchTo,TimerTotals& totals)
+void BeginNewPhaseIfNecessary(int &sceneToSwitchTo, TimerTotals &totals)
 {
 	// Are we beginning phase 0B?
 	if (g_benchmarkFrame == benchmarkEndWarmup)
@@ -238,27 +236,30 @@ void BeginNewPhaseIfNecessary(int& sceneToSwitchTo,TimerTotals& totals)
 	}
 }
 //-----------------------------------------------------------------------------
-void WriteSceneResults(TimerTotals& totals)
+void WriteSceneResults(TimerTotals &totals)
 {
 	// Write results for scene
-	for (int i = 0; i < g_numDetailTimers; i++) {
+	for (int i = 0; i < g_numDetailTimers; i++)
+	{
 		totals.detailTimers[i].time /= totals.samples;
 	}
 
 	if (g_profile && g_teamCity)
 	{
-		const char* prefix = benchmarkChartPrefix[g_benchmarkScene - 1];
+		const char *prefix = benchmarkChartPrefix[g_benchmarkScene - 1];
 
 		float exclusive = 0.0f;
 
-		for (int i = 0; i < g_numDetailTimers - 1; i++) {
+		for (int i = 0; i < g_numDetailTimers - 1; i++)
+		{
 			exclusive += totals.detailTimers[i].time;
 		}
 
 		printf("##teamcity[buildStatisticValue key='%s_FrameTime' value='%f']\n", prefix, totals.frameTime / totals.samples);
 		printf("##teamcity[buildStatisticValue key='%s_SumKernel' value='%f']\n", prefix, exclusive);
 
-		for (int i = 0; i < g_numDetailTimers - 1; i++) {
+		for (int i = 0; i < g_numDetailTimers - 1; i++)
+		{
 			printf("##teamcity[buildStatisticValue key='%s_%s' value='%f']\n", prefix, totals.detailTimers[i].name, totals.detailTimers[i].time);
 		}
 		printf("\n");
@@ -269,7 +270,8 @@ void WriteSceneResults(TimerTotals& totals)
 	printf("________________________________\n");
 	float exclusive = 0.0f;
 
-	for (int i = 0; i < g_numDetailTimers - 1; i++) {
+	for (int i = 0; i < g_numDetailTimers - 1; i++)
+	{
 		exclusive += totals.detailTimers[i].time;
 		printf("%s %f\n", totals.detailTimers[i].name, totals.detailTimers[i].time);
 	}
@@ -291,7 +293,8 @@ void WriteSceneResults(TimerTotals& totals)
 
 		g_benchmarkFile << std::fixed << std::setprecision(6);
 
-		for (int i = 0; i < g_numDetailTimers - 1; i++) {
+		for (int i = 0; i < g_numDetailTimers - 1; i++)
+		{
 			exclusive += totals.detailTimers[i].time;
 			g_benchmarkFile << totals.detailTimers[i].name << " " << totals.detailTimers[i].time << std::endl;
 
@@ -300,7 +303,8 @@ void WriteSceneResults(TimerTotals& totals)
 
 		g_benchmarkFile << "Sum(exclusive) " << exclusive << std::endl;
 		g_benchmarkFile << "Sum(inclusive) " << totals.detailTimers[g_numDetailTimers - 1].time << std::endl;
-		g_benchmarkFile << "________________________________" << std::endl << std::endl;
+		g_benchmarkFile << "________________________________" << std::endl
+						<< std::endl;
 	}
 
 	if (g_outputAllFrameTimes)
@@ -325,7 +329,6 @@ void WriteSceneResults(TimerTotals& totals)
 
 			g_benchmarkFile << std::endl;
 		}
-
 	}
 
 	g_benchmarkFile.close();
@@ -348,7 +351,6 @@ void WriteSceneResults(TimerTotals& totals)
 			sumVelocities < (benchmarkEnergyCheck[benchmark_id] * 0.50))
 			printf("Benchmark kinetic energy verification failed! Expected: [%f], Actual: [%f]\n\n", benchmarkEnergyCheck[benchmark_id], sumVelocities);
 #endif
-
 	}
 }
 //-----------------------------------------------------------------------------
@@ -380,7 +382,8 @@ int BenchmarkUpdate()
 	static TimerTotals s_totals;
 	int sceneToSwitchTo = -1;
 
-	if (!g_benchmark) return sceneToSwitchTo;
+	if (!g_benchmark)
+		return sceneToSwitchTo;
 
 	ProcessGpuTimes();
 	UpdateTotals(s_totals);

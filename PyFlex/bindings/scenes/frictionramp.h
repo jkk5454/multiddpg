@@ -3,8 +3,7 @@
 class FrictionRamp : public Scene
 {
 public:
-
-	FrictionRamp(const char* name) : Scene(name) {}
+	FrictionRamp(const char *name) : Scene(name) {}
 
 	virtual void Initialize()
 	{
@@ -17,7 +16,7 @@ public:
 		g_params.viscosity = 0.0f;
 		g_params.drag = 0.0f;
 		g_params.lift = 0.0f;
-		g_params.collisionDistance = radius*0.5f;
+		g_params.collisionDistance = radius * 0.5f;
 
 		g_windStrength = 0.0f;
 
@@ -31,10 +30,10 @@ public:
 		for (int i = 0; i < 3; ++i)
 		{
 			// box
-			CreateParticleShape(GetFilePathByPlatform("../../data/box.ply").c_str(), Vec3(0.0f, 3.5f, -i*2.0f), 0.5f, 0.0f, radius, 0.0f, 1.0f, true, 1.0f, NvFlexMakePhase(i, 0), true, 0.0f);
+			CreateParticleShape(GetFilePathByPlatform("../../data/box.ply").c_str(), Vec3(0.0f, 3.5f, -i * 2.0f), 0.5f, 0.0f, radius, 0.0f, 1.0f, true, 1.0f, NvFlexMakePhase(i, 0), true, 0.0f);
 
 			// ramp
-			AddBox(Vec3(5.0f, 0.25f, 1.f), Vec3(3.0f, 1.0f, -i*2.0f), QuatFromAxisAngle(Vec3(0.0f, 0.0f, 1.0f), DegToRad(-11.25f*(i + 1))));
+			AddBox(Vec3(5.0f, 0.25f, 1.f), Vec3(3.0f, 1.0f, -i * 2.0f), QuatFromAxisAngle(Vec3(0.0f, 0.0f, 1.0f), DegToRad(-11.25f * (i + 1))));
 		}
 	}
 };

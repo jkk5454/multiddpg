@@ -1,11 +1,9 @@
 
 
-
 class Restitution : public Scene
 {
 public:
-
-	Restitution(const char* name) : Scene(name) {}
+	Restitution(const char *name) : Scene(name) {}
 
 	void Initialize()
 	{
@@ -20,8 +18,7 @@ public:
 
 		g_numSubsteps = 4;
 
-		// draw options		
+		// draw options
 		g_drawPoints = true;
 	}
-	
 };

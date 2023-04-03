@@ -1,11 +1,9 @@
 
 
-
 class TriggerVolume : public Scene
 {
 public:
-
-	TriggerVolume(const char* name) : Scene(name) {}
+	TriggerVolume(const char *name) : Scene(name) {}
 
 	void Initialize()
 	{
@@ -26,11 +24,11 @@ public:
 		g_params.dissipation = 0.0f;
 		g_params.restitution = 0.0;
 		g_params.numIterations = 4;
-		g_params.particleCollisionMargin = g_params.radius*0.05f;
+		g_params.particleCollisionMargin = g_params.radius * 0.05f;
 
 		g_numSubsteps = 1;
 
-		// draw options		
+		// draw options
 		g_drawPoints = true;
 
 		g_emitters[0].mEnabled = true;
@@ -40,8 +38,8 @@ public:
 	{
 		const int maxContactsPerParticle = 6;
 
-		NvFlexVector<Vec4> contactPlanes(g_flexLib,g_buffers->positions.size()*maxContactsPerParticle);
-		NvFlexVector<Vec4> contactVelocities(g_flexLib, g_buffers->positions.size()*maxContactsPerParticle);
+		NvFlexVector<Vec4> contactPlanes(g_flexLib, g_buffers->positions.size() * maxContactsPerParticle);
+		NvFlexVector<Vec4> contactVelocities(g_flexLib, g_buffers->positions.size() * maxContactsPerParticle);
 		NvFlexVector<int> contactIndices(g_flexLib, g_buffers->positions.size());
 		NvFlexVector<unsigned int> contactCounts(g_flexLib, g_buffers->positions.size());
 
@@ -61,11 +59,11 @@ public:
 
 			for (unsigned int c = 0; c < count; ++c)
 			{
-				Vec4 velocity = contactVelocities[contactIndex*maxContactsPerParticle + c];
+				Vec4 velocity = contactVelocities[contactIndex * maxContactsPerParticle + c];
 
 				const int shapeId = int(velocity.w);
 
-				// detect when particle intersects the trigger 
+				// detect when particle intersects the trigger
 				// volume and teleport it over to the other box
 				if (shapeId == 1)
 				{
@@ -77,5 +75,4 @@ public:
 			}
 		}
 	}
-
 };

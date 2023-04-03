@@ -121,8 +121,15 @@ class Picker(ActionToolBase):
         3. Update picked particle pos
         """
         action = np.reshape(action, [-1, 4])
+        '''
+        action = np.array([[-0.001, 0.000, 0.000, 0.001],
+                          [-0.001, 0.000, 0.000, 0.001]])
+        '''
         # pick_flag = np.random.random(self.num_picker) < action[:, 3]
-        pick_flag = action[:, 3] > 0.5
+        #pick_flag = action[:, 3] > 0.5
+        pick_flag = abs(action[:,3])>0
+
+        #pick_flag = action[:, 3] > 0.5
         picker_pos, particle_pos = self._get_pos()
         new_picker_pos, new_particle_pos = picker_pos.copy(), particle_pos.copy()
 
@@ -180,6 +187,7 @@ class Picker(ActionToolBase):
                         new_particle_pos[picked_particle_idices[j], :3] = particle_pos[picked_particle_idices[j], :3].copy()
 
         self._set_pos(new_picker_pos, new_particle_pos)
+        return pick_flag
 
 
 class PickerPickPlace(Picker):

@@ -2,8 +2,7 @@
 class GooGun : public Scene
 {
 public:
-
-	GooGun(const char* name, bool viscous) : Scene(name), mViscous(viscous) {}
+	GooGun(const char *name, bool viscous) : Scene(name), mViscous(viscous) {}
 
 	virtual void Initialize()
 	{
@@ -13,18 +12,18 @@ public:
 		float radius = 0.1f;
 
 		for (int i = 0; i < 5; i++)
-			AddRandomConvex(10, Vec3(i*2.0f, 0.0f, Randf(0.0f, 2.0f)), minSize, maxSize, Vec3(0.0f, 1.0f, 0.0f), Randf(0.0f, k2Pi*10.0f));
+			AddRandomConvex(10, Vec3(i * 2.0f, 0.0f, Randf(0.0f, 2.0f)), minSize, maxSize, Vec3(0.0f, 1.0f, 0.0f), Randf(0.0f, k2Pi * 10.0f));
 
 		g_params.radius = radius;
 
 		g_params.numIterations = 3;
 		g_params.vorticityConfinement = 0.0f;
-		g_params.fluidRestDistance = g_params.radius*0.55f;
+		g_params.fluidRestDistance = g_params.radius * 0.55f;
 		g_params.smoothing = 0.5f;
 		g_params.relaxationFactor = 1.f;
 		g_params.restitution = 0.0f;
 		g_params.collisionDistance = 0.01f;
-		g_params.shapeCollisionMargin = g_params.collisionDistance*0.25f;
+		g_params.shapeCollisionMargin = g_params.collisionDistance * 0.25f;
 
 		if (mViscous)
 		{
@@ -59,9 +58,9 @@ public:
 #endif
 
 		g_emitters[0].mEnabled = true;
-		g_emitters[0].mSpeed = (g_params.fluidRestDistance*2.f / g_dt);
+		g_emitters[0].mSpeed = (g_params.fluidRestDistance * 2.f / g_dt);
 
-		// draw options		
+		// draw options
 		g_drawEllipsoids = true;
 		g_pause = false;
 	}

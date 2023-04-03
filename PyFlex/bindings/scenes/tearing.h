@@ -2,8 +2,7 @@
 class Tearing : public Scene
 {
 public:
-
-	Tearing(const char* name) : Scene(name) {}
+	Tearing(const char *name) : Scene(name) {}
 
 	~Tearing()
 	{
@@ -12,8 +11,8 @@ public:
 
 	void Initialize()
 	{
-		Mesh* mesh = ImportMesh(GetFilePathByPlatform("../../data/irregular_plane.obj").c_str());
-		mesh->Transform(RotationMatrix(kPi, Vec3(0.0f, 1.0f, 0.0f))*RotationMatrix(kPi*0.5f, Vec3(1.0f, 0.0f, 0.0f))*ScaleMatrix(2.0f));
+		Mesh *mesh = ImportMesh(GetFilePathByPlatform("../../data/irregular_plane.obj").c_str());
+		mesh->Transform(RotationMatrix(kPi, Vec3(0.0f, 1.0f, 0.0f)) * RotationMatrix(kPi * 0.5f, Vec3(1.0f, 0.0f, 0.0f)) * ScaleMatrix(2.0f));
 
 		Vec3 lower, upper;
 		mesh->GetBounds(lower, upper);
@@ -39,9 +38,9 @@ public:
 
 		g_numExtraParticles = 1000;
 
-		mCloth = NvFlexExtCreateTearingClothFromMesh((float*)&g_buffers->positions[0], int(g_buffers->positions.size()), int(g_buffers->positions.size()) + g_numExtraParticles, (int*)&mesh->m_indices[0], mesh->GetNumFaces(), 0.8f, 0.8f, 0.0f);
+		mCloth = NvFlexExtCreateTearingClothFromMesh((float *)&g_buffers->positions[0], int(g_buffers->positions.size()), int(g_buffers->positions.size()) + g_numExtraParticles, (int *)&mesh->m_indices[0], mesh->GetNumFaces(), 0.8f, 0.8f, 0.0f);
 
-		g_buffers->triangles.assign((int*)&mesh->m_indices[0], mesh->m_indices.size());
+		g_buffers->triangles.assign((int *)&mesh->m_indices[0], mesh->m_indices.size());
 		g_buffers->triangleNormals.resize(mesh->GetNumFaces(), Vec3(0.0f, 0.0f, 1.0f));
 
 		g_buffers->springIndices.assign(mCloth->springIndices, mCloth->numSprings * 2);
@@ -52,7 +51,7 @@ public:
 		g_params.dynamicFriction = 0.025f;
 		g_params.dissipation = 0.0f;
 		g_params.numIterations = 16;
-		g_params.particleCollisionMargin = g_params.radius*0.05f;
+		g_params.particleCollisionMargin = g_params.radius * 0.05f;
 		g_params.relaxationFactor = 1.0f;
 		g_params.drag = 0.03f;
 
@@ -63,7 +62,7 @@ public:
 
 		g_pause = false;
 
-		// draw options		
+		// draw options
 		g_drawPoints = false;
 	}
 
@@ -85,7 +84,7 @@ public:
 		int numTriangleEdits;
 
 		// update asset's copy of the particles
-		memcpy(mCloth->particles, &g_buffers->positions[0], sizeof(Vec4)*g_buffers->positions.size());
+		memcpy(mCloth->particles, &g_buffers->positions[0], sizeof(Vec4) * g_buffers->positions.size());
 
 		NvFlexExtTearClothMesh(mCloth, maxStrain, 4, particleCopies, &numParticleCopies, maxCopies, triangleEdits, &numTriangleEdits, maxEdits);
 
@@ -95,7 +94,7 @@ public:
 			const int srcIndex = particleCopies[i].srcIndex;
 			const int destIndex = particleCopies[i].destIndex;
 
-			g_buffers->positions[destIndex] = Vec4(Vec3(g_buffers->positions[srcIndex]), 1.0f);	// override mass because picked particle has inf. mass
+			g_buffers->positions[destIndex] = Vec4(Vec3(g_buffers->positions[srcIndex]), 1.0f); // override mass because picked particle has inf. mass
 			g_buffers->restPositions[destIndex] = g_buffers->restPositions[srcIndex];
 			g_buffers->velocities[destIndex] = g_buffers->velocities[srcIndex];
 			g_buffers->phases[destIndex] = g_buffers->phases[srcIndex];
@@ -128,5 +127,5 @@ public:
 		NvFlexSetRestParticles(g_solver, g_buffers->restPositions.buffer, NULL);
 	}
 
-	NvFlexExtAsset* mCloth;
+	NvFlexExtAsset *mCloth;
 };

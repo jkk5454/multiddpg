@@ -34,44 +34,43 @@
 
 struct Mesh
 {
-    void AddMesh(const Mesh& m);
+    void AddMesh(const Mesh &m);
 
     uint32_t GetNumVertices() const { return uint32_t(m_positions.size()); }
     uint32_t GetNumFaces() const { return uint32_t(m_indices.size()) / 3; }
 
-	void DuplicateVertex(uint32_t i);
+    void DuplicateVertex(uint32_t i);
 
     void CalculateNormals();
-    void Transform(const Matrix44& m);
-	void Normalize(float s=1.0f);	// scale so bounds in any dimension equals s and lower bound = (0,0,0)
+    void Transform(const Matrix44 &m);
+    void Normalize(float s = 1.0f); // scale so bounds in any dimension equals s and lower bound = (0,0,0)
 
-    void GetBounds(Vector3& minExtents, Vector3& maxExtents) const;
+    void GetBounds(Vector3 &minExtents, Vector3 &maxExtents) const;
 
     std::vector<Point3> m_positions;
     std::vector<Vector3> m_normals;
     std::vector<Vector2> m_texcoords[2];
     std::vector<Colour> m_colours;
 
-    std::vector<uint32_t> m_indices;    
+    std::vector<uint32_t> m_indices;
 };
 
 // create mesh from file
-Mesh* ImportMeshFromObj(const char* path);
-Mesh* ImportMeshFromPly(const char* path);
-Mesh* ImportMeshFromBin(const char* path);
+Mesh *ImportMeshFromObj(const char *path);
+Mesh *ImportMeshFromPly(const char *path);
+Mesh *ImportMeshFromBin(const char *path);
 
 // just switches on filename
-Mesh* ImportMesh(const char* path);
+Mesh *ImportMesh(const char *path);
 
 // save a mesh in a flat binary format
-void ExportMeshToBin(const char* path, const Mesh* m);
+void ExportMeshToBin(const char *path, const Mesh *m);
 
 // create procedural primitives
-Mesh* CreateTriMesh(float size, float y=0.0f);
-Mesh* CreateCubeMesh();
-Mesh* CreateQuadMesh(float size, float y=0.0f);
-Mesh* CreateDiscMesh(float radius, uint32_t segments);
-Mesh* CreateTetrahedron(float ground=0.0f, float height=1.0f); //fixed but not used
-Mesh* CreateSphere(int slices, int segments, float radius = 1.0f);
-Mesh* CreateCapsule(int slices, int segments, float radius = 1.0f, float halfHeight = 1.0f);
-
+Mesh *CreateTriMesh(float size, float y = 0.0f);
+Mesh *CreateCubeMesh();
+Mesh *CreateQuadMesh(float size, float y = 0.0f);
+Mesh *CreateDiscMesh(float radius, uint32_t segments);
+Mesh *CreateTetrahedron(float ground = 0.0f, float height = 1.0f); //fixed but not used
+Mesh *CreateSphere(int slices, int segments, float radius = 1.0f);
+Mesh *CreateCapsule(int slices, int segments, float radius = 1.0f, float halfHeight = 1.0f);

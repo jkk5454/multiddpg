@@ -3,13 +3,12 @@
 class Lighthouse : public Scene
 {
 public:
-
-	Lighthouse(const char* name) : Scene(name) {}
+	Lighthouse(const char *name) : Scene(name) {}
 
 	virtual void Initialize()
 	{
 		float radius = 0.15f;
-		float restDistance = radius*0.6f;
+		float restDistance = radius * 0.6f;
 
 		NvFlexDistanceFieldId sdf = CreateSDF(GetFilePathByPlatform("../../data/lighthouse.ply").c_str(), 128);
 		AddSDF(sdf, Vec3(4.0f, 0.0f, 0.0f), Quat(), 10.f);
@@ -48,8 +47,7 @@ public:
 		g_waveAmplitude = 2.2f;
 		g_waveFloorTilt = 0.1f;
 
-
-		// draw options		
+		// draw options
 		g_drawPoints = false;
 		g_drawEllipsoids = true;
 		g_drawDiffuse = true;

@@ -3,8 +3,7 @@
 class Inflatable : public Scene
 {
 public:
-
-	Inflatable(const char* name) : Scene(name) {}
+	Inflatable(const char *name) : Scene(name) {}
 
 	virtual ~Inflatable()
 	{
@@ -12,7 +11,7 @@ public:
 			delete mCloths[i];
 	}
 
-	void AddInflatable(const Mesh* mesh, float overPressure, int phase)
+	void AddInflatable(const Mesh *mesh, float overPressure, int phase)
 	{
 		const int startVertex = g_buffers->positions.size();
 
@@ -48,7 +47,7 @@ public:
 		}
 
 		// create a cloth mesh using the global positions / indices
-		ClothMesh* cloth = new ClothMesh(&g_buffers->positions[0], g_buffers->positions.size(), &g_buffers->triangles[triOffset], triCount * 3, 0.8f, 1.0f);
+		ClothMesh *cloth = new ClothMesh(&g_buffers->positions[0], g_buffers->positions.size(), &g_buffers->triangles[triOffset], triCount * 3, 0.8f, 1.0f);
 
 		for (size_t i = 0; i < cloth->mConstraintIndices.size(); ++i)
 			g_buffers->springIndices.push_back(cloth->mConstraintIndices[i]);
@@ -75,16 +74,15 @@ public:
 
 		// convex rocks
 		for (int i = 0; i < 5; i++)
-			AddRandomConvex(10, Vec3(i*2.0f, 0.0f, Randf(0.0f, 2.0f)), minSize, maxSize, Vec3(0.0f, 1.0f, 0.0f), Randf(0.0f, k2Pi));
+			AddRandomConvex(10, Vec3(i * 2.0f, 0.0f, Randf(0.0f, 2.0f)), minSize, maxSize, Vec3(0.0f, 1.0f, 0.0f), Randf(0.0f, k2Pi));
 
 		float radius = 0.12f;
 		int group = 0;
 
-		const char* meshes[2] =
-		{
-			"../../data/box_high_weld.ply",
-			"../../data/sphere.ply"
-		};
+		const char *meshes[2] =
+			{
+				"../../data/box_high_weld.ply",
+				"../../data/sphere.ply"};
 
 		mPressure = 1.0f;
 
@@ -92,9 +90,9 @@ public:
 		{
 			for (int i = 0; i < 4; ++i)
 			{
-				Mesh* mesh = ImportMesh(GetFilePathByPlatform(meshes[(i + y) & 1]).c_str());
+				Mesh *mesh = ImportMesh(GetFilePathByPlatform(meshes[(i + y) & 1]).c_str());
 				mesh->Normalize();
-				mesh->Transform(TranslationMatrix(Point3(i*2.0f, 1.0f + y*2.0f, 1.5f)));
+				mesh->Transform(TranslationMatrix(Point3(i * 2.0f, 1.0f + y * 2.0f, 1.5f)));
 
 				AddInflatable(mesh, mPressure, NvFlexMakePhase(group++, 0));
 
@@ -106,7 +104,7 @@ public:
 		g_params.dynamicFriction = 0.4f;
 		g_params.dissipation = 0.0f;
 		g_params.numIterations = 10;
-		g_params.particleCollisionMargin = g_params.radius*0.05f;
+		g_params.particleCollisionMargin = g_params.radius * 0.05f;
 		g_params.drag = 0.0f;
 		g_params.collisionDistance = 0.01f;
 
@@ -118,7 +116,7 @@ public:
 
 		g_numSubsteps = 2;
 
-		// draw options		
+		// draw options
 		g_drawPoints = false;
 		g_drawSprings = 0;
 		g_drawCloth = false;
@@ -147,7 +145,7 @@ public:
 
 		for (size_t i = 0; i < mCloths.size(); ++i)
 		{
-			DrawCloth(&g_buffers->positions[0], &g_buffers->normals[0], NULL, &g_buffers->triangles[indexStart], mCloths[i]->mTris.size(), g_buffers->positions.size(), i % 6, g_params.radius*0.35f);
+			DrawCloth(&g_buffers->positions[0], &g_buffers->normals[0], NULL, &g_buffers->triangles[indexStart], mCloths[i]->mTris.size(), g_buffers->positions.size(), i % 6, g_params.radius * 0.35f);
 
 			indexStart += mCloths[i]->mTris.size() * 3;
 		}
@@ -155,5 +153,5 @@ public:
 
 	float mPressure;
 
-	std::vector<ClothMesh*> mCloths;
+	std::vector<ClothMesh *> mCloths;
 };

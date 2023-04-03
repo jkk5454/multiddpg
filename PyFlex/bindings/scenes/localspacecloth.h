@@ -1,11 +1,9 @@
 
 
-
 class LocalSpaceCloth : public Scene
 {
 public:
-
-	LocalSpaceCloth (const char* name) : Scene(name) {}
+	LocalSpaceCloth(const char *name) : Scene(name) {}
 
 	void Initialize()
 	{
@@ -15,13 +13,13 @@ public:
 
 		float radius = 0.1f;
 
-		CreateSpringGrid(Vec3(0.5f, 1.45f, -0.5f), 32, 20, 1, radius*0.5f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseSelfCollideFilter), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), 1.0f);
-		
+		CreateSpringGrid(Vec3(0.5f, 1.45f, -0.5f), 32, 20, 1, radius * 0.5f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseSelfCollideFilter), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), 1.0f);
+
 		int c1 = 1;
 		int c2 = 20;
 
 		// add tethers
-		for (int i=0; i < int(g_buffers->positions.size()); ++i)
+		for (int i = 0; i < int(g_buffers->positions.size()); ++i)
 		{
 			float minSqrDist = FLT_MAX;
 
@@ -30,7 +28,7 @@ public:
 				float stiffness = -0.8f;
 				float give = 0.01f;
 
-				float sqrDist = LengthSq(Vec3(g_buffers->positions[c1])-Vec3(g_buffers->positions[c2]));
+				float sqrDist = LengthSq(Vec3(g_buffers->positions[c1]) - Vec3(g_buffers->positions[c2]));
 
 				if (sqrDist < minSqrDist)
 				{
@@ -41,10 +39,8 @@ public:
 				}
 			}
 		}
-		
 
-
-		for (int i=0; i < g_buffers->positions.size(); ++i)
+		for (int i = 0; i < g_buffers->positions.size(); ++i)
 		{
 			if (g_buffers->positions[i].x == 0.5f)
 				g_buffers->positions[i].w = 0.0f;
@@ -71,8 +67,8 @@ public:
 		g_params.shapeCollisionMargin = 0.05f;
 
 		g_params.numIterations = 6;
-	
-		// draw options		
+
+		// draw options
 		g_drawPoints = false;
 	}
 
@@ -83,24 +79,23 @@ public:
 
 		imguiSlider("Linear Inertia", &linearInertialScale, 0.0f, 1.0f, 0.001f);
 		imguiSlider("Angular Inertia", &angularInertialScale, 0.0f, 1.0f, 0.001f);
-
 	}
 
 	virtual void Update()
 	{
-		rotation += rotationSpeed*g_dt;
+		rotation += rotationSpeed * g_dt;
 
 		// new position of the box center
-		Vec3 newPosition = translation;//meshFrame.GetPosition() + Vec3(float(g_lastdx), 0.0f, float(g_lastdy))*0.001f;
+		Vec3 newPosition = translation; //meshFrame.GetPosition() + Vec3(float(g_lastdx), 0.0f, float(g_lastdy))*0.001f;
 		Quat newRotation = QuatFromAxisAngle(Vec3(0.0f, 1.0f, 0.0f), rotation);
 
 		NvFlexExtMovingFrameUpdate(&meshFrame, newPosition, newRotation, g_dt);
 
 		// update all the particles in the sim with inertial forces
 		NvFlexExtMovingFrameApply(
-			&meshFrame, 
-			&g_buffers->positions[0].x, 
-			&g_buffers->velocities[0].x, 
+			&meshFrame,
+			&g_buffers->positions[0].x,
+			&g_buffers->velocities[0].x,
 			g_buffers->positions.size(),
 			linearInertialScale,
 			angularInertialScale,
@@ -115,7 +110,7 @@ public:
 		g_buffers->shapeFlags.resize(0);
 
 		AddBox(size, newPosition, newRotation);
-		
+
 		UpdateShapes();
 	}
 

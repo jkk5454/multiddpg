@@ -36,9 +36,9 @@ struct PfmImage
 
 	// optional
 	float m_maxDepth;
-	
-	float* m_data;
+
+	float *m_data;
 };
 
-bool PfmLoad(const char* filename, PfmImage& image);
-void PfmSave(const char* filename, const PfmImage& image);
+bool PfmLoad(const char *filename, PfmImage &image);
+void PfmSave(const char *filename, const PfmImage &image);

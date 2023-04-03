@@ -21,9 +21,9 @@
 
 namespace OGL_Renderer
 {
-	bool imguiRenderGLInit(const char* fontpath);
+	bool imguiRenderGLInit(const char *fontpath);
 	void imguiRenderGLDestroy();
 	void imguiRenderGLDraw();
-}
+} // namespace OGL_Renderer
 
 #endif // IMGUI_RENDER_GL_H

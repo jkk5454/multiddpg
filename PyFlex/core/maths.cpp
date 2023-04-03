@@ -36,14 +36,13 @@ void RandInit()
 	seed2 = seed1 ^ 0x13ab45fe;
 }
 
-static float s_identity[4][4] = { { 1.0f, 0.0f, 0.0f, 0.0f },
-{ 0.0f, 1.0f, 0.0f, 0.0f },
-{ 0.0f, 0.0f, 1.0f, 0.0f },
-{ 0.0f, 0.0f, 0.0f, 1.0f } };
+static float s_identity[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
+								 {0.0f, 1.0f, 0.0f, 0.0f},
+								 {0.0f, 0.0f, 1.0f, 0.0f},
+								 {0.0f, 0.0f, 0.0f, 1.0f}};
 
 template <>
 XMatrix44<float> XMatrix44<float>::kIdentity(s_identity[0]);
-
 
 Colour::Colour(Colour::Preset p)
 {

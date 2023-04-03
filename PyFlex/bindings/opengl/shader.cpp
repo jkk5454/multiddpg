@@ -37,24 +37,23 @@
 
 #define WITH_GLEW
 
-void glAssert(const char* msg, long line, const char* file)
+void glAssert(const char *msg, long line, const char *file)
 {
 	struct glError
 	{
 		GLenum code;
-		const char* name;
+		const char *name;
 	};
 
 	static const glError errors[] =
-	{
-		{ GL_NO_ERROR, "No Error" },
-		{ GL_INVALID_ENUM, "Invalid Enum" },
-		{ GL_INVALID_VALUE, "Invalid Value" },
-		{ GL_INVALID_OPERATION, "Invalid Operation" },
+	{ {GL_NO_ERROR, "No Error"},
+	  {GL_INVALID_ENUM, "Invalid Enum"},
+	  {GL_INVALID_VALUE, "Invalid Value"},
+	  {GL_INVALID_OPERATION, "Invalid Operation"},
 #if OGL1
-		{ GL_STACK_OVERFLOW, "Stack Overflow" },
-		{ GL_STACK_UNDERFLOW, "Stack Underflow" },
-		{ GL_OUT_OF_MEMORY, "Out Of Memory" }
+	  {GL_STACK_OVERFLOW, "Stack Overflow"},
+	  {GL_STACK_UNDERFLOW, "Stack Underflow"},
+	  {GL_OUT_OF_MEMORY, "Out Of Memory"}
 #endif
 	};
 
@@ -66,7 +65,7 @@ void glAssert(const char* msg, long line, const char* file)
 	}
 	else
 	{
-		const char* errorName = "Unknown error";
+		const char *errorName = "Unknown error";
 
 		// find error message
 		for (uint32_t i = 0; i < sizeof(errors) / sizeof(glError); i++)
@@ -110,10 +109,10 @@ namespace OGL_Renderer
 #endif
 	}
 
-	void PreProcessShader(const char* filename, std::string& source)
+	void PreProcessShader(const char *filename, std::string &source)
 	{
 		// load source
-		FILE* f = fopen(filename, "r");
+		FILE *f = fopen(filename, "r");
 
 		if (!f)
 		{
@@ -131,8 +130,8 @@ namespace OGL_Renderer
 				// test for #include
 				if (strncmp(buf, "#include", 8) == 0)
 				{
-					const char* begin = strchr(buf, '\"');
-					const char* end = strrchr(buf, '\"');
+					const char *begin = strchr(buf, '\"');
+					const char *end = strrchr(buf, '\"');
 
 					if (begin && end && (begin != end))
 					{
@@ -151,7 +150,7 @@ namespace OGL_Renderer
 		fclose(f);
 	}
 
-	GLuint CompileProgram(const char *vsource, const char *fsource, const char* gsource)
+	GLuint CompileProgram(const char *vsource, const char *fsource, const char *gsource)
 	{
 		GLuint vertexShader = GLuint(-1);
 		GLuint geometryShader = GLuint(-1);
@@ -197,7 +196,8 @@ namespace OGL_Renderer
 		GLint success = 0;
 		glGetProgramiv(program, GL_LINK_STATUS, &success);
 
-		if (!success) {
+		if (!success)
+		{
 			char temp[256];
 			glGetProgramInfoLog(program, 256, 0, temp);
 			printf("Failed to link program:\n%s\n", temp);
@@ -208,17 +208,17 @@ namespace OGL_Renderer
 		return program;
 	}
 
-	void DrawPlane(const Vec4& p, bool color)
+	void DrawPlane(const Vec4 &p, bool color)
 	{
 		Vec3 u, v;
 		BasisFromVector(Vec3(p.x, p.y, p.z), &u, &v);
 
-		Vec3 c = Vec3(p.x, p.y, p.z)*-p.w;
+		Vec3 c = Vec3(p.x, p.y, p.z) * -p.w;
 
 		glBegin(GL_QUADS);
 
 		if (color)
-			glColor3fv(p*0.5f + Vec4(0.5f, 0.5f, 0.5f, 0.5f));
+			glColor3fv(Vec3(0.001f, 0.001f, 0.001f));
 
 		float kSize = 200.0f;
 
@@ -227,26 +227,26 @@ namespace OGL_Renderer
 		{
 			for (int y = -3; y <= 3; ++y)
 			{
-				Vec3 coff = c + u*float(x)*kSize*2.0f + v*float(y)*kSize*2.0f;
+				Vec3 coff = c + u * float(x) * kSize * 2.0f + v * float(y) * kSize * 2.0f;
 
 				glTexCoord2f(1.0f, 1.0f);
 				glNormal3f(p.x, p.y, p.z);
-				glVertex3fv(coff + u*kSize + v*kSize);
+				glVertex3fv(coff + u * kSize + v * kSize);
 
 				glTexCoord2f(0.0f, 1.0f);
 				glNormal3f(p.x, p.y, p.z);
-				glVertex3fv(coff - u*kSize + v*kSize);
+				glVertex3fv(coff - u * kSize + v * kSize);
 
 				glTexCoord2f(0.0f, 0.0f);
 				glNormal3f(p.x, p.y, p.z);
-				glVertex3fv(coff - u*kSize - v*kSize);
+				glVertex3fv(coff - u * kSize - v * kSize);
 
 				glTexCoord2f(1.0f, 0.0f);
 				glNormal3f(p.x, p.y, p.z);
-				glVertex3fv(coff + u*kSize - v*kSize);
+				glVertex3fv(coff + u * kSize - v * kSize);
 			}
 		}
 
 		glEnd();
 	}
-}
+} // namespace OGL_Renderer

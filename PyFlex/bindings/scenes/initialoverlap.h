@@ -4,8 +4,7 @@
 class InitialOverlap : public Scene
 {
 public:
-
-	InitialOverlap(const char* name) : Scene(name) {}
+	InitialOverlap(const char *name) : Scene(name) {}
 
 	virtual void Initialize()
 	{
@@ -24,7 +23,7 @@ public:
 
 		g_numSubsteps = 2;
 
-		// draw options		
+		// draw options
 		g_drawPoints = true;
 	}
 };

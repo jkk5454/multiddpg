@@ -32,4 +32,4 @@
 #include "maths.h"
 
 // extrudes a circle along a Hermite curve defined by curvePoints, resolution is the number of circle segments, smoothing is the number of segments between points
-void Extrude(const Vec3* points, int numPoints, std::vector<Vec3>& positions, std::vector<Vec3>& normals, std::vector<int>& indices, float radius, int resolution, int smoothing);
+void Extrude(const Vec3 *points, int numPoints, std::vector<Vec3> &positions, std::vector<Vec3> &normals, std::vector<int> &indices, float radius, int resolution, int smoothing);

@@ -3,28 +3,34 @@
 class Scene
 {
 public:
+	Scene(const char *name) : mName(name) {}
 
-	Scene(const char* name) : mName(name) {}
-	
-	virtual void Initialize(py::array_t<float> scene_params, int thread_idx = 0) = 0;
+	virtual void Initialize(
+				py::array_t<float> scene_params, 
+				py::array_t<float> vertices,
+				py::array_t<int> stretch_edges,
+				py::array_t<int> bend_edges,
+				py::array_t<int> shear_edges,
+				py::array_t<int> faces, 
+				int thread_idx = 0){};
 	virtual void PostInitialize() {}
-	
+
 	// update any buffers (all guaranteed to be mapped here)
 	virtual void Update(py::array_t<float> update_params) {}
 
 	// send any changes to flex (all buffers guaranteed to be unmapped here)
 	virtual void Sync() {}
-	
+
 	virtual void Draw(int pass) {}
 	virtual void KeyDown(int key) {}
 	virtual void DoGui() {}
 	virtual void CenterCamera() {}
 
-	virtual Matrix44 GetBasis() { return Matrix44::kIdentity; }	
+	virtual Matrix44 GetBasis() { return Matrix44::kIdentity; }
 
-	virtual const char* GetName() { return mName; }
+	virtual const char *GetName() { return mName; }
 
-	const char* mName;
+	const char *mName;
 };
 
 #include "softgym_scenes/softgym_cloth.h"

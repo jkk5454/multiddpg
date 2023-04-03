@@ -29,7 +29,7 @@
 
 #include <vector>
 
-void Extrude(const Vec3* points, int numPoints, std::vector<Vec3>& vertices, std::vector<Vec3>& normals, std::vector<int>& triangles, float radius, int resolution, int smoothing)
+void Extrude(const Vec3 *points, int numPoints, std::vector<Vec3> &vertices, std::vector<Vec3> &normals, std::vector<int> &triangles, float radius, int resolution, int smoothing)
 {
 	if (numPoints < 2)
 		return;
@@ -61,8 +61,8 @@ void Extrude(const Vec3* points, int numPoints, std::vector<Vec3>& vertices, std
 
 		Vec3 p1 = Vec3(points[b]);
 		Vec3 p2 = Vec3(points[c]);
-		Vec3 m1 = 0.5f*(Vec3(points[c]) - Vec3(points[a]));
-		Vec3 m2 = 0.5f*(Vec3(points[d]) - Vec3(points[b]));
+		Vec3 m1 = 0.5f * (Vec3(points[c]) - Vec3(points[a]));
+		Vec3 m2 = 0.5f * (Vec3(points[d]) - Vec3(points[b]));
 
 		// ensure last segment handled correctly
 		int segments = (i < numPoints - 2) ? smoothing : smoothing + 1;
@@ -77,7 +77,7 @@ void Extrude(const Vec3* points, int numPoints, std::vector<Vec3>& vertices, std
 
 			// if parallel then don't need to do anything
 			if (fabsf(angle) > 0.001f)
-				frame = RotationMatrix(angle, SafeNormalize(Cross(cur, dir)))*frame;
+				frame = RotationMatrix(angle, SafeNormalize(Cross(cur, dir))) * frame;
 
 			size_t startIndex = vertices.size();
 
@@ -86,9 +86,9 @@ void Extrude(const Vec3* points, int numPoints, std::vector<Vec3>& vertices, std
 				float angle = k2Pi / resolution;
 
 				// transform position and normal to world space
-				Vec4 v = frame*Vec4(cosf(angle*c), sinf(angle*c), 0.0f, 0.0f);
+				Vec4 v = frame * Vec4(cosf(angle * c), sinf(angle * c), 0.0f, 0.0f);
 
-				vertices.push_back(Vec3(v)*radius + pos);
+				vertices.push_back(Vec3(v) * radius + pos);
 				normals.push_back(Vec3(v));
 			}
 

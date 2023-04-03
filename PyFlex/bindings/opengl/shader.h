@@ -36,7 +36,7 @@
 #include "../../external/glad/include/glad/glad.h"
 #include "../../external/SDL2-2.0.4/include/SDL.h"
 
-#pragma comment (lib, "opengl32.lib") /* link Microsoft OpenGL lib   */
+#pragma comment(lib, "opengl32.lib") /* link Microsoft OpenGL lib   */
 
 #include <gl/GL.h>
 
@@ -51,7 +51,7 @@
 #include <GL/freeglut.h>
 
 #elif __APPLE__
-#define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED 
+#define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #include <opengl/gl3.h>
 #elif PLATFORM_IOS
 
@@ -71,12 +71,16 @@
 #if defined(NDEBUG)
 #define glVerify(x) x
 #else
-#define glVerify(x) {x; glAssert(#x, __LINE__, __FILE__);}
-void glAssert(const char* msg, long line, const char* file);
+#define glVerify(x)                       \
+	{                                     \
+		x;                                \
+		glAssert(#x, __LINE__, __FILE__); \
+	}
+void glAssert(const char *msg, long line, const char *file);
 #endif
 
 namespace OGL_Renderer
 {
-	GLuint CompileProgram(const char *vsource = NULL, const char *fsource = NULL, const char* gsource = NULL);
-	void DrawPlane(const Vec4& p, bool color = true);
-}
+	GLuint CompileProgram(const char *vsource = NULL, const char *fsource = NULL, const char *gsource = NULL);
+	void DrawPlane(const Vec4 &p, bool color = true);
+} // namespace OGL_Renderer

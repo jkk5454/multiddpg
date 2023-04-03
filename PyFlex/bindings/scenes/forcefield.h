@@ -3,9 +3,7 @@
 class ForceField : public Scene
 {
 public:
-
-
-	ForceField(const char* name) : Scene(name)
+	ForceField(const char *name) : Scene(name)
 	{
 	}
 
@@ -14,9 +12,9 @@ public:
 		const float radius = 0.01f;
 		const int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide);
 
-		CreateParticleGrid(Vec3(-1.0f, radius, 0.0f), 200, 6, 50, radius*0.5f, Vec3(0.0f), 1.0f, false, 0.0f, phase);
+		CreateParticleGrid(Vec3(-1.0f, radius, 0.0f), 200, 6, 50, radius * 0.5f, Vec3(0.0f), 1.0f, false, 0.0f, phase);
 
-		g_params.radius = radius*1.0f;
+		g_params.radius = radius * 1.0f;
 		g_params.dynamicFriction = 0.4f;
 		g_params.staticFriction = 0.4f;
 		g_params.particleFriction = 0.25f;
@@ -30,7 +28,6 @@ public:
 		g_drawPoints = true;
 
 		callback = NULL;
-
 	}
 
 	virtual void PostInitialize()
@@ -47,16 +44,16 @@ public:
 		g_sceneUpper += Vec3(1.0f);
 	}
 
-	void DrawCircle(const Vec3& pos, const Vec3& u, const Vec3& v, float radius, int segments)
+	void DrawCircle(const Vec3 &pos, const Vec3 &u, const Vec3 &v, float radius, int segments)
 	{
 		BeginLines();
-		
-		Vec3 start = pos + radius*v;
 
-		for (int i=1; i <=segments; ++i)
+		Vec3 start = pos + radius * v;
+
+		for (int i = 1; i <= segments; ++i)
 		{
-			float theta = k2Pi*(float(i)/segments);
-			Vec3 end = pos + radius*sinf(theta)*u + radius*cosf(theta)*v;
+			float theta = k2Pi * (float(i) / segments);
+			Vec3 end = pos + radius * sinf(theta) * u + radius * cosf(theta) * v;
 
 			DrawLine(start, end, Vec4(1.0f));
 
@@ -74,10 +71,10 @@ public:
 
 	virtual void Update()
 	{
-		float time = g_frame*g_dt;
+		float time = g_frame * g_dt;
 
-		(Vec3&)forcefield.mPosition = Vec3((sinf(time)), 0.5f, 0.0f);
-		forcefield.mRadius = (sinf(time*1.5f)*0.5f + 0.5f);
+		(Vec3 &)forcefield.mPosition = Vec3((sinf(time)), 0.5f, 0.0f);
+		forcefield.mRadius = (sinf(time * 1.5f) * 0.5f + 0.5f);
 		forcefield.mStrength = -30.0f;
 		forcefield.mMode = eNvFlexExtModeForce;
 		forcefield.mLinearFalloff = true;
@@ -87,6 +84,5 @@ public:
 
 	NvFlexExtForceField forcefield;
 
-	NvFlexExtForceFieldCallback* callback;
-
+	NvFlexExtForceFieldCallback *callback;
 };

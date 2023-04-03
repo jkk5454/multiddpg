@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(PyFleX)
 
-# set(CMAKE_VERBOSE_MAKEFILE ON)
-
 find_package(CUDA 9.0 REQUIRED)
 find_package(pybind11 REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -MMD -m64 -Wall -std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -MMD -m64 -Wall -std=c++0x")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_FORCE_INLINES -fPIC -fpermissive -fno-strict-aliasing -O3")
 
 set(ROOT $ENV{PYFLEXROOT})
@@ -43,4 +41,5 @@ target_link_libraries(${EXAMPLE_BIN} PRIVATE ${ROOT}/lib/linux64/NvFlexReleaseCU
 target_link_libraries(${EXAMPLE_BIN} PRIVATE ${ROOT}/external/SDL2-2.0.4/lib/x64/libSDL2-2.0.so.0.4.0)
 target_link_libraries(${EXAMPLE_BIN} PRIVATE ${ROOT}/external/SDL2-2.0.4/lib/x64/libSDL2.a)
 target_link_libraries(${EXAMPLE_BIN} PRIVATE ${CUDA_LIBRARIES})
+target_link_libraries(${EXAMPLE_BIN} PRIVATE GL GLU)
 
