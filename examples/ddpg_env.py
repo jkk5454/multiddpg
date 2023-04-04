@@ -1,0 +1,129 @@
+import os.path as osp
+import argparse
+import numpy as np
+
+import sys
+sys.path.append('/home/armsim/softgym')
+
+from softgym.registered_env import env_arg_dict, SOFTGYM_ENVS
+from softgym.utils.normalized_env import normalize
+from softgym.utils.visualization import save_numpy_as_gif
+import pyflex
+from matplotlib import pyplot as plt
+
+import ddpg
+
+
+
+
+def show_depth():
+    # render rgb and depth
+    img, depth = pyflex.render()
+    img = img.reshape((720, 720, 4))[::-1, :, :3]
+    depth = depth.reshape((720, 720))[::-1]
+    # get foreground mask
+    rgb, depth = pyflex.render_cloth()
+    depth = depth.reshape(720, 720)[::-1]
+    # mask = mask[:, :, 3]
+    # depth[mask == 0] = 0
+    # show rgb and depth(masked)
+    depth[depth > 5] = 0
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    axes[0].imshow(img)
+    axes[1].imshow(depth)
+    plt.show()
+    
+def initial_state(env, frames, img_size=720):
+    env.reset()
+    #for i in range(env.horizon):
+    for i in range(50):
+        if i < 20:
+            action = np.array([[-0.001, 0.000, 0.000, 0.001],
+                          [-0.001, 0.000, 0.000, 0.001]])
+        elif 19<i<50:
+            action = np.array([[-0.00, 0.002, 0.000, 0.001],
+                          [-0.00, 0.002, 0.000, 0.001]])
+        
+        #action = env.action_space.sample()
+        # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all
+        # intermediate frames. Only use this option for visualization as it increases computation.
+        
+        _, _, _, info = env.step(action, record_continuous_video=True, img_size=img_size)
+        frames.extend(info['flex_env_recorded_frames'])
+    print('initial_state done')
+    
+def position_and_wrinkle_inf():
+    #top vision
+    cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+    pyflex.set_camera_params(
+        np.array([*cam_pos1,*cam_angle1,720,720]))
+    show_depth()
+    wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
+    center_x, center_y=pyflex.center_inf()
+    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
+    #side vision
+    cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+    pyflex.set_camera_params(
+        np.array([*cam_pos2,*cam_angle2,720,720]))
+    show_depth()
+    center_x, center_y=pyflex.center_inf()
+    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
+
+    
+def main():
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    # ['PassWater', 'PourWater', 'PourWaterAmount', 'RopeFlatten', 'ClothFold', 'ClothFlatten', 'ClothDrop', 'ClothFoldCrumpled', 'ClothFoldDrop', 'RopeConfiguration']
+    parser.add_argument('--env_name', type=str, default='ClothDrop')
+    parser.add_argument('--headless', type=int, default=0, help='Whether to run the environment with headless rendering')
+    parser.add_argument('--num_variations', type=int, default=1, help='Number of environment variations to be generated')
+    parser.add_argument('--save_video_dir', type=str, default='./data/', help='Path to the saved video')
+    parser.add_argument('--img_size', type=int, default=720, help='Size of the recorded videos')
+    parser.add_argument('--test_depth', type=int, default=0, help='If to test the depth rendering by showing it')
+
+    args = parser.parse_args()
+
+    env_kwargs = env_arg_dict[args.env_name]
+
+    # Generate and save the initial states for running this environment for the first time
+    env_kwargs['use_cached_states'] = False
+    env_kwargs['save_cached_states'] = False
+    env_kwargs['num_variations'] = args.num_variations
+    env_kwargs['render'] = True
+    env_kwargs['headless'] = args.headless
+
+    if not env_kwargs['use_cached_states']:
+        print('Waiting to generate environment variations. May take 1 minute for each variation...')
+    env = normalize(SOFTGYM_ENVS[args.env_name](**env_kwargs))
+    env.reset()
+    
+    
+    frames = [env.get_image(args.img_size, args.img_size)]  
+    
+    initial_state(env, frames, args.img_size)
+    
+    for i in range(100):
+        if i<51:
+            action = np.array([[0.00120, -0.0001, 0.000, 0.001],
+                          [0.00120, -0.0001, -0.000, 0.001]])
+        elif 50<i<65:
+            action = np.array([[0.000, 0.0000, 0.000, 0.001],
+                        [0.000, 0.0000, 0.000, 0.001]])
+        elif 64<i<100:
+            action = np.array([[0.000, 0.0000, 0.000, 0.00],
+                        [0.000, 0.0000, 0.000, 0.00]])
+            
+        _, _, _, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
+        frames.extend(info['flex_env_recorded_frames'])
+    
+    env.get_elongation_gif()
+    
+    if args.test_depth:
+        position_and_wrinkle_inf()
+    if args.save_video_dir is not None:
+        save_name = osp.join(args.save_video_dir, args.env_name + '.gif')
+        save_numpy_as_gif(np.array(frames), save_name)
+        print('Video generated and save to {}'.format(save_name))
+
+
+if __name__ == '__main__':
+    main()

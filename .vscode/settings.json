@@ -7,7 +7,8 @@
     "markdown",
     "latex",
     "plaintext",
-    "cpp"
+    "cpp",
+    "python"
   ],
   "files.associations": {
     "tuple": "cpp",

@@ -57,6 +57,8 @@ class FlexEnv(gym.Env):
         self.dim_shape_state = 14
         self.particle_num = 0
         self.eval_flag = False
+        
+        self.headless = headless
 
         # version 1 does not support robot, while version 2 does.
         pyflex_root = os.environ['PYFLEXROOT']

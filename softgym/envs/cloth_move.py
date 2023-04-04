@@ -557,8 +557,9 @@ class ClothMoveEnv(ClothEnv):
                 ncols, nrows = self.fig.canvas.get_width_height()
                 image = np.fromstring(buf, dtype=np.uint8).reshape(nrows*2, ncols*2, 3) # 2 for 4k monitor
                 self.elongnation_images.append(image)
-                plt.draw()
-                plt.pause(0.1)
+                if self.headless is False:
+                    plt.draw()
+                    plt.pause(0.1)
                 #plt.close()
                 
     # get the elonganation of the object
