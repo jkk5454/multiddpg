@@ -11,18 +11,23 @@ import random
 import scipy.spatial
 import matplotlib.pyplot as plt
 import imageio
+import math
 
 class ClothMoveEnv(ClothEnv):
     def __init__(self, cached_states_path='cloth_move_init_states.pkl', **kwargs):
         self.fold_group_a = self.fold_group_b = None
         self.init_pos, self.prev_dist = None, None
         self.picked_particles = None
-        self.fig = plt.figure(figsize=(12, 5))
-        self.fig.cbar = [None]*2
+        #self.fig = plt.figure(figsize=(12, 5))
+        #self.fig.cbar = [None]*2
         self.elongnation_images=[]
+        self.is_final_state=0
         self.wall_num = 1  # number of obstacle's wall
         super().__init__(**kwargs)
         self.get_cached_configs_and_states(cached_states_path, self.num_variations)
+        
+        self.normorlize_elongations=None
+        
 
     def rotate_particles(self, angle):
         pos = pyflex.get_positions().reshape(-1, 4)
@@ -224,7 +229,23 @@ class ClothMoveEnv(ClothEnv):
         colors[self.fold_group_a[rand_index]] = rand_colors
         colors[self.fold_group_b[rand_index]] = rand_colors
         self.set_colors(colors)
-
+        
+    def _get_obs(self):
+        """ Get observation. """
+        particle_pos = np.array(pyflex.get_positions()).reshape(-1, 4)
+        obs = np.zeros(self.action_tool.num_picker*3+2)
+        rgb, depth = pyflex.render_cloth()
+        center_x, center_y=pyflex.center_inf()
+        if math.isnan(center_x) and math.isnan(center_y):
+            center_x, center_y=0,0
+        if self.picked_particles is not None:
+            for i in range(len(self.picked_particles)):
+                if self.picked_particles[i] is not None:
+                    obs[i*3:i*3+3]=particle_pos[self.picked_particles[i],:3]
+        obs[-2:]=np.array([center_x,center_y])
+        return obs
+        
+        
     def _reset(self):
         """ Right now only use one initial state. Need to make sure _reset always give the same result. Otherwise CEM will fail."""
         if hasattr(self, 'action_tool'):
@@ -437,42 +458,80 @@ class ClothMoveEnv(ClothEnv):
  
         all_states = np.concatenate((shape_states,glass_states), axis=0)
         pyflex.set_shape_states(all_states)
+        
+    def final_state(self):
+        return self.is_final_state
 
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
-        """
-        The particles are splitted into two groups. The reward will be the minus average eculidean distance between each
-        particle in group a and the crresponding particle in group b
-        :param pos: nx4 matrix (x, y, z, inv_mass)
-        """
-        pos = pyflex.get_positions()
-        pos = pos.reshape((-1, 4))[:, :3]
-        pos_group_a = pos[self.fold_group_a]
-        pos_group_b = pos[self.fold_group_b]
-        pos_group_b_init = self.init_pos[self.fold_group_b]
-        curr_dist = np.mean(np.linalg.norm(pos_group_a - pos_group_b, axis=1)) + \
-                    1.2 * np.mean(np.linalg.norm(pos_group_b - pos_group_b_init, axis=1))
-        reward = -curr_dist
+        # Compute elongation penalty/reward
+        elongation_reward = 0
+        if self.normorlize_elongations is not None:
+            if np.max(self.normorlize_elongations)<0.8:
+                elongation_reward = 1
+            else:
+                elongation_reward = -1
+        
+        # Compute picker position reward
+        picker_reward = 0
+        s = self._get_obs()
+        if self.is_final_state == 0:
+            picker_reward = 1-math.sqrt((s[0] - 0.28)**2 + (s[3] - 0.28)**2)
+        
+        # Compute wrinkle density/depth reward, only in final state
+        wrinkle_reward = 0
+        center_reward = 0
+        if self.is_final_state:
+            cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720]))
+            rgb, depth = pyflex.render_cloth()
+            wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
+            wrinkle_reward = -(wrinkle_density + 10*wrinkle_avedepth)
+            
+            center_x, center_y=pyflex.center_inf()
+            if np.isnan(center_x):
+                center_x=0
+            if np.isnan(center_y):
+                center_y=0
+            center_reward_top = -math.sqrt((center_y - 0.5)**2)
+            if abs(center_x-0.5) > 0.3:
+                center_reward_top = -1000
+                wrinkle_reward = 0
+            
+            cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+            pyflex.set_camera_params(
+            np.array([*cam_pos2,*cam_angle2,720,720]))
+            rgb, depth = pyflex.render_cloth()
+            center_x, center_y=pyflex.center_inf()
+            #print('center_x_side, center_y_side',center_x, center_y)
+            if np.isnan(center_x):
+                center_x=0
+            center_reward_side = -math.sqrt((center_x - 0.5)**2)
+            if center_reward_side < -0.4:
+                center_reward_side = -1000
+                wrinkle_reward = 0
+            
+            center_reward = 0.5*center_reward_top + 0.5*center_reward_side
+            
+            cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720])) # reset camera to original position
+
+        reward = 0.1*(0.5 * elongation_reward + 0.5 * picker_reward) + 0.9*(0.8*center_reward + 0.2 * wrinkle_reward)
+        if np.isnan(reward):
+            reward = -100
+        
         return reward
 
     def _get_info(self):
         # Duplicate of the compute reward function!
         pos = pyflex.get_positions()
         pos = pos.reshape((-1, 4))[:, :3]
-        pos_group_a = pos[self.fold_group_a]
-        pos_group_b = pos[self.fold_group_b]
-        pos_group_b_init = self.init_pos[self.fold_group_b]
-        group_dist = np.mean(np.linalg.norm(pos_group_a - pos_group_b, axis=1))
-        fixation_dist = np.mean(np.linalg.norm(pos_group_b - pos_group_b_init, axis=1))
-        performance = -group_dist - 1.2 * fixation_dist
+        performance = self.normorlize_elongations
         performance_init = performance if self.performance_init is None else self.performance_init  # Use the original performance
         info = {
             'performance': performance,
-            'normalized_performance': (performance - performance_init) / (0. - performance_init),
-            'neg_group_dist': -group_dist,
-            'neg_fixation_dist': -fixation_dist
+            'max_normorlize_elongations': np.max(self.normorlize_elongations),
+            'min_normorlize_elongations': np.min(self.normorlize_elongations)
         }
-        if 'qpg' in self.action_mode:
-            info['total_steps'] = self.action_tool.total_steps
         return info
     
     #get the impact point with glass and check the impact points are not dragging the particles too far away that violates the actual physicals constraints.
@@ -510,9 +569,9 @@ class ClothMoveEnv(ClothEnv):
                     active_impact_indices.append(i)
 
             l = len(impact_particle_idices)
+            elongations = [[] for _ in range(len(self.picked_particles))]
             #print('len of l is:',l)
             for i in range(len(self.picked_particles)):
-                elongations = []
                 draw_particles_x=[]
                 draw_particles_y=[]
                 for j in range(l):
@@ -520,19 +579,20 @@ class ClothMoveEnv(ClothEnv):
                                                    self.init_pos[impact_particle_idices[j], :3])
                     now_distance = np.linalg.norm(particle_pos[self.picked_particles[i], :3] -
                                                   particle_pos[impact_particle_idices[j], :3])
-                    elongations.append(now_distance / init_distance)          
+                    elongations[i].append(now_distance / init_distance)          
                     #print('elongation:',now_distance/init_distance)
                     draw_particles_x.append(particle_pos[impact_particle_idices[j], 0])
                     draw_particles_y.append(particle_pos[impact_particle_idices[j], 2])
                     
                 #colors set
             if l:
+                self.normorlize_elongations = [[] for _ in range(len(self.picked_particles))]
                 for i in range(len(self.picked_particles)):
-                    ax = self.fig.add_subplot(1,2,i+1)
-                    min_elongations = np.min(elongations)
-                    max_elongations = np.max(elongations)
+                    #ax = self.fig.add_subplot(1,2,i+1)
                     #normalized_elongations = (elongations - min_elongations) / (max_elongations - min_elongations)
-                    normalized_elongations = (elongations - np.array(1.0)) / (np.array(1.8) - np.array(1.0))
+                    normalized_elongations= (elongations[i] - np.array(1.0)) / (np.array(1.8) - np.array(1.0))
+                    self.normorlize_elongations[i]=normalized_elongations
+                '''
                     colors = plt.cm.rainbow(normalized_elongations)
                     ax.cla()
                     
@@ -548,6 +608,7 @@ class ClothMoveEnv(ClothEnv):
                         cb.ax.set_ylabel('elongation',rotation=270,fontsize=14,fontweight='bold')
                         self.fig.cbar[i]=cb
                     self.fig.cbar[i].update_normal(im)
+                
                 self.fig.canvas.draw()
                 #argb_image = self.fig.canvas.tostring_rgb()
                 #print('argb_image:',argb_image) 
@@ -557,10 +618,12 @@ class ClothMoveEnv(ClothEnv):
                 ncols, nrows = self.fig.canvas.get_width_height()
                 image = np.fromstring(buf, dtype=np.uint8).reshape(nrows*2, ncols*2, 3) # 2 for 4k monitor
                 self.elongnation_images.append(image)
+                #print('max elongation:',np.max(self.normorlize_elongations))
                 if self.headless is False:
                     plt.draw()
                     plt.pause(0.1)
                 #plt.close()
+                '''
                 
     # get the elonganation of the object
     def get_elongation_gif(self):

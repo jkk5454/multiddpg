@@ -196,6 +196,11 @@ class FlexEnv(gym.Env):
             done = True
         if record_continuous_video:
             info['flex_env_recorded_frames'] = frames
+
+        if self.final_state():
+            done = True
+            
+        del frames
         return obs, reward, done, info
 
     def initialize_camera(self):
@@ -233,6 +238,11 @@ class FlexEnv(gym.Env):
             img = cv2.resize(img, (width, height))
         return img
 
+
+    def final_state(self):
+        """ Set up the flex scene """
+        raise NotImplementedError
+    
     def set_scene(self, config, state=None):
         """ Set up the flex scene """
         raise NotImplementedError

@@ -79,12 +79,14 @@ def main():
         elif 114<i<env.horizon:
             action = np.array([[0.000, 0.0000, 0.000, 0.00],
                         [0.000, 0.0000, 0.000, 0.00]])
+            if i == env.horizon-1:
+                env._wrapped_env.is_final_state = 1
         
         #action = env.action_space.sample()
         # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all
         # intermediate frames. Only use this option for visualization as it increases computation.
         
-        _, _, _, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
+        obs, reward, done, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
         frames.extend(info['flex_env_recorded_frames'])
     
     env.get_elongation_gif()

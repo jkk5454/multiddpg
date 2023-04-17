@@ -2,21 +2,21 @@ import os
 
 import numpy as np
 import tensorflow as tf
-
 import tensorlayer as tl
+from memory_profiler import profile
 
 #####################  hyper parameters  ####################
 LR_A = 0.001                # learning rate for actor
 LR_C = 0.002                # learning rate for critic
 GAMMA = 0.9                 # reward discount
 TAU = 0.01                  # soft replacement
-MEMORY_CAPACITY = 10000     # size of replay buffer
+MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 32             # update batchsize
 
-MAX_EPISODES = 200          # total number of episodes for training
-MAX_EP_STEPS = 200          # total number of steps for each episode
+MAX_EPISODES = 50          # total number of episodes for training
+MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
-VAR = 3                     # control exploration
+VAR = 0.0003                     # control exploration
 
 ###############################  DDPG  ####################################
 
@@ -26,10 +26,10 @@ class DDPG(object):
     DDPG class
     """
     def __init__(self, a_dim, s_dim, a_bound):
-        self.memory = np.zeros((MEMORY_CAPACITY, s_dim * 2 + a_dim + 1), dtype=np.float32)
+        #self.memory = np.zeros((MEMORY_CAPACITY, s_dim * 2 + a_dim + 1), dtype=np.float32)
+        self.memory = np.zeros((MEMORY_CAPACITY, s_dim * 2 + a_dim + 1 +1), dtype=np.float32) # state, next_state, action, reward, final_state_flag
         self.pointer = 0
         self.a_dim, self.s_dim, self.a_bound = a_dim, s_dim, a_bound
-
         W_init = tf.random_normal_initializer(mean=0, stddev=0.3)
         b_init = tf.constant_initializer(0.1)
 
@@ -64,9 +64,12 @@ class DDPG(object):
             return tl.models.Model(inputs=[s, a], outputs=x, name='Critic' + name)
 
         self.actor = get_actor([None, s_dim])
-        self.critic = get_critic([None, s_dim], [None, a_dim])
+        self.critic_process = get_critic([None, s_dim], [None, a_dim],name='_process')
+        self.critic_final = get_critic([None, s_dim], [None, a_dim],name='_final')
         self.actor.train()
-        self.critic.train()
+        self.critic_process.train()
+        self.critic_final.train()
+        
 
         # copy weights from actor to actor_target
         def copy_para(from_model, to_model):
@@ -85,9 +88,13 @@ class DDPG(object):
         self.actor_target.eval()
 
     
-        self.critic_target = get_critic([None, s_dim], [None, a_dim], name='_target')
-        copy_para(self.critic, self.critic_target)
-        self.critic_target.eval()
+        self.critic_process_target = get_critic([None, s_dim], [None, a_dim], name='_process_target')
+        copy_para(self.critic_process, self.critic_process_target)
+        self.critic_process_target.eval()
+        
+        self.critic_final_target = get_critic([None, s_dim], [None, a_dim], name='_final_target')
+        copy_para(self.critic_final, self.critic_final_target)
+        self.critic_final_target.eval()
 
         self.R = tl.layers.Input([None, 1], tf.float32, 'r')
 
@@ -95,14 +102,29 @@ class DDPG(object):
 
         self.actor_opt = tf.optimizers.Adam(LR_A)
         self.critic_opt = tf.optimizers.Adam(LR_C)
+        
+        
+        print('initiate DDPG model')
+    '''    
+    def call(self, state_inputs, action_inputs, final_state_flag):
+        if final_state_flag:
+            return self.critic_final([state_inputs, action_inputs])
+        else:
+            return self.critic_process([state_inputs, action_inputs])
+    '''
 
-
-    def ema_update(self):
-        paras = self.actor.trainable_weights + self.critic.trainable_weights   
+    def ema_update_process(self):
+        paras = self.actor.trainable_weights + self.critic_process.trainable_weights   
         self.ema.apply(paras)                                                   
-        for i, j in zip(self.actor_target.trainable_weights + self.critic_target.trainable_weights, paras):
+        for i, j in zip(self.actor_target.trainable_weights + self.critic_process_target.trainable_weights, paras):
             i.assign(self.ema.average(j))                                       
 
+    def ema_update_final(self):
+        pars = self.critic_final.trainable_weights+ self.actor.trainable_weights
+        self.ema.apply(pars)
+        for i, j in zip(self.critic_final_target.trainable_weights + self.actor_target.trainable_weights, pars):
+            i.assign(self.ema.average(j))
+            
     # store transition
     def choose_action(self, s):
         """
@@ -111,44 +133,122 @@ class DDPG(object):
         :return: act
         """
         return self.actor(np.array([s], dtype=np.float32))[0]
-
+    
+    def add_noise(self, bt):
+        bt_noise = np.tile(bt, (8, 1))
+        #print(bt_noise.shape)
+        for i in range(len(bt)):
+           bt_noise[i+len(bt),self.s_dim+self.a_dim+1-1] = bt[i,self.s_dim+self.a_dim+1-1] + 0.3*np.random.normal(0, 0.01) # add alpha = 0.3 gaussian noise
+           bt_noise[i+len(bt)*2,self.s_dim+self.a_dim+1-1] = bt[i,self.s_dim+self.a_dim+1-1] + 0.5*np.random.normal(0, 0.01) # add alpha = 0.5 gaussian noise
+           bt_noise[i+len(bt)*3,self.s_dim+self.a_dim+1-1] = bt[i,self.s_dim+self.a_dim+1-1] + 0.8*np.random.normal(0, 0.01) # add alpha = 0.8 gaussian noise
+           bt_noise[i+len(bt)*4,self.s_dim+self.a_dim+1-1] = bt[i,self.s_dim+self.a_dim+1-1] + np.random.normal(0, 0.01) # add alpha = 1 gaussian noise
+           poisson_noise = np.random.poisson(bt[i][self.s_dim+self.a_dim+1-1], 3) # add poisson noise
+           bt_noise[i+len(bt)*5,self.s_dim+self.a_dim+1-1] = poisson_noise[0] 
+           bt_noise[i+len(bt)*6,self.s_dim+self.a_dim+1-1] = poisson_noise[1] 
+           bt_noise[i+len(bt)*7,self.s_dim+self.a_dim+1-1] = poisson_noise[2]
+        return bt_noise 
+    
     def learn(self):
         """
         Update parameters
         :return: None
         """
-        indices = np.random.choice(MEMORY_CAPACITY, size=BATCH_SIZE)    
-        bt = self.memory[indices, :]                    
-        bs = bt[:, :self.s_dim]                         
-        ba = bt[:, self.s_dim:self.s_dim + self.a_dim]  
-        br = bt[:, -self.s_dim - 1:-self.s_dim]         
-        bs_ = bt[:, -self.s_dim:]                       
+        indices = np.where(self.memory[:,-1]==1)
+        indices_process = np.random.choice(indices[0], size=BATCH_SIZE)    
+        #bt = self.memory[indices, :]
+        #bs = bt[:, :self.s_dim]
+        # Process：
+        #indices_process = np.where(bt[:,-1]==0)
+        bt_process = self.memory[indices_process,:]                    
+        bs_process = bt_process[:, :self.s_dim]                         
+        ba_process = bt_process[:, self.s_dim:self.s_dim + self.a_dim]  
+        br_process = bt_process[:, -self.s_dim - 1:-self.s_dim]         
+        bs__process = bt_process[:, -self.s_dim:]                       
 
-        # Critic：
+        # Critic process：
         # br + GAMMA * q_
         with tf.GradientTape() as tape:
-            a_ = self.actor_target(bs_)
-            q_ = self.critic_target([bs_, a_])
-            y = br + GAMMA * q_
-            q = self.critic([bs, ba])
-            td_error = tf.losses.mean_squared_error(y, q)
-        c_grads = tape.gradient(td_error, self.critic.trainable_weights)
-        self.critic_opt.apply_gradients(zip(c_grads, self.critic.trainable_weights))
-
+            a_ = self.actor_target(bs__process)
+            q__process = self.critic_process_target([bs__process, a_])
+            y = br_process + GAMMA * q__process
+            q_process = self.critic_process([bs_process, ba_process])
+            td_error = tf.losses.mean_squared_error(y, q_process)
+        c_grads = tape.gradient(td_error, self.critic_process.trainable_weights)
+        self.critic_opt.apply_gradients(zip(c_grads, self.critic_process.trainable_weights))
+        
+        #q_process = self.critic_process([bs_process, ba_process])
+        '''
         # Actor：
         # -q
         with tf.GradientTape() as tape:
-            a = self.actor(bs)
-            q = self.critic([bs, a])
+            a = self.actor(bs_process)
+            q = self.critic_process([bs_process, a])
             a_loss = -tf.reduce_mean(q)  # maximize the q
         a_grads = tape.gradient(a_loss, self.actor.trainable_weights)
+        #print('a_grads',a_grads)
         self.actor_opt.apply_gradients(zip(a_grads, self.actor.trainable_weights))
+        '''
+        # Final：
+        indices_final = np.where(self.memory[:,-1]==1)
+        indices_final = np.random.choice(indices_final[0], size=4)
+        #print('indices_final',indices_final)
+        bt_final = self.memory[indices_final, :]
+        
+        bt_final_noise = self.add_noise(bt_final)
+                          
+        bs_final_noise = bt_final_noise[:, :self.s_dim]                         
+        ba_final_noise = bt_final_noise[:, self.s_dim:self.s_dim + self.a_dim]  
+        br_final_noise = bt_final_noise[:, -self.s_dim - 1:-self.s_dim]         
+        bs__final_noise = bt_final_noise[:, -self.s_dim:]                       
+            
+        # Critic final：
+        # br + GAMMA * q_
+        with tf.GradientTape() as tape:
+            a_ = self.actor_target(bs__final_noise)
+            q__final = self.critic_final_target([bs__final_noise, a_])
+            y = br_final_noise + GAMMA * q__final
+            q_final = self.critic_final([bs_final_noise, ba_final_noise])
+            td_error = tf.losses.mean_squared_error(y, q_final)
+        c_grads = tape.gradient(td_error, self.critic_final.trainable_weights)
+        self.critic_opt.apply_gradients(zip(c_grads, self.critic_final.trainable_weights))
+        
+        #get q_final
+        bs_final = bt_final[:, :self.s_dim]
+        #ba_final = bt_final[:, self.s_dim:self.s_dim + self.a_dim]
+        #q_final = self.critic_final([bs_final, ba_final])
 
-        self.ema_update()
+        '''
+        # Actor：
+        # -q
+        with tf.GradientTape() as tape:
+            a = self.actor(bs_final)
+            q = self.critic_final([bs_final, a])
+            a_loss = -tf.reduce_mean(q)  # maximize the q
+            print('a_loss',a_loss)
+        a_grads = tape.gradient(a_loss, self.actor.trainable_weights)
+        print('a_grads',a_grads)
+        self.actor_opt.apply_gradients(zip(a_grads, self.actor.trainable_weights))
+        '''
+        
+        # Actor：
+        # -q
+        with tf.GradientTape() as tape:
+            bs_combined = tf.concat((bs_process, bs_final),axis=0) 
+            a = self.actor(bs_combined)
+            q_final = self.critic_final([bs_combined, a])
+            q_process = self.critic_process([bs_combined, a])
+            q_weighted = tf.add(tf.multiply(q_final, 0.9), tf.multiply(q_process, 0.1))
+            q = tf.where(tf.cast(bs_combined[:,-1], tf.bool), q_weighted, q_process) 
+            a_loss = -tf.reduce_mean(q)
+        a_grads = tape.gradient(a_loss, self.actor.trainable_weights)
+        self.actor_opt.apply_gradients(zip(a_grads, self.actor.trainable_weights))
+        
+        self.ema_update_process()
+        self.ema_update_final()                       
 
 
     # store transition
-    def store_transition(self, s, a, r, s_):
+    def store_transition(self, s, a, r, s_, final_state_flag):
         """
         Store data in data buffer
         :param s: state
@@ -160,7 +260,7 @@ class DDPG(object):
         s = s.astype(np.float32)
         s_ = s_.astype(np.float32)
 
-        transition = np.hstack((s, a, [r], s_))
+        transition = np.hstack((s, a, [r], s_, final_state_flag))
 
         index = self.pointer % MEMORY_CAPACITY  # replace the old memory with new memory
         self.memory[index, :] = transition
@@ -176,15 +276,20 @@ class DDPG(object):
 
         tl.files.save_weights_to_hdf5('model/ddpg_actor.hdf5', self.actor)
         tl.files.save_weights_to_hdf5('model/ddpg_actor_target.hdf5', self.actor_target)
-        tl.files.save_weights_to_hdf5('model/ddpg_critic.hdf5', self.critic)
-        tl.files.save_weights_to_hdf5('model/ddpg_critic_target.hdf5', self.critic_target)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_process.hdf5', self.critic_process)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_process_target.hdf5', self.critic_process_target)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_final.hdf5', self.critic_final)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_final_target.hdf5', self.critic_final_target)
+        
 
     def load_ckpt(self):
         """
         load trained weights
         :return: None
         """
-        tl.files.load_hdf5_to_weights_in_order('model/ddpg_actor.hdf5', self.actor)
-        tl.files.load_hdf5_to_weights_in_order('model/ddpg_actor_target.hdf5', self.actor_target)
-        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic.hdf5', self.critic)
-        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_target.hdf5', self.critic_target)
+        tl.files.save_weights_to_hdf5('model/ddpg_actor.hdf5', self.actor)
+        tl.files.save_weights_to_hdf5('model/ddpg_actor_target.hdf5', self.actor_target)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_process.hdf5', self.critic_process)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_process_target.hdf5', self.critic_process_target)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_final.hdf5', self.critic_final)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_final_target.hdf5', self.critic_final_target)
