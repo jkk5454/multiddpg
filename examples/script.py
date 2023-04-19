@@ -2,9 +2,9 @@
 
 import os
 import sys
-from memory_profiler import profile
 from memory_profiler import memory_usage
-@profile
+from memory_profiler import profile
+
 def run_ddpg():
     os.system('python examples/ddpg_env.py --env_name ClothMove --headless 1')
 

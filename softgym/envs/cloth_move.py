@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import imageio
 import math
 
+
 class ClothMoveEnv(ClothEnv):
     def __init__(self, cached_states_path='cloth_move_init_states.pkl', **kwargs):
         self.fold_group_a = self.fold_group_b = None

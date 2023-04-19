@@ -3,7 +3,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import tensorlayer as tl
-from memory_profiler import profile
+
 
 #####################  hyper parameters  ####################
 LR_A = 0.001                # learning rate for actor

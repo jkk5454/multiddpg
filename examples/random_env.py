@@ -89,7 +89,7 @@ def main():
         obs, reward, done, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
         frames.extend(info['flex_env_recorded_frames'])
     
-    env.get_elongation_gif()
+    #env.get_elongation_gif()
     
     if args.test_depth:
         #top vision

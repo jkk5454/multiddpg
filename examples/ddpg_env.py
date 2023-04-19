@@ -20,14 +20,14 @@ from ddpg import DDPG
 from memory_profiler import profile
 
 
+
 RANDOMSEED = 1              # random seed
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 64             # update batchsize
-MAX_EPISODES = 50          # total number of episodes for training
+MAX_EPISODES = 100          # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
-
 
 def show_depth(savename=None):
     # render rgb and depth
@@ -50,62 +50,8 @@ def show_depth(savename=None):
     plt.pause(1)
     plt.close(fig)
 
-  
-def learn_function(ddpg = None):
-    ddpg.learn()
-    
- 
-def initial_state(env, frames, img_size=720):
-    env.reset()
-    #for i in range(env.horizon):
-    for i in range(50):
-        if i < 20:
-            action = np.array([[-0.001, 0.000, 0.000, 0.001],
-                          [-0.001, 0.000, 0.000, 0.001]])
-        elif 19<i<50:
-            action = np.array([[-0.00, 0.002, 0.000, 0.001],
-                          [-0.00, 0.002, 0.000, 0.001]])
-        
-        #action = env.action_space.sample()
-        # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all
-        # intermediate frames. Only use this option for visualization as it increases computation.
-        
-        next_obs, rewards, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
-        del action
-        gc.collect()
-        frames.extend(info['flex_env_recorded_frames'])
-    print('initial_state done')
-    return next_obs, rewards, done, info
-    
-def position_and_wrinkle_inf():
-    #top vision
-    cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-    pyflex.set_camera_params(
-        np.array([*cam_pos1,*cam_angle1,720,720]))
-    show_depth()
-    wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
-    center_x, center_y=pyflex.center_inf()
-    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
-    #side vision
-    cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
-    pyflex.set_camera_params(
-        np.array([*cam_pos2,*cam_angle2,720,720]))
-    show_depth()
-    center_x, center_y=pyflex.center_inf()
-    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
-
-
-def net_train(env, action_base , frames, img_size=720,ddpg=None):
-    reward_buffer = []      
-    t0 = time.time()
-    learn = 0
-    for i in range(MAX_EPISODES):
-        t1 = time.time()
-        s, r, done, info = initial_state(env, frames, img_size) # initial state
-        gc.collect()
-        ep_reward = 0
-        #print('ep_reward:',ep_reward)       
-        for j in range(MAX_EP_STEPS):
+def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg=None):
+     for j in range(MAX_EP_STEPS):
             # Add exploration noise
             a = ddpg.choose_action(s)       # action from DDPG
 
@@ -160,14 +106,66 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
             if ddpg.pointer > MEMORY_CAPACITY:
                 #ddpg.learn()
                 learn_function(ddpg)
-                if learn == 0:
-                    print('learn')
-                learn = 1
                 
             #plt.show()
             
             #print('episode',i,'step:',j)
-        del s, s_, r, a, done,info
+  
+def learn_function(ddpg = None):
+    ddpg.learn()
+    
+def initial_state(env, frames, img_size=720):
+    env.reset()
+    #for i in range(env.horizon):
+    for i in range(50):
+        if i < 20:
+            action = np.array([[-0.001, 0.000, 0.000, 0.001],
+                          [-0.001, 0.000, 0.000, 0.001]])
+        elif 19<i<50:
+            action = np.array([[-0.00, 0.002, 0.000, 0.001],
+                          [-0.00, 0.002, 0.000, 0.001]])
+        
+        #action = env.action_space.sample()
+        # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all
+        # intermediate frames. Only use this option for visualization as it increases computation.
+        
+        next_obs, rewards, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
+        del action
+        gc.collect()
+        frames.extend(info['flex_env_recorded_frames'])
+    print('initial_state done')
+    return next_obs, rewards, done, info
+    
+def position_and_wrinkle_inf():
+    #top vision
+    cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+    pyflex.set_camera_params(
+        np.array([*cam_pos1,*cam_angle1,720,720]))
+    show_depth()
+    wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
+    center_x, center_y=pyflex.center_inf()
+    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
+    #side vision
+    cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+    pyflex.set_camera_params(
+        np.array([*cam_pos2,*cam_angle2,720,720]))
+    show_depth()
+    center_x, center_y=pyflex.center_inf()
+    print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
+
+
+def net_train(env, action_base , frames, img_size=720,ddpg=None):
+    reward_buffer = []      
+    t0 = time.time()
+    for i in range(MAX_EPISODES):
+        frames = [env.get_image(img_size, img_size)]
+        t1 = time.time()
+        s, r, done, info = initial_state(env, frames, img_size) # initial state
+        ep_reward = 0
+        #print('ep_reward:',ep_reward)
+        
+        learn_step(i,s,r, ep_reward,t1, env, action_base, frames, img_size, ddpg)       
+        
                
         # test
         if i and not i % TEST_PER_EPISODES:
@@ -206,7 +204,10 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
                     ep_reward += r
                     
                 env._wrapped_env.is_final_state = 0
-        '''
+            
+        print('frames:',sys.getsizeof(frames))
+        del frames
+    '''    
         if reward_buffer:
             plt.ion()
             plt.cla()
