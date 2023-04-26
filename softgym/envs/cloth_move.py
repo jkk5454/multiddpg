@@ -468,7 +468,7 @@ class ClothMoveEnv(ClothEnv):
         elongation_reward = 0
         if self.normorlize_elongations is not None:
             if np.max(self.normorlize_elongations)<0.8:
-                elongation_reward = 1
+                elongation_reward = 0
             else:
                 elongation_reward = -1
         
@@ -476,7 +476,7 @@ class ClothMoveEnv(ClothEnv):
         picker_reward = 0
         s = self._get_obs()
         if self.is_final_state == 0:
-            picker_reward = 1-math.sqrt((s[0] - 0.28)**2 + (s[3] - 0.28)**2)
+            picker_reward = -math.sqrt((s[0] - 0.27)**2 + (s[3] - 0.27)**2)
         
         # Compute wrinkle density/depth reward, only in final state
         wrinkle_reward = 0
@@ -486,14 +486,14 @@ class ClothMoveEnv(ClothEnv):
             pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720]))
             rgb, depth = pyflex.render_cloth()
             wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
-            wrinkle_reward = -(wrinkle_density + 10*wrinkle_avedepth)
+            wrinkle_reward = -(wrinkle_density - 10*wrinkle_avedepth)
             
             center_x, center_y=pyflex.center_inf()
             if np.isnan(center_x):
                 center_x=0
             if np.isnan(center_y):
                 center_y=0
-            center_reward_top = -math.sqrt((center_y - 0.5)**2)
+            center_reward_top = -math.sqrt((center_y - 0.5)**2+(center_x - 0.5)**2)
             if abs(center_x-0.5) > 0.3:
                 center_reward_top = -1000
                 wrinkle_reward = 0
@@ -511,7 +511,7 @@ class ClothMoveEnv(ClothEnv):
                 center_reward_side = -1000
                 wrinkle_reward = 0
             
-            center_reward = 0.5*center_reward_top + 0.5*center_reward_side
+            center_reward = 10*(0.5*center_reward_top + 0.5*center_reward_side)
             
             cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720])) # reset camera to original position

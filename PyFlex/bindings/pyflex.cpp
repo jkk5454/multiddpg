@@ -1089,7 +1089,7 @@ std::tuple<py::array_t<unsigned char>, py::array_t<float>> pyflex_render(int cap
     float center_y=0;
     int clothvertices=0;
     float cambase;
-    float workbenchpos[3]={0.1,0.3,0};
+    float workbenchpos[3]={0.2,0.3,0};
     float workbenchbase;
     for(int i =0; i<3; i++){
         if(g_camAngle[i]!=0){

@@ -66,8 +66,8 @@ def main():
             action = np.array([[-0.001, 0.000, 0.000, 0.001],
                           [-0.001, 0.000, 0.000, 0.001]])
         elif 19<i<50:
-            action = np.array([[-0.00, 0.002, 0.000, 0.001],
-                          [-0.00, 0.002, 0.000, 0.001]])
+            action = np.array([[-0.00, 0.0015, 0.000, 0.001],
+                          [-0.00, 0.0015, 0.000, 0.001]])
         elif 49<i<101:
             action = np.array([[0.00120, -0.0001, 0.000, 0.001],
                           [0.00120, -0.0001, -0.000, 0.001]])
@@ -88,6 +88,7 @@ def main():
         
         obs, reward, done, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
         frames.extend(info['flex_env_recorded_frames'])
+        #print('i',i,'obs',obs)
     
     #env.get_elongation_gif()
     
@@ -101,7 +102,7 @@ def main():
         center_x, center_y=pyflex.center_inf()
         print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
         #side vision
-        cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+        cam_pos2, cam_angle2 = np.array([-0.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         pyflex.set_camera_params(
             np.array([*cam_pos2,*cam_angle2,720,720]))
         show_depth()

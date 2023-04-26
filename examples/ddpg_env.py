@@ -24,10 +24,12 @@ from memory_profiler import profile
 RANDOMSEED = 1              # random seed
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 64             # update batchsize
-MAX_EPISODES = 100          # total number of episodes for training
+MAX_EPISODES = 1000          # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
+
+log_file = './data/train1/reward.txt'
 
 def show_depth(savename=None):
     # render rgb and depth
@@ -47,7 +49,7 @@ def show_depth(savename=None):
     #plt.show()
     plt.savefig(savename)
     #print(savename)
-    plt.pause(1)
+    #plt.pause(1)
     plt.close(fig)
 
 def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg=None):
@@ -80,11 +82,43 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                     '\rEpisode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
                         i, MAX_EPISODES, ep_reward+r,
                         time.time() - t1
-                    ), end=''
+                    )
                 )
+                
+                with open(log_file, 'a') as f:
+                    f.write('\rEpisode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
+                            i, MAX_EPISODES, ep_reward+r,
+                            time.time() - t1
+                        ))
                 #reward_buffer.append(ep_reward)
-                savename='./data/train/{}.png'.format(i)
+                #top_view
+                savename='./data/train1/{}_top.png'.format(i)
                 show_depth(savename)
+                center_x, center_y=pyflex.center_inf()
+                wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
+                with open(log_file, 'a') as f:
+                    f.write('\rwrinkle desity: {:.4f}  | wrinkle averange depth: {:.4f}  | center_x: {:.4f} | ceneter_y: {:.4f}'.format(wrinkle_density, wrinkle_avedepth, center_x,center_y)
+                            )
+                print('\rcenter_x_top: {:.4f} | ceneter_y_top: {:.4f}'.format(center_x,center_y))
+                
+                
+                
+                cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+                pyflex.set_camera_params(
+                    np.array([*cam_pos2,*cam_angle2,720,720]))
+                #side view
+                savename='./data/train1/{}_side.png'.format(i)
+                show_depth(savename)
+                center_x, center_y=pyflex.center_inf()
+                with open(log_file, 'a') as f:
+                    f.write( '\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}'.format(center_x,center_y)
+                            )
+                print('\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}'.format(center_x,center_y),end='')
+                cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+                pyflex.set_camera_params(
+                    np.array([*cam_pos1,*cam_angle1,720,720]))
+                
+                
                 '''
                 save_name = osp.join('./data/', 'ClothMove{}.gif'.format(i))
                 save_numpy_as_gif(np.array(frames), save_name)
@@ -190,14 +224,49 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
                     env._wrapped_env.is_final_state = 1
                     frames.extend(info_release['flex_env_recorded_frames'])
                     ep_reward += r
-                    savename='./data/train/Test_{}.png'.format(i)
-                    show_depth(savename)
+                    
                     print(
                         '\rTest Episode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
                             i, MAX_EPISODES, ep_reward,
                             time.time() - t1
                         )
                     )
+                    with open(log_file, 'a') as f:
+                        f.write('\rTest Episode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
+                            i, MAX_EPISODES, ep_reward,
+                            time.time() - t1
+                        )
+                                )
+                        
+                    
+                    #top vision
+                    savename='./data/train1/Test_{}_top.png'.format(i)
+                    show_depth(savename)
+                    center_x, center_y=pyflex.center_inf()
+                    wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
+                    with open(log_file, 'a') as f:
+                        f.write('\rwrinkle desity: {:.4f} |  wrinkle averange depth: {:.4f}  | center_x_top: {:.4f} | ceneter_y: {:.4f}'.format(wrinkle_density, wrinkle_avedepth, center_x,center_y)
+                            )
+                    print('\rcenter_x_top: {:.4f} | ceneter_y_top: {:.4f}'.format(center_x,center_y))
+                    
+                    
+                    
+                    cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+                    pyflex.set_camera_params(
+                        np.array([*cam_pos2,*cam_angle2,720,720]))
+                    #side vision
+                    savename='./data/train1/Test_{}_side.png'.format(i)
+                    show_depth(savename)
+                    center_x, center_y=pyflex.center_inf()
+                    with open(log_file, 'a') as f:
+                        f.write( '\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}'.format(center_x,center_y)
+                            )
+                    print('\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}'.format(center_x,center_y),end='')
+                    cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+                    pyflex.set_camera_params(
+                        np.array([*cam_pos1,*cam_angle1,720,720]))
+                    
+                    
                     reward_buffer.append(ep_reward)
                 s = s_
                 if j!=MAX_EP_STEPS-1:
@@ -205,9 +274,9 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
                     
                 env._wrapped_env.is_final_state = 0
             
-        print('frames:',sys.getsizeof(frames))
+        #print('frames:',sys.getsizeof(frames))
         del frames
-    '''    
+    '''
         if reward_buffer:
             plt.ion()
             plt.cla()
@@ -274,12 +343,13 @@ def main():
     
     with tf.device('/GPU:0'):
         ddpg = DDPG(a_dim=a_bound.shape[0], s_dim=initial_obs.shape[0], a_bound=a_bound)
+        with open(log_file, 'w') as f:
+                    f.write('\rDDPG\n')
         if args.train:
             net_train(env,action_0, frames, args.img_size,ddpg)
                 
     
-    '''            
-    env.get_elongation_gif()
+                
     
     if args.test_depth:
         position_and_wrinkle_inf()
@@ -287,7 +357,7 @@ def main():
         save_name = osp.join(args.save_video_dir, args.env_name + '.gif')
         save_numpy_as_gif(np.array(frames), save_name)
         print('Video generated and save to {}'.format(save_name))
-    '''
+    
 
 
 if __name__ == '__main__':

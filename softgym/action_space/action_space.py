@@ -39,7 +39,7 @@ class Picker(ActionToolBase):
         self.particle_radius = particle_radius
         self.init_particle_pos = init_particle_pos
         #self.spring_coef = spring_coef  # Prevent picker to drag two particles too far away
-        self.spring_coef = 5
+        self.spring_coef = 1000.
 
         space_low = np.array([-0.1, -0.1, -0.1, 0] * self.num_picker) * 0.1  # [dx, dy, dz, [0, 1]]
         space_high = np.array([0.1, 0.1, 0.1, 10] * self.num_picker) * 0.1
@@ -132,6 +132,7 @@ class Picker(ActionToolBase):
 
         #pick_flag = action[:, 3] > 0.5
         picker_pos, particle_pos = self._get_pos()
+        #print('picker_pos:', picker_pos)
         new_picker_pos, new_particle_pos = picker_pos.copy(), particle_pos.copy()
         
         #init_particle_pos set

@@ -13,7 +13,7 @@ TAU = 0.01                  # soft replacement
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 32             # update batchsize
 
-MAX_EPISODES = 50          # total number of episodes for training
+MAX_EPISODES = 1000         # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                     # control exploration
@@ -142,7 +142,10 @@ class DDPG(object):
            bt_noise[i+len(bt)*2,self.s_dim+self.a_dim+1-1] = bt[i,self.s_dim+self.a_dim+1-1] + 0.5*np.random.normal(0, 0.01) # add alpha = 0.5 gaussian noise
            bt_noise[i+len(bt)*3,self.s_dim+self.a_dim+1-1] = bt[i,self.s_dim+self.a_dim+1-1] + 0.8*np.random.normal(0, 0.01) # add alpha = 0.8 gaussian noise
            bt_noise[i+len(bt)*4,self.s_dim+self.a_dim+1-1] = bt[i,self.s_dim+self.a_dim+1-1] + np.random.normal(0, 0.01) # add alpha = 1 gaussian noise
-           poisson_noise = np.random.poisson(bt[i][self.s_dim+self.a_dim+1-1], 3) # add poisson noise
+           lam = bt[i][self.s_dim+self.a_dim+1-1]
+           lam = np.nan_to_num(lam)
+           lam = np.clip(lam, 0, None) # clip negative values to 0
+           poisson_noise = np.random.poisson(lam, 3) # add poisson noise
            bt_noise[i+len(bt)*5,self.s_dim+self.a_dim+1-1] = poisson_noise[0] 
            bt_noise[i+len(bt)*6,self.s_dim+self.a_dim+1-1] = poisson_noise[1] 
            bt_noise[i+len(bt)*7,self.s_dim+self.a_dim+1-1] = poisson_noise[2]
