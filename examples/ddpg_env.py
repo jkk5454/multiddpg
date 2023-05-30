@@ -29,7 +29,7 @@ MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
 
-log_file = './data/train1/reward.txt'
+log_file = './data/train_pure/reward.txt'
 
 def show_depth(savename=None):
     # render rgb and depth
@@ -92,7 +92,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                         ))
                 #reward_buffer.append(ep_reward)
                 #top_view
-                savename='./data/train1/{}_top.png'.format(i)
+                savename='./data/train_pure/{}_top.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -107,7 +107,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                 pyflex.set_camera_params(
                     np.array([*cam_pos2,*cam_angle2,720,720]))
                 #side view
-                savename='./data/train1/{}_side.png'.format(i)
+                savename='./data/train_pure/{}_side.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 with open(log_file, 'a') as f:
@@ -240,7 +240,7 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
                         
                     
                     #top vision
-                    savename='./data/train1/Test_{}_top.png'.format(i)
+                    savename='./data/train_pure/test/Test_{}_top.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
                     wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -255,13 +255,15 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
                     pyflex.set_camera_params(
                         np.array([*cam_pos2,*cam_angle2,720,720]))
                     #side vision
-                    savename='./data/train1/Test_{}_side.png'.format(i)
+                    savename='./data/train_pure/test/Test_{}_side.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
+                    mean_half_front, mean_half_back=pyflex.sidecam_inf()
+                    diff = abs(mean_half_front-mean_half_back)
                     with open(log_file, 'a') as f:
-                        f.write( '\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}'.format(center_x,center_y)
+                        f.write( '\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f} | Mirror Diff:{:.4f}'.format(center_x,center_y, diff)
                             )
-                    print('\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}'.format(center_x,center_y),end='')
+                    print('\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}| Mirror Diff:{:.4f}'.format(center_x,center_y, diff),end='')
                     cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
                     pyflex.set_camera_params(
                         np.array([*cam_pos1,*cam_angle1,720,720]))

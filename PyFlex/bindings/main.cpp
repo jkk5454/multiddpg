@@ -185,6 +185,9 @@ float g_avedepth;
 
 float g_centerx, g_centery;
 
+//side camera parameters
+float g_mean_front_half, g_mean_back_half;
+
 // mesh used for deformable object rendering
 Mesh *g_mesh;
 vector<int> g_meshSkinIndices;

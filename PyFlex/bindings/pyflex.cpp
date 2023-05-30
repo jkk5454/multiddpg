@@ -1139,6 +1139,33 @@ std::tuple<py::array_t<unsigned char>, py::array_t<float>> pyflex_render(int cap
         std::cout<<"camAngle"<<g_camAngle[0]<<";"<<g_camAngle[1]<<";"<<g_camAngle[2]<<endl;*/
 
     }
+
+    /*get the average depth from the side camera*/
+
+    if(g_clothOnly && g_camAngle[0]!=0){
+        int half_width = g_screenWidth / 2;
+        float sum_front_half = 0.0;
+        float sum_back_half = 0.0;
+
+        for (int i = 0; i < g_screenWidth * g_screenHeight; ++i)
+        {
+            int y = i / g_screenWidth;
+            int x = i % g_screenWidth;
+            
+            if (x < half_width)
+            {
+                sum_front_half += rendered_depth_ptr[i];
+            }
+            else if (x >= half_width)
+            {
+                sum_back_half += rendered_depth_ptr[i];
+            }
+        }
+
+        g_mean_front_half = sum_front_half / (g_screenHeight * half_width);
+        g_mean_back_half = sum_back_half / (g_screenHeight * half_width);
+    }
+
     
 
 
@@ -1240,6 +1267,11 @@ std::tuple<float,float> pyflex_center_inf() {
     return std::make_tuple(g_centerx, g_centery);
 }
 
+/*side camera parameters*/
+std::tuple<float,float> pyflex_sidecam_inf() {
+    return std::make_tuple(g_mean_front_half, g_mean_back_half);
+}
+
 PYBIND11_MODULE(pyflex, m)
 {
     m.def("main", &main);
@@ -1275,6 +1307,9 @@ PYBIND11_MODULE(pyflex, m)
 
     /*center information*/
     m.def("center_inf", &pyflex_center_inf);
+
+    /*side camera parameters*/
+    m.def("sidecam_inf", &pyflex_sidecam_inf);
 
     m.def("get_camera_params", &pyflex_get_camera_params, "Get camera parameters");
     m.def("set_camera_params", &pyflex_set_camera_params, "Set camera parameters");

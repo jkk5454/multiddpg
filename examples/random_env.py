@@ -108,6 +108,8 @@ def main():
         show_depth()
         center_x, center_y=pyflex.center_inf()
         print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
+        mean_half_front, mean_half_back=pyflex.sidecam_inf()
+        print('mean_half_front:',mean_half_front,'   mean_half_back:', mean_half_back)
 
     if args.save_video_dir is not None:
         save_name = osp.join(args.save_video_dir, args.env_name + '.gif')

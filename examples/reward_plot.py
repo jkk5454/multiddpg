@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # 打开文本文件并读取所有内容
-with open('./data/train/reward.txt', 'r') as f:
+with open('/home/clothsim/softgym/data/train1/reward.txt', 'r') as f:
     data = f.read()
 
 episodes = []
 episode_reward = []
-for match in re.finditer(r'Episode: (\d+)/\d+  \| Episode Reward: ([\d.]+)', data):
+for match in re.finditer(r'Episode: (\d+)/\d+  \| Episode Reward: ([\d.-]+)', data):
     episode_num, reward = match.groups()
     if not match.string.startswith('Test'):
         episodes.append(int(episode_num))
@@ -19,13 +19,14 @@ plt.plot(episodes, episode_reward, '-o')
 plt.title('Episode Reward vs Episode')
 plt.xlabel('Episode')
 plt.ylabel('Episode Reward')
+plt.ylim(-2,-0.5)
 plt.show()
 
 del episodes[:], episode_reward[:]
 
 episodes = []
 episode_reward = []
-for match in re.finditer(r'Test Episode: (\d+)/\d+  \| Episode Reward: ([\d.]+)', data):
+for match in re.finditer(r'Test Episode: (\d+)/\d+  \| Episode Reward: ([\d.-]+)', data):
     episode_num, reward = match.groups()
     episodes.append(int(episode_num))
     episode_reward.append(float(reward))
@@ -35,6 +36,7 @@ plt.plot(episodes, episode_reward, '-o')
 plt.title('Tetst Episode Reward vs Episode')
 plt.xlabel('Test Episode')
 plt.ylabel('Episode Reward')
+plt.ylim(-2,-0.5)
 plt.show()
 
 del episodes[:], episode_reward[:]
