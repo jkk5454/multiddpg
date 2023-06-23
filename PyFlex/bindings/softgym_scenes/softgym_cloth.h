@@ -157,7 +157,10 @@ public:
         //g_params.dynamicFriction = 0.75f;
         g_params.dynamicFriction = 0.0001f;
         g_params.staticFriction = 0.0001f;
-        g_params.particleFriction = 0.0001f;
+        g_params.particleFriction = 0.0001f;//standard cloth
+        /*g_params.dynamicFriction = 0.0002f;
+        g_params.staticFriction = 0.0002f;
+        g_params.particleFriction = 0.0002f; *///material: cloth
         g_params.damping = 1.0f;
         g_params.sleepThreshold = 0.02f;
 

@@ -24,7 +24,7 @@ from memory_profiler import profile
 RANDOMSEED = 1              # random seed
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 64             # update batchsize
-MAX_EPISODES = 1000          # total number of episodes for training
+MAX_EPISODES = 1000         # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
@@ -156,8 +156,8 @@ def initial_state(env, frames, img_size=720):
             action = np.array([[-0.001, 0.000, 0.000, 0.001],
                           [-0.001, 0.000, 0.000, 0.001]])
         elif 19<i<50:
-            action = np.array([[-0.00, 0.002, 0.000, 0.001],
-                          [-0.00, 0.002, 0.000, 0.001]])
+            action = np.array([[-0.00, 0.0018, 0.000, 0.001],
+                          [-0.00, 0.0018, 0.000, 0.001]])
         
         #action = env.action_space.sample()
         # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all

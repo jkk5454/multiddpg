@@ -47,17 +47,19 @@ class ClothMoveEnv(ClothEnv):
         if self.action_mode in ['sawyer', 'franka']:
             cam_pos, cam_angle = np.array([0.0, 1.62576, 1.04091]), np.array([0.0, -0.844739, 0])
         else:
-            #cam_pos, cam_angle = np.array([0.1, 1.0, 1.0]), np.array([0, -45 / 180. * np.pi, 0.])
+            cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.0, 0.3, 0.5]), np.array([0, -0, 90 / 180 * np.pi])
-            cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            #cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         config = {
             #'ClothPos': [-1.6, 2.0, -0.8],
-            'ClothPos': [-0.2, 0.005, 0],
-            'ClothSize': [int(0.6 / particle_radius), int(0.368 / particle_radius)],
+            'ClothPos': [-0.2, 0.005, 0], # for T-shirt
+            #'ClothPos': [-0.5, 0.005, -0.2], #for garment
+            'ClothSize': [int(0.3 / particle_radius), int(0.3 / particle_radius)],
             #'ClothStiff': [2.0, 1, 0.9],  # Stretch, Bend and Shear
-            'ClothStiff': [2.0, 2.3, 0.2],  # Stretch, Bend and Shear
+            'ClothStiff': [2.0, 2.3, 0.2],  # Stretch, Bend and Shear standard
+            #'ClothStiff': [1.5, 1.8, 0.4],  # Stretch, Bend and Shear  Test for different material
             'glass': {
                 'glass_border': 0.015,
                 'glass_length': 0.20,
@@ -140,7 +142,7 @@ class ClothMoveEnv(ClothEnv):
                 np.array(list(stretch_edges)), np.array(
                 list(bend_edges)), np.array(list(shear_edges))
 
-
+    
     def generate_env_variation(self, num_variations=2, vary_cloth_size=True):
         """ Generate initial states. Note: This will also change the current states! """
         generated_configs, generated_states = [], []
@@ -152,7 +154,7 @@ class ClothMoveEnv(ClothEnv):
         mesh_bend_edges = np.array([])
         mesh_shear_edges = np.array([])
         mesh_faces = np.array([])
-
+    
         for i in range(num_variations):
             config = deepcopy(default_config)
             self.update_camera(config['camera_name'], config['camera_params'][config['camera_name']])
@@ -181,44 +183,53 @@ class ClothMoveEnv(ClothEnv):
             })
             self.set_scene(config)
             #self.action_tool.reset([0., -1., 0.])
-            '''
-            pos = pyflex.get_positions().reshape(-1, 4)
-            pos[:, :3] -= np.mean(pos, axis=0)[:3]
-            
-            if self.action_mode in ['sawyer', 'franka']: # Take care of the table in robot case
-                pos[:, 1] = 0.57
-            else:
-                pos[:, 1] = 0.005
-            pos[:, 3] = 1
-            pyflex.set_positions(pos.flatten())
-            pyflex.set_velocities(np.zeros_like(pos))
-            '''
             pyflex.step()
-            '''
-            for _ in range(5):  # In case if the cloth starts in the air
-                pyflex.step()
-
-            for wait_i in range(max_wait_step):
-                pyflex.step()
-                curr_vel = pyflex.get_velocities()
-                if np.alltrue(np.abs(curr_vel) < stable_vel_threshold):
-                    break
-            #center_object()
-            #angle = (np.random.random() - 0.5) * np.pi / 2
-            #self.rotate_particles(angle)
-            print(pyflex.get_positions().reshape(-1,4))
-            pos = pyflex.get_positions().reshape(-1, 4)
-            pos[:, :3] -= np.mean(pos, axis=0)[:3]
-            pyflex.step()
-            '''
             #print(pyflex.get_positions().reshape(-1,4))
-
             generated_configs.append(deepcopy(config))
             print('config {}: {}'.format(i, config['camera_params']))
             generated_states.append(deepcopy(self.get_state()))
 
         return generated_configs, generated_states
+    '''
+    def generate_env_variation(self, num_variations=2, vary_cloth_size=True):
+        """ Generate initial states. Note: This will also change the current states! """
+        generated_configs, generated_states = [], []
+        default_config = self.get_default_config()
+        default_config['flip_mesh'] = 1
+        
+        mesh_verts = np.array([])
+        mesh_stretch_edges = np.array([])
+        mesh_bend_edges = np.array([])
+        mesh_shear_edges = np.array([])
+        mesh_faces = np.array([])
 
+        for i in range(num_variations):
+            config = deepcopy(default_config)
+            self.update_camera(config['camera_name'], config['camera_params'][config['camera_name']])
+            if vary_cloth_size:
+                cloth_dimx, cloth_dimy = self._sample_cloth_size()
+                config['ClothSize'] = [cloth_dimx, cloth_dimy]
+            else:
+                cloth_dimx, cloth_dimy = config['ClothSize']
+            config.update({
+                'ClothSize':[cloth_dimx,cloth_dimy],
+                'mesh_verts': mesh_verts.reshape(-1),
+                'mesh_stretch_edges': mesh_stretch_edges.reshape(-1),
+                'mesh_bend_edges': mesh_bend_edges.reshape(-1),
+                'mesh_shear_edges': mesh_shear_edges.reshape(-1),
+                'mesh_faces': mesh_faces.reshape(-1),
+            })
+            self.set_scene(config)
+
+            pyflex.step()
+
+           
+            generated_configs.append(deepcopy(config))
+            print('config {}: {}'.format(i, config['camera_params']))
+            generated_states.append(deepcopy(self.get_state()))
+
+        return generated_configs, generated_states
+    '''
     def set_test_color(self, num_particles):
         """
         Assign random colors to group a and the same colors for each corresponding particle in group b
@@ -463,7 +474,6 @@ class ClothMoveEnv(ClothEnv):
         
     def final_state(self):
         return self.is_final_state
-    
     '''
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         # Compute elongation penalty/reward
@@ -515,6 +525,7 @@ class ClothMoveEnv(ClothEnv):
                 center_reward_top = -1000
             if np.isnan(wrinkle_avedepth):
                 wrinkle_reward = -1000
+                print('wrinkle_avedepth is nan')
             
             cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
             pyflex.set_camera_params(
@@ -542,12 +553,13 @@ class ClothMoveEnv(ClothEnv):
             reward = -100
         
         return reward
-        '''
-        
+    
+    '''
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         picker_reward = 0
         position_reward = 0
         s = self._get_obs()
+        '''
         if self.is_final_state == 0:
             picker_reward = -math.sqrt((s[0] - 0.27)**2 + (s[3] - 0.27)**2)
             #add side camera center
@@ -566,9 +578,10 @@ class ClothMoveEnv(ClothEnv):
         reward = 0.6 * picker_reward+0.4*position_reward
         if np.isnan(reward):
             reward = -100
-        
+        '''
+        reward = 0
         return reward
-        
+    
 
     def _get_info(self):
         # Duplicate of the compute reward function!
