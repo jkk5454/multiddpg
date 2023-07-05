@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 import sys
-sys.path.append('/home/armsim/softgym')
+sys.path.append('/home/clothsim/softgym')
 
 from softgym.registered_env import env_arg_dict, SOFTGYM_ENVS
 from softgym.utils.normalized_env import normalize

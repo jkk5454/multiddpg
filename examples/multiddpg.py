@@ -291,9 +291,9 @@ class DDPG(object):
         :return: None
         """
         print(tl.__version__)
-        tl.files.load_hdf5_to_weights_in_order('/home/clothsim/softgym/model/ddpg_actor.hdf5', self.actor)
-        tl.files.load_hdf5_to_weights_in_order('/home/clothsim/softgym/model/ddpg_actor_target.hdf5', self.actor_target)
-        tl.files.load_hdf5_to_weights_in_order('/home/clothsim/softgym/model/ddpg_critic_process.hdf5', self.critic_process)
-        tl.files.load_hdf5_to_weights_in_order('/home/clothsim/softgym/model/ddpg_critic_process_target.hdf5', self.critic_process_target)
-        tl.files.load_hdf5_to_weights_in_order('/home/clothsim/softgym/model/ddpg_critic_final.hdf5', self.critic_final)
-        tl.files.load_hdf5_to_weights_in_order('/home/clothsim/softgym/model/ddpg_critic_final_target.hdf5', self.critic_final_target)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_actor.hdf5', self.actor)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_actor_target.hdf5', self.actor_target)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_process.hdf5', self.critic_process)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_process_target.hdf5', self.critic_process_target)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_final.hdf5', self.critic_final)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_final_target.hdf5', self.critic_final_target)

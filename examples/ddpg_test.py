@@ -3,7 +3,8 @@ import argparse
 import numpy as np
 import gc
 import sys
-sys.path.append('/home/armsim/softgym')
+sys.path.append('/home/clothsim/multiddpg')
+import softgym
 
 from softgym.registered_env import env_arg_dict, SOFTGYM_ENVS
 from softgym.utils.normalized_env import normalize
@@ -15,9 +16,8 @@ import time
 import tensorflow as tf
 import tensorlayer as tl
 
-from ddpg import DDPG
+from multiddpg import DDPG
 
-from memory_profiler import profile
 
 
 
@@ -29,7 +29,7 @@ MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
 
-log_file = './data/test_pure/reward.txt'
+log_file = './data/test/reward.txt'
 
 def show_depth(savename=None):
     # render rgb and depth
@@ -95,11 +95,11 @@ def position_and_wrinkle_inf():
 
     
     
-def net_test(env, action_base , frames, img_size=720,ddpg=None):
+def net_test(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX_EPISODES):
     print('load...')
     ddpg.load_ckpt()
     print('load success')
-    for n in range(100):
+    for n in range(max_episodes):
         frames = [env.get_image(img_size, img_size)]
         s, r, done, info = initial_state(env, frames, img_size) # initial state
         a1 = np.random.uniform(-0.0001, 0.0001)
@@ -123,6 +123,7 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None):
             action = [action_base[0]+action1, action_base[1]+action2]
             # action from DDPG
             s_, r, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
+            frames.extend(info['flex_env_recorded_frames'])
 
             if j == MAX_EP_STEPS - 1 or done:
                 #release steps
@@ -130,12 +131,15 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None):
                         [0.000, 0.0000, 0.000, 0.00]])
                 for k in range(20):
                     s_relase, r, done_release, info_release = env.step(action_release, record_continuous_video=True, img_size=img_size)
+                    frames.extend(info_release['flex_env_recorded_frames'])
                 env._wrapped_env.is_final_state = 1
-                frames.extend(info_release['flex_env_recorded_frames'])
                 
                 
                 #top vision
-                savename='./data/test_pure/Test_{}_top.png'.format(n)
+                cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+                pyflex.set_camera_params(
+                    np.array([*cam_pos1,*cam_angle1,720,720]))
+                savename='./data/test/Test_{}_top.png'.format(n)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -150,7 +154,7 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None):
                 pyflex.set_camera_params(
                     np.array([*cam_pos2,*cam_angle2,720,720]))
                 #side vision
-                savename='./data/test_pure/Test_{}_side.png'.format(n)
+                savename='./data/test/Test_{}_side.png'.format(n)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 mean_half_front, mean_half_back=pyflex.sidecam_inf()
@@ -159,15 +163,16 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None):
                     f.write( '\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f} | Mirror Diff:{:.4f}'.format(center_x,center_y, diff)
                         )
                 print('\rcenter_x_side: {:.4f} | ceneter_y_side: {:.4f}| Mirror Diff:{:.4f}'.format(center_x,center_y, diff),end='')
-                cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-                pyflex.set_camera_params(
-                    np.array([*cam_pos1,*cam_angle1,720,720]))
                 
-                '''
-                savename='./data/test_pure/{}.gif'.format(n)
+                
+                cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
+                pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
+                
+                
+                savename='./data/test/{}.gif'.format(n)
                 save_numpy_as_gif(np.array(frames), savename)
                 print('Video generated and save to {}'.format(savename))
-                '''
+                
                 
             s = s_
                 
@@ -189,6 +194,8 @@ def main():
     parser.add_argument('--test_depth', type=int, default=0, help='If to test the depth rendering by showing it')
     parser.add_argument('--train', dest='train', action='store_true')
     parser.add_argument('--test', dest='test', action='store_false',default=True)
+    parser.add_argument('--max_episode', type=int, default=100)
+
 
     args = parser.parse_args()
 
@@ -200,6 +207,8 @@ def main():
     env_kwargs['num_variations'] = args.num_variations
     env_kwargs['render'] = True
     env_kwargs['headless'] = args.headless
+    
+    max_episodes = args.max_episode
 
     if not env_kwargs['use_cached_states']:
         print('Waiting to generate environment variations. May take 1 minute for each variation...')
@@ -229,7 +238,7 @@ def main():
                     f.write('\rDDPG\n')
             
         if args.test:
-            net_test(env,action_0, frames, args.img_size,ddpg)
+            net_test(env,action_0, frames, args.img_size,ddpg, max_episodes)
                 
     
                 

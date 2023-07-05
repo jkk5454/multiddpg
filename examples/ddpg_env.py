@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 import gc
 import sys
-sys.path.append('/home/armsim/softgym')
+sys.path.append('/home/clothsim/multiddpg')
 
 from softgym.registered_env import env_arg_dict, SOFTGYM_ENVS
 from softgym.utils.normalized_env import normalize
@@ -15,9 +15,7 @@ import time
 import tensorflow as tf
 import tensorlayer as tl
 
-from ddpg import DDPG
-
-from memory_profiler import profile
+from multiddpg import DDPG
 
 
 
@@ -29,7 +27,7 @@ MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
 
-log_file = './data/train_pure/reward.txt'
+log_file = './data/train/reward.txt'
 
 def show_depth(savename=None):
     # render rgb and depth
@@ -52,7 +50,7 @@ def show_depth(savename=None):
     #plt.pause(1)
     plt.close(fig)
 
-def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg=None):
+def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX_EPISODES):
      for j in range(MAX_EP_STEPS):
             # Add exploration noise
             a = ddpg.choose_action(s)       # action from DDPG
@@ -80,19 +78,19 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                 #ep_reward += r
                 print(
                     '\rEpisode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
-                        i, MAX_EPISODES, ep_reward+r,
+                        i, max_episodes, ep_reward+r,
                         time.time() - t1
                     )
                 )
                 
                 with open(log_file, 'a') as f:
                     f.write('\rEpisode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
-                            i, MAX_EPISODES, ep_reward+r,
+                            i, max_episodes, ep_reward+r,
                             time.time() - t1
                         ))
                 #reward_buffer.append(ep_reward)
                 #top_view
-                savename='./data/train_pure/{}_top.png'.format(i)
+                savename='./data/train/train{}_top.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -107,7 +105,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                 pyflex.set_camera_params(
                     np.array([*cam_pos2,*cam_angle2,720,720]))
                 #side view
-                savename='./data/train_pure/{}_side.png'.format(i)
+                savename='./data/train/train{}_side.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 with open(log_file, 'a') as f:
@@ -188,17 +186,17 @@ def position_and_wrinkle_inf():
     print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
 
 
-def net_train(env, action_base , frames, img_size=720,ddpg=None):
+def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX_EPISODES):
     reward_buffer = []      
     t0 = time.time()
-    for i in range(MAX_EPISODES):
+    for i in range(max_episodes):
         frames = [env.get_image(img_size, img_size)]
         t1 = time.time()
         s, r, done, info = initial_state(env, frames, img_size) # initial state
         ep_reward = 0
         #print('ep_reward:',ep_reward)
         
-        learn_step(i,s,r, ep_reward,t1, env, action_base, frames, img_size, ddpg)       
+        learn_step(i,s,r, ep_reward,t1, env, action_base, frames, img_size, ddpg, max_episodes)       
         
                
         # test
@@ -227,20 +225,20 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
                     
                     print(
                         '\rTest Episode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
-                            i, MAX_EPISODES, ep_reward,
+                            i, max_episodes, ep_reward,
                             time.time() - t1
                         )
                     )
                     with open(log_file, 'a') as f:
                         f.write('\rTest Episode: {}/{}  | Episode Reward: {:.4f}  | Running Time: {:.4f}'.format(
-                            i, MAX_EPISODES, ep_reward,
+                            i, max_episodes, ep_reward,
                             time.time() - t1
                         )
                                 )
                         
                     
                     #top vision
-                    savename='./data/train_pure/test/Test_{}_top.png'.format(i)
+                    savename='./data/train/test/Test_{}_top.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
                     wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -255,7 +253,7 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None):
                     pyflex.set_camera_params(
                         np.array([*cam_pos2,*cam_angle2,720,720]))
                     #side vision
-                    savename='./data/train_pure/test/Test_{}_side.png'.format(i)
+                    savename='./data/train/test/Test_{}_side.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
                     mean_half_front, mean_half_back=pyflex.sidecam_inf()
@@ -309,6 +307,7 @@ def main():
     parser.add_argument('--test_depth', type=int, default=0, help='If to test the depth rendering by showing it')
     parser.add_argument('--train', dest='train', action='store_true', default=True)
     parser.add_argument('--test', dest='test', action='store_false')
+    parser.add_argument('--max_episode', type=int, default=1000)
 
     args = parser.parse_args()
 
@@ -320,6 +319,8 @@ def main():
     env_kwargs['num_variations'] = args.num_variations
     env_kwargs['render'] = True
     env_kwargs['headless'] = args.headless
+    
+    max_episodes = args.max_episode
 
     if not env_kwargs['use_cached_states']:
         print('Waiting to generate environment variations. May take 1 minute for each variation...')
@@ -348,17 +349,9 @@ def main():
         with open(log_file, 'w') as f:
                     f.write('\rDDPG\n')
         if args.train:
-            net_train(env,action_0, frames, args.img_size,ddpg)
+            net_train(env,action_0, frames, args.img_size,ddpg, max_episodes)
                 
     
-                
-    
-    if args.test_depth:
-        position_and_wrinkle_inf()
-    if args.save_video_dir is not None:
-        save_name = osp.join(args.save_video_dir, args.env_name + '.gif')
-        save_numpy_as_gif(np.array(frames), save_name)
-        print('Video generated and save to {}'.format(save_name))
     
 
 

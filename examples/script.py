@@ -1,19 +1,25 @@
 # script.py
 
 import os
-import sys
-from memory_profiler import memory_usage
-from memory_profiler import profile
+import argparse
 
 def run_ddpg():
-    os.system('python examples/ddpg_env.py --env_name ClothMove --headless 1')
+    os.system('python examples/ddpg_env.py --env_name ClothMove --headless 1 --test_depth 1 --max_episode 50')
+    
+def test_ddpg():
+    os.system('python examples/ddpg_test.py --env_name ClothMove --headless 1 --test_depth 1 --max_episode 10')
+    
+def main():
+    parser = argparse.ArgumentParser(description='MultiDDPG ')
+    parser.add_argument('--train', type=int, default=1)
+    args = parser.parse_args()
+    
+    if args.train == 1:
+        run_ddpg()
+    else:
+        test_ddpg()
+
+
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        log_file = sys.argv[1]
-        with open(log_file, 'w') as f:
-            run_ddpg()
-            f.write('\n\nMemory profile:\n')
-            f.write('\n'.join(str(x) for x in memory_usage()))
-    else:
-        print('Usage: python script.py <log_file>')
+    main()

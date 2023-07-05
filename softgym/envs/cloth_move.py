@@ -166,7 +166,7 @@ class ClothMoveEnv(ClothEnv):
             
             cloth_dimx, cloth_dimy = -1, -1
             # sample random mesh
-            path = "/home/clothsim/softgym/cloth3d/val/Tshirt_processed.obj"
+            path = "./cloth3d/val/Tshirt_processed.obj"
             retval = self.load_cloth(path)
             mesh_verts = retval[0]
             mesh_faces = retval[1]
@@ -474,7 +474,7 @@ class ClothMoveEnv(ClothEnv):
         
     def final_state(self):
         return self.is_final_state
-    '''
+    
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         # Compute elongation penalty/reward
         elongation_reward = 0
@@ -552,14 +552,17 @@ class ClothMoveEnv(ClothEnv):
         if np.isnan(reward):
             reward = -100
         
+        cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
+        pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
+        
         return reward
     
+    #Without dragging phase and release pahse
     '''
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         picker_reward = 0
         position_reward = 0
         s = self._get_obs()
-        '''
         if self.is_final_state == 0:
             picker_reward = -math.sqrt((s[0] - 0.27)**2 + (s[3] - 0.27)**2)
             #add side camera center
@@ -578,10 +581,8 @@ class ClothMoveEnv(ClothEnv):
         reward = 0.6 * picker_reward+0.4*position_reward
         if np.isnan(reward):
             reward = -100
-        '''
-        reward = 0
         return reward
-    
+    '''
 
     def _get_info(self):
         # Duplicate of the compute reward function!
