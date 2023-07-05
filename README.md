@@ -25,7 +25,7 @@ in the directory that contains the Dockerfile.
   Using the following command to run docker
   ```
     nvidia-docker run \
-    -v PATH_TO_SoftGym:/workspace/softgym \
+    -v PATH_TO_MultiDDPG:/workspace/multiddpg \
     -v PATH_TO_CONDA:PATH_TO_CONDA \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     --gpus all \
