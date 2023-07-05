@@ -44,16 +44,16 @@ in the directory that contains the Dockerfile.
 
   ## MultiDDPG Train and Test
   Train MultiDDPG for 50 episodes as an example
-  '''
+  ```
 
   python examples/script.py --train 1
-  '''
+  ```
 
   Test MultiDDPG for 10 tasks with different inital positions
-  '''
+  ```
 
   python examples/script.py --train 0
-  '''
+  ```
 
   If the module 'softgym' can not be found. Please change the sys path in '.\examples\ddpg_env.py' and '.\exaples\ddpg_test.py'
 
