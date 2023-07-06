@@ -48,16 +48,16 @@ in the directory that contains the Dockerfile.
 4. Go to the root folder of MultiDDPG and run `. ./prepare_1.0.sh && ./compile_1.0.sh`. Please see the example test scripts and the bottom of `bindings/pyflex.cpp` for available APIs.
 
   ## MultiDDPG Train and Test
-  Train MultiDDPG for 50 episodes as an example
-  ```
-
-  python examples/script.py --train 1
-  ```
-
-  Test MultiDDPG for 10 tasks with different inital positions
+  Test MultiDDPG for 10 tasks with different inital positions using the network in './model'
   ```
 
   python examples/script.py --train 0
+  ```
+
+  Train MultiDDPG for 50 episodes as an example stores in './model'
+  ```
+
+  python examples/script.py --train 1
   ```
 
   If the module 'softgym' can not be found. Please change the sys path in '.\examples\ddpg_env.py' and '.\exaples\ddpg_test.py'
