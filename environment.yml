@@ -22,3 +22,4 @@ dependencies:
     - sk-video==1.1.10
     - tensorflow==2.6.0
     - tensorlayer==2.2.5
+    - trimesh
