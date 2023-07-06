@@ -2,8 +2,6 @@ import os.path as osp
 import argparse
 import numpy as np
 import gc
-import sys
-sys.path.append('/home/clothsim/multiddpg')
 
 from softgym.registered_env import env_arg_dict, SOFTGYM_ENVS
 from softgym.utils.normalized_env import normalize

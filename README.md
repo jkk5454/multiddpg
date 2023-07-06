@@ -33,11 +33,16 @@ in the directory that contains the Dockerfile.
     -e QT_X11_NO_MITSHM=1 \
     -it multiddpg bash
   ```
-  Now you are in the Docker environment. Go to the softgym directory and compile PyFlex
+  Now you are in the Docker environment. Go to the multiddpg directory and compile PyFlex
 
   ```
   export PATH="PATH_TO_CONDA/bin:$PATH"
   . ./prepare_1.0.sh && ./compile_1.0.sh
+  ```
+  install softgym
+  ```
+  cd softgym
+  pip install .
   ```
 
 4. Go to the root folder of MultiDDPG and run `. ./prepare_1.0.sh && ./compile_1.0.sh`. Please see the example test scripts and the bottom of `bindings/pyflex.cpp` for available APIs.

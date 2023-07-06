@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 import gc
 import sys
-sys.path.append('/home/clothsim/multiddpg')
+# sys.path.append('/home/clothsim/multiddpg')
 import softgym
 
 from softgym.registered_env import env_arg_dict, SOFTGYM_ENVS

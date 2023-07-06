@@ -20,3 +20,5 @@ dependencies:
     - Shapely==1.6.4.post2
     - pyquaternion==0.9.5 
     - sk-video==1.1.10
+    - tensorflow==2.6.0
+    - tensorlayer==2.2.5
