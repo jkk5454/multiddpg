@@ -7,7 +7,6 @@ from softgym.utils.visualization import save_numpy_as_gif
 import cv2
 import os.path as osp
 import pickle
-from memory_profiler import profile
 
 try:
     import pyflex
