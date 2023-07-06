@@ -1,4 +1,4 @@
-name: softgym
+name: multiddpg
 channels:
   - defaults
 dependencies:
