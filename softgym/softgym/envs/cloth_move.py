@@ -47,9 +47,9 @@ class ClothMoveEnv(ClothEnv):
         if self.action_mode in ['sawyer', 'franka']:
             cam_pos, cam_angle = np.array([0.0, 1.62576, 1.04091]), np.array([0.0, -0.844739, 0])
         else:
-            cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
+            #cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.0, 0.3, 0.5]), np.array([0, -0, 90 / 180 * np.pi])
-            #cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         config = {
@@ -166,7 +166,7 @@ class ClothMoveEnv(ClothEnv):
             
             cloth_dimx, cloth_dimy = -1, -1
             # sample random mesh
-            path = "./cloth3d/val/Tshirt_processed.obj"
+            path = "./cloth3d/val/Tshirt_model.obj"
             retval = self.load_cloth(path)
             mesh_verts = retval[0]
             mesh_faces = retval[1]
@@ -552,7 +552,7 @@ class ClothMoveEnv(ClothEnv):
         if np.isnan(reward):
             reward = -100
         
-        cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
+        cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
         pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
         
         return reward

@@ -20,12 +20,12 @@ from multiddpg import DDPG
 RANDOMSEED = 1              # random seed
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 64             # update batchsize
-MAX_EPISODES = 1000         # total number of episodes for training
+MAX_EPISODES = 500         # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
 
-log_file = './data/train/reward.txt'
+log_file = './data/train_multi_weighted0109/reward.txt'
 
 def show_depth(savename=None):
     # render rgb and depth
@@ -88,7 +88,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                         ))
                 #reward_buffer.append(ep_reward)
                 #top_view
-                savename='./data/train/train{}_top.png'.format(i)
+                savename='./data/train_multi_weighted0109/train{}_top.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -103,7 +103,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                 pyflex.set_camera_params(
                     np.array([*cam_pos2,*cam_angle2,720,720]))
                 #side view
-                savename='./data/train/train{}_side.png'.format(i)
+                savename='./data/train_multi_weighted0109/train{}_side.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 with open(log_file, 'a') as f:
@@ -236,7 +236,7 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
                         
                     
                     #top vision
-                    savename='./data/train/test/Test_{}_top.png'.format(i)
+                    savename='./data/train_multi_weighted0109/test/Test_{}_top.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
                     wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -251,7 +251,7 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
                     pyflex.set_camera_params(
                         np.array([*cam_pos2,*cam_angle2,720,720]))
                     #side vision
-                    savename='./data/train/test/Test_{}_side.png'.format(i)
+                    savename='./data/train_multi_weighted0109/test/Test_{}_side.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
                     mean_half_front, mean_half_back=pyflex.sidecam_inf()
@@ -305,7 +305,7 @@ def main():
     parser.add_argument('--test_depth', type=int, default=0, help='If to test the depth rendering by showing it')
     parser.add_argument('--train', dest='train', action='store_true', default=True)
     parser.add_argument('--test', dest='test', action='store_false')
-    parser.add_argument('--max_episode', type=int, default=1000)
+    parser.add_argument('--max_episode', type=int, default=500)
 
     args = parser.parse_args()
 
@@ -334,8 +334,8 @@ def main():
     
     initial_obs, rewards, _, info = initial_state(env, frames, args.img_size)
     a_bound = np.array([0.0002, 0.0002, 0.0002, 0.0002, 0.0002, 0.0002])
-    action_0 = np.array([[0.0010, 0.0000, 0.000, 0.001],
-                          [0.0010, 0.0000, -0.000, 0.001]])
+    action_0 = np.array([[0.0010, 0.0001, 0.0001, 0.001],
+                          [0.0009, -0.0001, 0.0001, 0.001]])
     
     print('initial_obs_dim:',initial_obs.shape[0],'a_dim:',a_bound.shape[0])
     
