@@ -1091,6 +1091,7 @@ std::tuple<py::array_t<unsigned char>, py::array_t<float>> pyflex_render(int cap
     float cambase;
     float workbenchpos[3]={0.2,0.3,0};
     float workbenchbase;
+    int total_detectable_depth_pixels = 0;
     for(int i =0; i<3; i++){
         if(g_camAngle[i]!=0){
             cambase = g_camPos[i];
@@ -1115,12 +1116,13 @@ std::tuple<py::array_t<unsigned char>, py::array_t<float>> pyflex_render(int cap
                 center_y+=y;
                 center_x+=x;
                 clothvertices++;
+                total_detectable_depth_pixels += 1;
             }
         }
         rendered_depth_ptr[i]=4*(rendered_depth_ptr[i]-abs(cambase-workbenchbase));   //0.4 based on the pose of workbench and camera
         if(rendered_depth_ptr[i]>0)
             rendered_depth_ptr[i]=0;
-        if(rendered_depth_ptr[i]<-0.02){
+        if(rendered_depth_ptr[i]<-0.036){
             g_wrinklenum=g_wrinklenum+1;
             depthsum = depthsum+rendered_depth_ptr[i];
             //std::cout<<rendered_depth_ptr[i]<<endl;
@@ -1128,7 +1130,8 @@ std::tuple<py::array_t<unsigned char>, py::array_t<float>> pyflex_render(int cap
     }
 
     //std::cout<<"g_wrinklenum:"<<g_wrinklenum<<"depthsum"<<depthsum<<endl;
-    g_wrinkledensity = (float)g_wrinklenum / (g_screenWidth * g_screenHeight);
+    //g_wrinkledensity = (float)g_wrinklenum / (g_screenWidth * g_screenHeight);
+    g_wrinkledensity = (float)g_wrinklenum / total_detectable_depth_pixels;
     g_avedepth = depthsum/g_wrinklenum;
 
     /*position detection*/

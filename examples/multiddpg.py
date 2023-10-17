@@ -6,17 +6,20 @@ import tensorlayer as tl
 
 
 #####################  hyper parameters  ####################
-LR_A = 0.001                # learning rate for actor
-LR_C = 0.002                # learning rate for critic
+LR_A = 0.0005                # learning rate for actor
+LR_C = 0.0005                # learning rate for critic
 GAMMA = 0.9                 # reward discount
 TAU = 0.01                  # soft replacement
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 32             # update batchsize
 
-MAX_EPISODES = 1000         # total number of episodes for training
+MAX_EPISODES = 200        # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
-VAR = 0.0003                     # control exploration
+VAR = 0.0001                     # control exploration
+
+decay_steps = 500  # Set the decay steps as per your requirement
+decay_rate = 0.96  # Set the decay rate as per your requirement
 
 ###############################  DDPG  ####################################
 
@@ -99,9 +102,21 @@ class DDPG(object):
         self.R = tl.layers.Input([None, 1], tf.float32, 'r')
 
         self.ema = tf.train.ExponentialMovingAverage(decay=1 - TAU)  # soft replacement
+        
+        lr_schedule_actor = tf.keras.optimizers.schedules.ExponentialDecay(
+            LR_A,
+            decay_steps=decay_steps,
+            decay_rate=decay_rate,
+            staircase=True)
 
-        self.actor_opt = tf.optimizers.Adam(LR_A)
-        self.critic_opt = tf.optimizers.Adam(LR_C)
+        lr_schedule_critic = tf.keras.optimizers.schedules.ExponentialDecay(
+            LR_C,
+            decay_steps=decay_steps,
+            decay_rate=decay_rate,
+            staircase=True)
+
+        self.actor_opt = tf.optimizers.Adam(lr_schedule_actor)
+        self.critic_opt = tf.optimizers.Adam(lr_schedule_critic)
         
         
         print('initiate DDPG model')
@@ -156,7 +171,7 @@ class DDPG(object):
         Update parameters
         :return: None
         """
-        indices = np.where(self.memory[:,-1]==1)
+        indices = np.where(self.memory[:,-1]==0)
         indices_process = np.random.choice(indices[0], size=BATCH_SIZE)    
         #bt = self.memory[indices, :]
         #bs = bt[:, :self.s_dim]
@@ -165,8 +180,11 @@ class DDPG(object):
         bt_process = self.memory[indices_process,:]                    
         bs_process = bt_process[:, :self.s_dim]                         
         ba_process = bt_process[:, self.s_dim:self.s_dim + self.a_dim]  
-        br_process = bt_process[:, -self.s_dim - 1:-self.s_dim]         
-        bs__process = bt_process[:, -self.s_dim:]                       
+        #br_process = bt_process[:, -self.s_dim - 1:-self.s_dim]         
+        #bs__process = bt_process[:, -self.s_dim:]
+        
+        br_process = bt_process[:, self.s_dim + self.a_dim]        
+        bs__process = bt_process[:, self.s_dim + self.a_dim + 1:self.s_dim*2 + self.a_dim + 1]                       
 
         # Critic process：
         # br + GAMMA * q_
@@ -193,7 +211,13 @@ class DDPG(object):
         '''
         # Final：
         indices_final = np.where(self.memory[:,-1]==1)
-        indices_final = np.random.choice(indices_final[0], size=4)
+        #indices_final = np.random.choice(indices_final[0], size=4)
+        if len(indices_final[0]) == 0:
+            print("No matching indices found. Skipping this iteration.")
+            return
+        else:
+            indices_final = np.random.choice(indices_final[0], size=4)
+
         #print('indices_final',indices_final)
         bt_final = self.memory[indices_final, :]
         
@@ -201,8 +225,10 @@ class DDPG(object):
                           
         bs_final_noise = bt_final_noise[:, :self.s_dim]                         
         ba_final_noise = bt_final_noise[:, self.s_dim:self.s_dim + self.a_dim]  
-        br_final_noise = bt_final_noise[:, -self.s_dim - 1:-self.s_dim]         
-        bs__final_noise = bt_final_noise[:, -self.s_dim:]                       
+        #br_final_noise = bt_final_noise[:, -self.s_dim - 1:-self.s_dim]         
+        #bs__final_noise = bt_final_noise[:, -self.s_dim:] 
+        br_final_noise = bt_final_noise[:, self.s_dim + self.a_dim]         
+        bs__final_noise = bt_final_noise[:, self.s_dim + self.a_dim + 1:self.s_dim*2 + self.a_dim + 1]                      
             
         # Critic final：
         # br + GAMMA * q_
@@ -240,9 +266,9 @@ class DDPG(object):
             a = self.actor(bs_combined)
             q_final = self.critic_final([bs_combined, a])
             q_process = self.critic_process([bs_combined, a])
-            q_weighted = tf.add(tf.multiply(q_final, 0.9), tf.multiply(q_process, 0.1))
-            q = tf.where(tf.cast(bs_combined[:,-1], tf.bool), q_weighted, q_process) 
-            a_loss = -tf.reduce_mean(q)
+            q_weighted = tf.add(tf.multiply(q_final, 0.5), tf.multiply(q_process, 0.5))
+            #q = tf.where(tf.cast(bs_combined[:,-1], tf.bool), q_weighted, q_process) 
+            a_loss = -tf.reduce_mean(q_weighted)
         a_grads = tape.gradient(a_loss, self.actor.trainable_weights)
         self.actor_opt.apply_gradients(zip(a_grads, self.actor.trainable_weights))
         

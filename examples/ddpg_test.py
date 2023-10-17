@@ -168,11 +168,11 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX
                 cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
                 pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
                 
-                
+                '''
                 savename='./data/test/{}.gif'.format(n)
                 save_numpy_as_gif(np.array(frames), savename)
                 print('Video generated and save to {}'.format(savename))
-                
+                '''
                 
             s = s_
                 
@@ -224,8 +224,8 @@ def main():
     
     initial_obs, rewards, _, info = initial_state(env, frames, args.img_size)
     a_bound = np.array([0.0002, 0.0002, 0.0002, 0.0002, 0.0002, 0.0002])
-    action_0 = np.array([[0.0010, 0.0000, 0.000, 0.001],
-                          [0.0010, 0.0000, -0.000, 0.001]])
+    action_0 = np.array([[0.0009, 0.00012, -0.00015, 0.001],
+                          [0.0009, -0.00012, 0.00015, 0.001]])
     
     print('initial_obs_dim:',initial_obs.shape[0],'a_dim:',a_bound.shape[0])
     
@@ -238,6 +238,7 @@ def main():
                     f.write('\rDDPG\n')
             
         if args.test:
+            print('start test')
             net_test(env,action_0, frames, args.img_size,ddpg, max_episodes)
                 
     

@@ -6,8 +6,8 @@ import tensorlayer as tl
 
 
 #####################  hyper parameters  ####################
-LR_A = 0.001                # learning rate for actor
-LR_C = 0.002                # learning rate for critic
+LR_A = 0.0002                # learning rate for actor
+LR_C = 0.0002                # learning rate for critic
 GAMMA = 0.9                 # reward discount
 TAU = 0.01                  # soft replacement
 MEMORY_CAPACITY = 600     # size of replay buffer
@@ -17,6 +17,10 @@ MAX_EPISODES = 1000         # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                     # control exploration
+
+decay_steps = 500  # Set the decay steps as per your requirement
+decay_rate = 0.96  # Set the decay rate as per your requirement
+
 
 ###############################  DDPG  ####################################
 
@@ -93,12 +97,23 @@ class DDPG(object):
         self.R = tl.layers.Input([None, 1], tf.float32, 'r')
 
         self.ema = tf.train.ExponentialMovingAverage(decay=1 - TAU)  
+        lr_schedule_actor = tf.keras.optimizers.schedules.ExponentialDecay(
+            LR_A,
+            decay_steps=decay_steps,
+            decay_rate=decay_rate,
+            staircase=True)
 
-        self.actor_opt = tf.optimizers.Adam(LR_A)
-        self.critic_opt = tf.optimizers.Adam(LR_C)
+        lr_schedule_critic = tf.keras.optimizers.schedules.ExponentialDecay(
+            LR_C,
+            decay_steps=decay_steps,
+            decay_rate=decay_rate,
+            staircase=True)
+
+        self.actor_opt = tf.optimizers.Adam(lr_schedule_actor)
+        self.critic_opt = tf.optimizers.Adam(lr_schedule_critic)
         
         
-        print('initiate DDPG model')
+        print('initiate tradition DDPG model')
     '''    
     def call(self, state_inputs, action_inputs, final_state_flag):
         if final_state_flag:
@@ -146,10 +161,12 @@ class DDPG(object):
         bt = self.memory[indices, :]                   
         bs = bt[:, :self.s_dim]                         
         ba = bt[:, self.s_dim:self.s_dim + self.a_dim]  
-        br = bt[:, -self.s_dim - 1:-self.s_dim]        
-        bs_ = bt[:, -self.s_dim:]                     
-
+        #br = bt[:, -self.s_dim - 1:-self.s_dim]
+        br = bt[:, self.s_dim + self.a_dim]        
+        bs_ = bt[:, self.s_dim + self.a_dim + 1:self.s_dim*2 + self.a_dim + 1]
         
+        #print('bs',bs.shape,'br',br.shape,'bs_',bs_.shape)                    
+
         with tf.GradientTape() as tape:
             a_ = self.actor_target(bs_)
             q_ = self.critic_target([bs_, a_])
