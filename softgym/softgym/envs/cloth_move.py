@@ -47,9 +47,10 @@ class ClothMoveEnv(ClothEnv):
         if self.action_mode in ['sawyer', 'franka']:
             cam_pos, cam_angle = np.array([0.0, 1.62576, 1.04091]), np.array([0.0, -0.844739, 0])
         else:
-            cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
+            #cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.0, 0.3, 0.5]), np.array([0, -0, 90 / 180 * np.pi])
             #cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            cam_pos, cam_angle = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         config = {
@@ -58,12 +59,12 @@ class ClothMoveEnv(ClothEnv):
             #'ClothPos': [-0.5, 0.005, -0.2], #for garment
             'ClothSize': [int(0.3 / particle_radius), int(0.3 / particle_radius)],
             #'ClothStiff': [2.0, 1, 0.9],  # Stretch, Bend and Shear
-            'ClothStiff': [2.3, 2.0, 0.2],  # Stretch, Bend and Shear standard
+            'ClothStiff': [2.5, 2.3, 0.15],  # Stretch, Bend and Shear standard
             #'ClothStiff': [1.5, 1.8, 0.4],  # Stretch, Bend and Shear  Test for different material
             'glass': {
                 'glass_border': 0.015,
-                'glass_length': 0.20,
-                'glass_width':0.06,
+                'glass_length': 0.38,
+                'glass_width':0.28,
             },
             'camera_name': 'default_camera',
             'camera_params': {'default_camera':
@@ -166,7 +167,7 @@ class ClothMoveEnv(ClothEnv):
             
             cloth_dimx, cloth_dimy = -1, -1
             # sample random mesh
-            path = "./cloth3d/val/Tshirt_processed.obj"
+            path = "./cloth3d/val/RealTshirt_model.obj"
             retval = self.load_cloth(path)
             mesh_verts = retval[0]
             mesh_faces = retval[1]
@@ -474,14 +475,13 @@ class ClothMoveEnv(ClothEnv):
         
     def final_state(self):
         return self.is_final_state
-    
-    '''
+
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         # Compute elongation penalty/reward
         elongation_reward = 0
         if self.normorlize_elongations is not None and self.is_final_state == 0:
-            if np.max(self.normorlize_elongations)<0.6:
-                elongation_reward = 1
+            if np.max(self.normorlize_elongations)<1:
+                elongation_reward = 0
             else:
                 elongation_reward = -1
         
@@ -490,15 +490,15 @@ class ClothMoveEnv(ClothEnv):
         position_reward = 0
         s = self._get_obs()
         if self.is_final_state == 0:
-            picker_reward = -np.exp(math.sqrt((s[0] - 0.27)**2 + (s[3] - 0.27)**2)-abs(s[0]-s[3]))
-            if abs(s[0]-0.27) < 0.005:
+            picker_reward = -0.8*np.exp(math.sqrt((s[0] - 0.44)**2 + (s[3] - 0.44)**2)-abs(s[0]-s[3]))
+            if abs(s[0]-0.44) < 0.005:
                 print('s[0] get picker_reward:', picker_reward, 's[0]', s[0])
                 picker_reward += 1
-            if abs(s[3]-0.27) < 0.005:
-                print('s[3] get picker_reward:', picker_reward, 's[3]', s[0])
+            if abs(s[3]-0.44) < 0.005:
+                print('s[3] get picker_reward:', picker_reward, 's[3]', s[3])
                 picker_reward += 1
             #add side camera center
-            cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+            cam_pos2, cam_angle2 = np.array([-1.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
             pyflex.set_camera_params(
             np.array([*cam_pos2,*cam_angle2,720,720]))
             rgb, depth = pyflex.render_cloth()
@@ -507,7 +507,7 @@ class ClothMoveEnv(ClothEnv):
             if np.isnan(center_x):
                 center_x=1
                 position_reward = -10
-            cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            cam_pos1, cam_angle1 = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720])) # reset camera to original position
 
         # Compute wrinkle density/depth reward, only in final state
@@ -515,7 +515,7 @@ class ClothMoveEnv(ClothEnv):
         center_reward = 0
         diff_reward = 0
         if self.is_final_state:
-            cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            cam_pos1, cam_angle1 = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720]))
             rgb, depth = pyflex.render_cloth()
             wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -537,7 +537,7 @@ class ClothMoveEnv(ClothEnv):
                 wrinkle_reward = -100
                 print('wrinkle_avedepth is nan')
             
-            cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+            cam_pos2, cam_angle2 = np.array([-1.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
             pyflex.set_camera_params(
             np.array([*cam_pos2,*cam_angle2,720,720]))
             rgb, depth = pyflex.render_cloth()
@@ -556,21 +556,21 @@ class ClothMoveEnv(ClothEnv):
             
             center_reward = center_reward_top + center_reward_side
             
-            cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            cam_pos1, cam_angle1 = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720])) # reset camera to original position
             #print('center_reward, wrinkle_reward, diff_reward',center_reward, wrinkle_reward, diff_reward)
 
         #reward = 1*(0.2 * elongation_reward + 0.4* picker_reward+0.4*position_reward) + (0.3*center_reward + 0.6 * wrinkle_reward+0.1*diff_reward)
-        reward = (picker_reward + position_reward) + (center_reward +  wrinkle_reward+0.1*diff_reward)
+        reward = 0.75*(picker_reward + position_reward+ elongation_reward) + (center_reward +  wrinkle_reward+0.1*diff_reward)
         if np.isnan(reward):
             reward = -100
         
-        cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+        cam_pos, cam_angle = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
         pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
         
         
         return reward
-    '''
+
     ''' 
     #Without dragging phase and release pahse
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
@@ -609,9 +609,10 @@ class ClothMoveEnv(ClothEnv):
         pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
         return reward
     '''
+    '''
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         return 0
-    
+    '''
     def _get_info(self):
         # Duplicate of the compute reward function!
         pos = pyflex.get_positions()
@@ -676,6 +677,7 @@ class ClothMoveEnv(ClothEnv):
                     draw_particles_y.append(particle_pos[impact_particle_idices[j], 2])
                     
                 #colors set
+
             if l:
                 self.normorlize_elongations = [[] for _ in range(len(self.picked_particles))]
                 for i in range(len(self.picked_particles)):
@@ -683,6 +685,7 @@ class ClothMoveEnv(ClothEnv):
                     normalized_elongations= (elongations[i] - np.array(1.0)) / (np.array(1.8) - np.array(1.0))
                     self.normorlize_elongations[i]=normalized_elongations
 
+    
                     ax = self.fig.add_subplot(1,2,i+1)
                     colors = plt.cm.rainbow(normalized_elongations)
                     ax.cla()
@@ -691,8 +694,8 @@ class ClothMoveEnv(ClothEnv):
                     for j in range(l):
                         ax.plot([particle_pos[self.picked_particles[i]][0], particle_pos[impact_particle_idices[j]][0]]
                             ,[particle_pos[self.picked_particles[i]][2], particle_pos[impact_particle_idices[j]][2]],color=colors[j])
-                    ax.set_ylim(-0.12,0.12)
-                    ax.set_xlim(-0.05,0.3)
+                    ax.set_ylim(-0.5,0.5)
+                    ax.set_xlim(-0.5,0.5)
                     if self.fig.cbar[i] is None:
                         cb = self.fig.colorbar(im, ax=ax)
                         cb.ax.yaxis.set_label_position('left')
@@ -714,6 +717,7 @@ class ClothMoveEnv(ClothEnv):
                     plt.draw()
                     plt.pause(0.1)
                 #plt.close()
+
 
                 
     # get the elonganation of the object

@@ -61,6 +61,15 @@ class Picker(ActionToolBase):
         return clipped_picker_pos
 
     def _get_centered_picker_pos(self, center):
+        assert self.num_picker == 2, "This method is only configured for two pickers."
+
+        pos = []
+        # 第一个拾取器在中心点上方0.2的位置
+        pos.append([center[0], center[1], center[2] + 0.2])
+        # 第二个拾取器在中心点下方0.2的位置
+        pos.append([center[0], center[1], center[2] - 0.2])
+        return np.array(pos)
+        
         r = np.sqrt(self.num_picker - 1) * self.picker_radius * 2.
         pos = []
         for i in range(self.num_picker):

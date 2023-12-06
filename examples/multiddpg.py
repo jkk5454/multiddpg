@@ -6,8 +6,8 @@ import tensorlayer as tl
 
 
 #####################  hyper parameters  ####################
-LR_A = 0.0005                # learning rate for actor
-LR_C = 0.0005                # learning rate for critic
+LR_A = 0.0001                # learning rate for actor
+LR_C = 0.0001                # learning rate for critic
 GAMMA = 0.9                 # reward discount
 TAU = 0.01                  # soft replacement
 MEMORY_CAPACITY = 600     # size of replay buffer
@@ -37,6 +37,7 @@ class DDPG(object):
         b_init = tf.constant_initializer(0.1)
 
         # create actor network
+        '''
         def get_actor(input_state_shape, name=''):
             """
             Build actor network
@@ -49,8 +50,19 @@ class DDPG(object):
             x = tl.layers.Dense(n_units=a_dim, act=tf.nn.tanh, W_init=W_init, b_init=b_init, name='A_a')(x)
             x = tl.layers.Lambda(lambda x: np.array(a_bound) * x)(x)            # scale output to -action_bound to action_bound
             return tl.models.Model(inputs=inputs, outputs=x, name='Actor' + name)
-
+        '''
+        
+        def get_actor(input_state_shape, name=''):
+            inputs = tl.layers.Input(input_state_shape, name='A_input')
+            x = tl.layers.Dense(n_units=40, act=tf.nn.relu, W_init=W_init, b_init=b_init, name='A_l1')(inputs)
+            x = tl.layers.Dense(n_units=30, act=tf.nn.relu, W_init=W_init, b_init=b_init, name='A_l2')(x)
+            x = tl.layers.Dense(n_units=30, act=tf.nn.relu, W_init=W_init, b_init=b_init, name='A_l3')(x)
+            x = tl.layers.Dense(n_units=a_dim, act=tf.nn.tanh, W_init=W_init, b_init=b_init, name='A_a')(x)
+            x = tl.layers.Lambda(lambda x: np.array(a_bound) * x)(x)
+            return tl.models.Model(inputs=inputs, outputs=x, name='Actor' + name)
+        
         # create critic network
+        '''
         def get_critic(input_state_shape, input_action_shape, name=''):
             """
             Build critic network
@@ -65,14 +77,26 @@ class DDPG(object):
             x = tl.layers.Dense(n_units=60, act=tf.nn.relu, W_init=W_init, b_init=b_init, name='C_l1')(x)
             x = tl.layers.Dense(n_units=1, W_init=W_init, b_init=b_init, name='C_out')(x)
             return tl.models.Model(inputs=[s, a], outputs=x, name='Critic' + name)
-
+        '''
+        
+        
+        def get_critic(input_state_shape, input_action_shape, name=''):
+            s = tl.layers.Input(input_state_shape, name='C_s_input')
+            a = tl.layers.Input(input_action_shape, name='C_a_input')
+            x = tl.layers.Concat(1)([s, a])
+            x = tl.layers.Dense(n_units=70, act=tf.nn.relu, W_init=W_init, b_init=b_init, name='C_l1')(x)
+            x = tl.layers.Dense(n_units=60, act=tf.nn.relu, W_init=W_init, b_init=b_init, name='C_l2')(x)
+            x = tl.layers.Dense(n_units=60, act=tf.nn.relu, W_init=W_init, b_init=b_init, name='C_l3')(x)
+            x = tl.layers.Dense(n_units=1, W_init=W_init, b_init=b_init, name='C_out')(x)
+            return tl.models.Model(inputs=[s, a], outputs=x, name='Critic' + name)
+        
+        
         self.actor = get_actor([None, s_dim])
         self.critic_process = get_critic([None, s_dim], [None, a_dim],name='_process')
         self.critic_final = get_critic([None, s_dim], [None, a_dim],name='_final')
         self.actor.train()
         self.critic_process.train()
         self.critic_final.train()
-        
 
         # copy weights from actor to actor_target
         def copy_para(from_model, to_model):

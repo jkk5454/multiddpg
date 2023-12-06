@@ -8,7 +8,7 @@ env_arg_dict = {
                   'num_picker': 2,
                   'render': True,
                   'headless': True,
-                  'horizon': 150,
+                  'horizon': 160,
                   'action_repeat': 8,
                   'render_mode': 'cloth',
                   'num_variations': 1000,

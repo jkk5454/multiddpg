@@ -8,7 +8,8 @@
     "latex",
     "plaintext",
     "cpp",
-    "python"
+    "python",
+    "code-runner-output"
   ],
   "files.associations": {
     "tuple": "cpp",
@@ -97,5 +98,10 @@
     "**/.vscode",
     "**/.vscode/**"
   ],
-  "C_Cpp_Runner.useAddressSanitizer": false
+  "C_Cpp_Runner.useAddressSanitizer": false,
+  "spellright.parserByClass": {
+    "code-runner-output": {
+      "parser": "code"
+    }
+  }
 }

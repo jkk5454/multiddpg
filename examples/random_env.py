@@ -68,15 +68,15 @@ def main():
         elif 19<i<50:
             action = np.array([[-0.00, 0.0018, 0.000, 0.001],
                           [-0.00, 0.0018, 0.000, 0.001]])
-        elif 49<i<111:
+        elif 49<i<131:
             action = np.array([[0.0010, 0.0001, 0.0000, 0.001],
                           [0.0010, 0.0001, -0.0000, 0.001]])
             if i==78 or i==95:
                 draw=1
-        elif 110<i<125:
+        elif 130<i<151:
             action = np.array([[0.000, 0.0000, 0.000, 0.001],
                         [0.000, 0.0000, 0.000, 0.001]])
-        elif 124<i<env.horizon:
+        elif 150<i<env.horizon:
             env._wrapped_env.is_final_state = 1
             action = np.array([[0.000, 0.0000, 0.000, 0.00],
                         [0.000, 0.0000, 0.000, 0.00]])
@@ -89,13 +89,13 @@ def main():
         
         obs, reward, done, info = env.step(action, record_continuous_video=True, img_size=args.img_size)
         frames.extend(info['flex_env_recorded_frames'])
-        #print('i',i,'obs',obs)
+        print('i',i,'obs',obs)
     
-    #env.get_elongation_gif()
+    env.get_elongation_gif()
     
     if args.test_depth:
         #top vision
-        cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+        cam_pos1, cam_angle1 = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
         pyflex.set_camera_params(
             np.array([*cam_pos1,*cam_angle1,720,720]))
         show_depth()
@@ -103,7 +103,7 @@ def main():
         center_x, center_y=pyflex.center_inf()
         print('wrinkle desity:',wrinkle_density,'   wrinkle averange depth:', wrinkle_avedepth, '   center_x:', center_x,'  ceneter_y:',center_y)
         #side vision
-        cam_pos2, cam_angle2 = np.array([-0.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+        cam_pos2, cam_angle2 = np.array([-1.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         pyflex.set_camera_params(
             np.array([*cam_pos2,*cam_angle2,720,720]))
         show_depth()
