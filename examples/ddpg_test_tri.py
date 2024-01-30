@@ -16,7 +16,7 @@ import time
 import tensorflow as tf
 import tensorlayer as tl
 
-from multiddpg import DDPG
+from triddpg import DDPG
 
 
 
@@ -25,7 +25,7 @@ RANDOMSEED = 1              # random seed
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 64             # update batchsize
 MAX_EPISODES = 1000          # total number of episodes for training
-MAX_EP_STEPS = 80          # total number of steps for each episode
+MAX_EP_STEPS = 100          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
 VAR = 0.0003                    # control exploration
 
@@ -60,11 +60,11 @@ def show_depth(savename=None):
 def initial_state(env, frames, img_size=720):
     env.reset()
     #for i in range(env.horizon):
-    for i in range(50):
+    for i in range(30):
         if i < 20:
             action = np.array([[-0.001, 0.000, 0.000, 0.001],
                           [-0.001, 0.000, 0.000, 0.001]])
-        elif 19<i<50:
+        elif 19<i<30:
             action = np.array([[-0.00, 0.0018, 0.000, 0.001],
                           [-0.00, 0.0018, 0.000, 0.001]])
         
@@ -110,18 +110,18 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX
     for n in range(max_episodes):
         frames = [env.get_image(img_size, img_size)]
         s, r, done, info = initial_state(env, frames, img_size) # initial state
-        # a1 = np.random.uniform(-0.0001, 0.0001)
-        # a2 = np.random.uniform(-0.0001, 0.0001)
-        # a3 = np.random.uniform(-0.0001, 0.0001)
-        # a4 = np.random.uniform(-0.0001, 0.0001)
-        # a5 = np.random.uniform(-0.0001, 0.0001)
-        # a6 = np.random.uniform(-0.0001, 0.0001)
-        # action_random = np.array([[a1, a2, a3, 0.001],
-        #         [a4, a5, a6, 0.001]])
-        # for i in range(20):
-        #     s, r, done, info = env.step(action_random, record_continuous_video=True, img_size=img_size)
-        #     gc.collect()
-        #     frames.extend(info['flex_env_recorded_frames'])
+        a1 = np.random.uniform(-0.0001, 0.0001)
+        a2 = np.random.uniform(-0.0001, 0.0001)
+        a3 = np.random.uniform(-0.0001, 0.0001)
+        a4 = np.random.uniform(-0.0001, 0.0001)
+        a5 = np.random.uniform(-0.0001, 0.0001)
+        a6 = np.random.uniform(-0.0001, 0.0001)
+        action_random = np.array([[a1, a2, a3, 0.001],
+                 [a4, a5, a6, 0.001]])
+        for i in range(20):
+             s, r, done, info = env.step(action_random, record_continuous_video=True, img_size=img_size)
+             gc.collect()
+             frames.extend(info['flex_env_recorded_frames'])
         #random initial state
         
         for j in range(MAX_EP_STEPS):
@@ -135,13 +135,19 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX
             a = np.concatenate([a0, a1])
             action1 = np.append(a[:3],0)
             action2 =np.append(a[3:],0)
-            action = [action_base[0]+action1, action_base[1]+action2]
+            if j<20: #prepare steps
+                action = [action_base[1][0]+action1, action_base[1][1]+action2]
+                env._wrapped_env.is_final_state = -1
+            else:   #process steps
+                action = [action_base[0][0]+action1, action_base[0][1]+action2]
+                env._wrapped_env.is_final_state = 0
+            #action = [action_base[0]+action1, action_base[1]+action2]
             # action from DDPG
             s_, r, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
             print('s_',s_)
             frames.extend(info['flex_env_recorded_frames'])
 
-            if j == MAX_EP_STEPS - 1 or done:
+            if j == MAX_EP_STEPS - 1:
                 #release steps
                 action_release = np.array([[0.000, 0.0000, 0.000, 0.00],
                         [0.000, 0.0000, 0.000, 0.00]])
@@ -185,9 +191,9 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX
                 pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
                 
 
-                savename='./data/test/{}.gif'.format(n)
-                save_numpy_as_gif(np.array(frames), savename)
-                print('Video generated and save to {}'.format(savename))
+                # savename='./data/test/{}.gif'.format(n)
+                # save_numpy_as_gif(np.array(frames), savename)
+                # print('Video generated and save to {}'.format(savename))
                 
             s = s_
                 
@@ -209,7 +215,7 @@ def main():
     parser.add_argument('--test_depth', type=int, default=0, help='If to test the depth rendering by showing it')
     parser.add_argument('--train', dest='train', action='store_true')
     parser.add_argument('--test', dest='test', action='store_false',default=True)
-    parser.add_argument('--max_episode', type=int, default=1)
+    parser.add_argument('--max_episode', type=int, default=100)
 
 
     args = parser.parse_args()
@@ -239,8 +245,12 @@ def main():
     
     initial_obs, rewards, _, info = initial_state(env, frames, args.img_size)
     a_bound = np.array([0.00015, 0.00015, 0.00015, 0.00015, 0.00015, 0.00015])
-    action_0 = np.array([[0.001, -0.00002, 0.0000, 0.001],
-                          [0.001, -0.00002, 0.00000, 0.001]])
+    action_0 = np.array([[0.00095, -0.00002, 0.00007, 0.001],
+                          [0.00105, -0.00002, -0.00007, 0.001]])
+    action_1 = np.array([[-0.00, 0.00185, 0.000, 0.001],
+                           [-0.00, 0.00175, 0.000, 0.001]])
+    
+    action = [action_0, action_1]
     
     a0_bound = a_bound[:3]/(max_xyz-min_xyz)
     a1_bound = a_bound[3:]/(max_xyz-min_xyz)
@@ -258,7 +268,7 @@ def main():
             
         if args.test:
             print('start test')
-            net_test(env,action_0, frames, args.img_size,ddpg, max_episodes)
+            net_test(env,action, frames, args.img_size,ddpg, max_episodes)
                 
     
                 

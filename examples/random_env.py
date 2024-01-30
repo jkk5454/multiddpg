@@ -28,9 +28,12 @@ def show_depth():
     depth[depth > 5] = 0
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     axes[0].imshow(img)
-    axes[1].imshow(depth)
+    depth_plot = axes[1].imshow(depth)
+    #plt.show()
+    fig.colorbar(depth_plot, ax=axes[1], orientation='vertical')
     plt.show()
     
+        
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
     # ['PassWater', 'PourWater', 'PourWaterAmount', 'RopeFlatten', 'ClothFold', 'ClothFlatten', 'ClothDrop', 'ClothFoldCrumpled', 'ClothFoldDrop', 'RopeConfiguration']
@@ -63,17 +66,17 @@ def main():
         draw=0
     #for i in range(80):
         if i < 20:
-            action = np.array([[-0.001, 0.000, 0.000, 0.001],
-                          [-0.001, 0.000, 0.000, 0.001]])
+            action = np.array([[-0.0012, 0.000, 0.000, 0.001],
+                          [-0.0012, 0.000, 0.000, 0.001]])
         elif 19<i<50:
-            action = np.array([[-0.00, 0.0018, 0.000, 0.001],
-                          [-0.00, 0.0018, 0.000, 0.001]])
-        elif 49<i<131:
-            action = np.array([[0.0010, 0.0001, 0.0000, 0.001],
-                          [0.0010, 0.0001, -0.0000, 0.001]])
+            action = np.array([[-0.00, 0.0016, 0.000, 0.001],
+                          [-0.00, 0.0016, 0.000, 0.001]])
+        elif 49<i<101:
+            action = np.array([[0.0012, -0.00012, 0.0000, 0.001],
+                          [0.0012, -0.00012, -0.0000, 0.001]])
             if i==78 or i==95:
                 draw=1
-        elif 130<i<151:
+        elif 100<i<151:
             action = np.array([[0.000, 0.0000, 0.000, 0.001],
                         [0.000, 0.0000, 0.000, 0.001]])
         elif 150<i<env.horizon:
@@ -91,7 +94,7 @@ def main():
         frames.extend(info['flex_env_recorded_frames'])
         print('i',i,'obs',obs)
     
-    env.get_elongation_gif()
+    #env.get_elongation_gif()
     
     if args.test_depth:
         #top vision

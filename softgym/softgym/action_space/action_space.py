@@ -31,6 +31,7 @@ class Picker(ActionToolBase):
 
         super(Picker).__init__()
         self.picker_radius = picker_radius
+        #self.picker_radius = 0.01
         self.picker_threshold = picker_threshold
         self.num_picker = num_picker
         self.picked_particles = [None] * self.num_picker
@@ -70,14 +71,14 @@ class Picker(ActionToolBase):
         pos.append([center[0], center[1], center[2] - 0.2])
         return np.array(pos)
         
-        r = np.sqrt(self.num_picker - 1) * self.picker_radius * 2.
-        pos = []
-        for i in range(self.num_picker):
-            x = center[0] + np.sin(2 * np.pi * i / self.num_picker) * r
-            y = center[1]
-            z = center[2] + np.cos(2 * np.pi * i / self.num_picker) * r
-            pos.append([x, y, z])
-        return np.array(pos)
+        # r = np.sqrt(self.num_picker - 1) * self.picker_radius * 2.
+        # pos = []
+        # for i in range(self.num_picker):
+        #     x = center[0] + np.sin(2 * np.pi * i / self.num_picker) * r
+        #     y = center[1]
+        #     z = center[2] + np.cos(2 * np.pi * i / self.num_picker) * r
+        #     pos.append([x, y, z])
+        # return np.array(pos)
 
     def reset(self, center):
         for i in (0, 2):
@@ -86,9 +87,14 @@ class Picker(ActionToolBase):
             self.picker_high[i] += offset
         init_picker_poses = self._get_centered_picker_pos(center)
 
+        # for picker_pos in init_picker_poses:
+        #     pyflex.add_sphere(self.picker_radius, picker_pos, [1, 0, 0, 0])
+        # pos = pyflex.get_shape_states()  # Need to call this to update the shape collision
+        # pyflex.set_shape_states(pos)
         for picker_pos in init_picker_poses:
-            pyflex.add_sphere(self.picker_radius, picker_pos, [1, 0, 0, 0])
-        pos = pyflex.get_shape_states()  # Need to call this to update the shape collision
+            halfEdge = [0.02, 0.01 / 10, 0.01]  # 长方体的半边长，其中一个维度较小
+            pyflex.add_box(halfEdge, picker_pos, [1, 0, 0, 0])  # 添加长方体
+        pos=pyflex.get_shape_states()  # Need to call this to update the shape collision
         pyflex.set_shape_states(pos)
 
         self.picked_particles = [None] * self.num_picker

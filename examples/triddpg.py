@@ -6,8 +6,8 @@ import tensorlayer as tl
 
 
 #####################  hyper parameters  ####################
-LR_A = 0.0003                # learning rate for actor
-LR_C = 0.0003                # learning rate for critic
+LR_A = 0.0001                # learning rate for actor
+LR_C = 0.0001                # learning rate for critic
 GAMMA = 0.9                 # reward discount
 TAU = 0.01                  # soft replacement
 MEMORY_CAPACITY = 600     # size of replay buffer
@@ -92,9 +92,11 @@ class DDPG(object):
         
         
         self.actor = get_actor([None, s_dim])
+        self.critic_prepare = get_critic([None, s_dim], [None, a_dim],name='_prepare')
         self.critic_process = get_critic([None, s_dim], [None, a_dim],name='_process')
         self.critic_final = get_critic([None, s_dim], [None, a_dim],name='_final')
         self.actor.train()
+        self.critic_prepare.train()
         self.critic_process.train()
         self.critic_final.train()
 
@@ -115,6 +117,10 @@ class DDPG(object):
         self.actor_target.eval()
 
     
+        self.critic_prepare_target = get_critic([None, s_dim], [None, a_dim], name='_prepare_target')
+        copy_para(self.critic_prepare, self.critic_prepare_target)
+        self.critic_prepare_target.eval()
+
         self.critic_process_target = get_critic([None, s_dim], [None, a_dim], name='_process_target')
         copy_para(self.critic_process, self.critic_process_target)
         self.critic_process_target.eval()
@@ -151,6 +157,13 @@ class DDPG(object):
         else:
             return self.critic_process([state_inputs, action_inputs])
     '''
+    
+    def emu_update_prepare(self):
+        paras = self.actor.trainable_weights + self.critic_prepare.trainable_weights   
+        self.ema.apply(paras)                                                   
+        for i, j in zip(self.actor_target.trainable_weights + self.critic_prepare_target.trainable_weights, paras):
+            i.assign(self.ema.average(j))
+        
 
     def ema_update_process(self):
         paras = self.actor.trainable_weights + self.critic_process.trainable_weights   
@@ -195,6 +208,31 @@ class DDPG(object):
         Update parameters
         :return: None
         """
+        indices_prepare = np.where(self.memory[:,-1]==-1)
+        indices_prepare = np.random.choice(indices_prepare[0], size=BATCH_SIZE)
+        #bt = self.memory[indices, :]
+        #bs = bt[:, :self.s_dim]
+        # Prepare：
+        bt_prepare = self.memory[indices_prepare,:]
+        bs_prepare = bt_prepare[:, :self.s_dim]
+        ba_prepare = bt_prepare[:, self.s_dim:self.s_dim + self.a_dim]
+        #br_prepare = bt_prepare[:, -self.s_dim - 1:-self.s_dim]
+        #bs__prepare = bt_prepare[:, -self.s_dim:]
+        
+        br_prepare = bt_prepare[:, self.s_dim + self.a_dim]
+        bs__prepare = bt_prepare[:, self.s_dim + self.a_dim + 1:self.s_dim*2 + self.a_dim + 1]
+        
+        # Critic prepare：
+        # br + GAMMA * q_
+        with tf.GradientTape() as tape:
+            a_ = self.actor_target(bs__prepare)
+            q__prepare = self.critic_prepare_target([bs__prepare, a_])
+            y = br_prepare + GAMMA * q__prepare
+            q_prepare = self.critic_prepare([bs_prepare, ba_prepare])
+            td_error = tf.losses.mean_squared_error(y, q_prepare)
+        c_grads = tape.gradient(td_error, self.critic_prepare.trainable_weights)
+        self.critic_opt.apply_gradients(zip(c_grads, self.critic_prepare.trainable_weights))
+        
         indices = np.where(self.memory[:,-1]==0)
         indices_process = np.random.choice(indices[0], size=BATCH_SIZE)    
         #bt = self.memory[indices, :]
@@ -286,16 +324,28 @@ class DDPG(object):
         # Actor：
         # -q
         with tf.GradientTape() as tape:
-            bs_combined = tf.concat((bs_process, bs_final),axis=0) 
+            # 假设 bs_prepare, bs_process, bs_final 均已定义并有相同的维度
+            bs_combined = tf.concat([bs_prepare, bs_process, bs_final], axis=0)
+
+            # 生成动作
             a = self.actor(bs_combined)
-            q_final = self.critic_final([bs_combined, a])
+
+            # 获取各个 critic 网络的输出
+            q_prepare = self.critic_prepare([bs_combined, a])
             q_process = self.critic_process([bs_combined, a])
-            q_weighted = tf.add(tf.multiply(q_final, 0.3), tf.multiply(q_process, 0.7))
-            #q = tf.where(tf.cast(bs_combined[:,-1], tf.bool), q_weighted, q_process) 
+            q_final = self.critic_final([bs_combined, a])
+
+            # 对各个 critic 网络的输出进行加权组合
+            q_weighted = tf.add_n([
+                tf.multiply(q_prepare, 0.2),  # 假设为三个 critic 网络分配相同的权重
+                tf.multiply(q_process, 0.4),
+                tf.multiply(q_final, 0.4)
+            ]) 
             a_loss = -tf.reduce_mean(q_weighted)
         a_grads = tape.gradient(a_loss, self.actor.trainable_weights)
         self.actor_opt.apply_gradients(zip(a_grads, self.actor.trainable_weights))
         
+        self.emu_update_prepare()
         self.ema_update_process()
         self.ema_update_final()                       
 
@@ -329,6 +379,8 @@ class DDPG(object):
 
         tl.files.save_weights_to_hdf5('model/ddpg_actor.hdf5', self.actor)
         tl.files.save_weights_to_hdf5('model/ddpg_actor_target.hdf5', self.actor_target)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_prepare.hdf5', self.critic_prepare)
+        tl.files.save_weights_to_hdf5('model/ddpg_critic_prepare_target.hdf5', self.critic_prepare_target)
         tl.files.save_weights_to_hdf5('model/ddpg_critic_process.hdf5', self.critic_process)
         tl.files.save_weights_to_hdf5('model/ddpg_critic_process_target.hdf5', self.critic_process_target)
         tl.files.save_weights_to_hdf5('model/ddpg_critic_final.hdf5', self.critic_final)
@@ -343,6 +395,8 @@ class DDPG(object):
         print(tl.__version__)
         tl.files.load_hdf5_to_weights_in_order('model/ddpg_actor.hdf5', self.actor)
         tl.files.load_hdf5_to_weights_in_order('model/ddpg_actor_target.hdf5', self.actor_target)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_prepare.hdf5', self.critic_prepare)
+        tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_prepare_target.hdf5', self.critic_prepare_target)
         tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_process.hdf5', self.critic_process)
         tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_process_target.hdf5', self.critic_process_target)
         tl.files.load_hdf5_to_weights_in_order('model/ddpg_critic_final.hdf5', self.critic_final)
