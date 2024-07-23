@@ -10,8 +10,8 @@ LR_A = 0.0001                # learning rate for actor
 LR_C = 0.0001                # learning rate for critic
 GAMMA = 0.9                 # reward discount
 TAU = 0.01                  # soft replacement
-MEMORY_CAPACITY = 600     # size of replay buffer
-BATCH_SIZE = 32             # update batchsize
+MEMORY_CAPACITY = 2400     # size of replay buffer
+BATCH_SIZE = 256             # update batchsize
 
 MAX_EPISODES = 200        # total number of episodes for training
 MAX_EP_STEPS = 60          # total number of steps for each episode
@@ -208,7 +208,7 @@ class DDPG(object):
         Update parameters
         :return: None
         """
-        indices_prepare = np.where(self.memory[:,-1]==-1)
+        indices_prepare = np.where(self.memory[:,-1]==0)
         indices_prepare = np.random.choice(indices_prepare[0], size=BATCH_SIZE)
         #bt = self.memory[indices, :]
         #bs = bt[:, :self.s_dim]
@@ -233,7 +233,7 @@ class DDPG(object):
         c_grads = tape.gradient(td_error, self.critic_prepare.trainable_weights)
         self.critic_opt.apply_gradients(zip(c_grads, self.critic_prepare.trainable_weights))
         
-        indices = np.where(self.memory[:,-1]==0)
+        indices = np.where(self.memory[:,-1]==1)
         indices_process = np.random.choice(indices[0], size=BATCH_SIZE)    
         #bt = self.memory[indices, :]
         #bs = bt[:, :self.s_dim]
@@ -272,7 +272,7 @@ class DDPG(object):
         self.actor_opt.apply_gradients(zip(a_grads, self.actor.trainable_weights))
         '''
         # Final：
-        indices_final = np.where(self.memory[:,-1]==1)
+        indices_final = np.where(self.memory[:,-1]==2)
         #indices_final = np.random.choice(indices_final[0], size=4)
         if len(indices_final[0]) == 0:
             print("No matching indices found. Skipping this iteration.")

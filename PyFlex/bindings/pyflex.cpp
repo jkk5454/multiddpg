@@ -1,6 +1,7 @@
 #include <bindings/main.cpp>
 #include "opengl/shader.h"
 #include <GL/glu.h>
+#include "mesh.h"
 
 char rope_path[100];
 char box_high_path[100];
@@ -231,6 +232,10 @@ void pyflex_step(py::array_t<float> update_params, int capture, char *path, int 
     }
 
     g_render = temp_render;
+}
+
+void pyflex_updateenv(py::array_t<float> update_params) {
+    UpdateScene(update_params);
 }
 
 float rand_float(float LO, float HI)
@@ -570,6 +575,53 @@ void pyflex_add_rigid_body(py::array_t<float> positions, py::array_t<float> velo
     //     g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
     // printf("also ok here\n");
 }
+
+void pyflex_add_rigid_body_from_mesh(const std::string& filename, py::array_t<float>  translation_, py::array_t<float>  quat_, py::array_t<float>  scale_)
+{
+    
+    std::cout << "start loading" << std::endl;
+    
+    auto ptr_translation = (float *)translation_.request().ptr;
+    Vec3 translation = Vec3(ptr_translation[0], ptr_translation[1], ptr_translation[2]);
+    
+    auto ptr_quat = (float *)quat_.request().ptr;
+    Quat quat = Quat(ptr_quat[0], ptr_quat[1], ptr_quat[2], ptr_quat[3]);
+
+    auto ptr_scale = (float *)scale_.request().ptr;
+    Vec3 scale = Vec3(ptr_scale[0], ptr_scale[1], ptr_scale[2]);
+    
+    // 使用 ImportMesh 函数加载网格文件
+    Mesh* mesh = ImportMeshFromObj(filename.c_str());
+    if (!mesh)
+    {
+        throw std::runtime_error("Failed to load mesh file: " + filename);
+    }
+
+    // 获取网格顶点数和索引数
+    int numVertices = mesh->GetNumVertices();
+    int numIndices = mesh->m_indices.size();
+
+    // 创建用于存储顶点位置和速度的数组
+    py::array_t<float> positions({numVertices, 4});
+    py::array_t<float> velocities({numVertices, 3});
+    py::array_t<float> lower({3});
+
+    auto position_ptr = positions.mutable_data();
+    auto velocity_ptr = velocities.mutable_data();
+    auto lower_ptr = lower.mutable_data();
+
+    NvFlexTriangleMeshId meshId = CreateTriangleMesh(mesh);
+    if (!meshId)
+    {
+        delete mesh;
+        throw std::runtime_error("Failed to create triangle mesh from: " + filename);
+    }
+    AddTriangleMesh(meshId, translation, quat, scale);
+
+    delete mesh;
+
+}
+
 
 py::array_t<float> pyflex_get_restPositions()
 {
@@ -1089,7 +1141,8 @@ std::tuple<py::array_t<unsigned char>, py::array_t<float>> pyflex_render(int cap
     float center_y=0;
     int clothvertices=0;
     float cambase;
-    float workbenchpos[3]={0.2,0.3,0};
+    float workbenchpos[3]={0.2,0.3,0}; // dragging cloth
+    //float workbenchpos[3]={0.12,0.46,0.}; // dressing in vertical
     float workbenchbase;
     int total_detectable_depth_pixels = 0;
     for(int i =0; i<3; i++){
@@ -1326,7 +1379,15 @@ PYBIND11_MODULE(pyflex, m)
     m.def("add_sphere", &pyflex_add_sphere, "Add sphere to the scene");
     m.def("add_capsule", &pyflex_add_capsule, "Add capsule to the scene");
 
+    /*add mesh rigid body*/
+    m.def("add_rigid_body_from_mesh", &pyflex_add_rigid_body_from_mesh,
+          py::arg("filename"),py::arg("translation"),py::arg("rotation"),py::arg("scale"),
+          "Add mesh rigid body to the scene");
+
     m.def("pop_box", &pyflex_pop_box, "remove box from the scene");
+
+    m.def("update_env", &pyflex_updateenv, 
+            py::arg("update_params") = nullptr,"Update the environment");
 
     m.def("get_n_particles", &pyflex_get_n_particles, "Get the number of particles");
     m.def("get_n_shapes", &pyflex_get_n_shapes, "Get the number of shapes");

@@ -719,6 +719,7 @@ NvFlexTriangleMeshId CreateTriangleMesh(Mesh *m)
 	NvFlexVector<Vec4> positions(g_flexLib, m->m_positions.size());
 	positions.map();
 	NvFlexVector<int> indices(g_flexLib);
+	indices.map();
 
 	for (int i = 0; i < int(m->m_positions.size()); ++i)
 	{
@@ -750,12 +751,16 @@ void AddTriangleMesh(NvFlexTriangleMeshId mesh, Vec3 translation, Quat rotation,
 	geo.triMesh.scale[1] = scale.y;
 	geo.triMesh.scale[2] = scale.z;
 
+	MapBuffers(g_buffers); 
+
 	g_buffers->shapePositions.push_back(Vec4(translation, 0.0f));
 	g_buffers->shapeRotations.push_back(Quat(rotation));
 	g_buffers->shapePrevPositions.push_back(Vec4(translation, 0.0f));
 	g_buffers->shapePrevRotations.push_back(Quat(rotation));
 	g_buffers->shapeGeometry.push_back((NvFlexCollisionGeometry &)geo);
 	g_buffers->shapeFlags.push_back(NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, false));
+
+	UnmapBuffers(g_buffers);
 }
 
 NvFlexDistanceFieldId CreateSDF(const char *meshFile, int dim, float margin = 0.1f, float expand = 0.0f)

@@ -25,8 +25,21 @@ public:
 
     float get_param_float(py::array_t<float> scene_params, int idx)
     {
-        auto ptr = (float *)scene_params.request().ptr;
+        // 获取数组的 buffer_info 对象
+        py::buffer_info buf = scene_params.request();
+        
+        // 检查索引是否在有效范围内
+        if (idx < 0 || idx >= buf.size) {
+            throw std::out_of_range("Index out of range");
+        }
+
+        // 获取指向数组数据的指针，并将其转换为 float 指针
+        auto ptr = static_cast<float*>(buf.ptr);
+
+        // 根据索引获取数组中的值
         float out = ptr[idx];
+
+        // 返回值
         return out;
     }
 
@@ -151,28 +164,42 @@ public:
                 }
         }
 
+        // g_numSubsteps = 4;
+        // g_params.numIterations = 30;//standard cloth
         g_numSubsteps = 4;
         g_params.numIterations = 30;
+        g_dt = 1.0f/120.0f; //vertical cloth
 
         //g_params.dynamicFriction = 0.75f;
+        // g_params.dynamicFriction = 0.0001f;
+        // g_params.staticFriction = 0.0001f;
+        // g_params.particleFriction = 0.0001f;//standard cloth
         g_params.dynamicFriction = 0.0001f;
         g_params.staticFriction = 0.0001f;
-        g_params.particleFriction = 0.0001f;//standard cloth
+        g_params.particleFriction = 0.1f; //vertical cloth
         /*g_params.dynamicFriction = 0.0002f;
         g_params.staticFriction = 0.0002f;
         g_params.particleFriction = 0.0002f; *///material: cloth
         g_params.damping = 1.0f;
-        g_params.sleepThreshold = 0.02f;
+        // g_params.sleepThreshold = 0.02f; //standard cloth
+        g_params.sleepThreshold = 0.04f; //vertical cloth
 
         g_params.relaxationFactor = 1.0f;
-        g_params.shapeCollisionMargin = 0.04f;
+        // g_params.shapeCollisionMargin = 0.04f;//standard cloth
+        g_params.shapeCollisionMargin = 0.01f; // vertical cloth
 
         g_sceneLower = Vec3(-1.0f);
         g_sceneUpper = Vec3(1.0f);
         g_drawPoints = false;
 
+
+        g_params.dissipation = 0.12f;
+        g_params.restitution = 0.02f;
+
+
         g_params.radius = radius * 1.8f;
-        g_params.collisionDistance = 0.005f;
+        // g_params.collisionDistance = 0.005f; //standard cloth
+        g_params.collisionDistance = 0.005f; //vertical cloth
 
         g_drawPoints = render_type & 1;
         g_drawCloth = (render_type & 2) >> 1;
@@ -187,20 +214,53 @@ public:
         g_screenWidth = cam_width;
     }
 
+    // virtual void Update(py::array_t<float> update_params)
+	// {
+    //     static bool update_param_flag = false;
+	// 	if(update_params){
+    //         if (get_param_float(update_params, 0)>0)
+    //         {
+    //             /*printf("%d...\r\n",update_params.itemsize());
+    //             printf("%f.. \r\n", get_param_float(update_params, 0));
+    //             printf("%f.. \r\n", get_param_float(update_params, 1));
+    //             printf("%f.. \r\n", get_param_float(update_params, 2));
+    //             printf("%f.. \r\n", get_param_float(update_params, 3));
+    //             printf("%f.. \r\n", get_param_float(update_params, 4));*/
+    //             g_params.dynamicFriction=0.7f;
+    //             g_params.staticFriction = 0.7f;
+    //             if (!update_param_flag)
+    //             {
+    //                 update_param_flag = true;
+    //                 g_step = true;
+    //             }
+                
+    //         }
+            
+    //         /*std::cout << "current parameter is: ";
+    //         for ( size_t i; i < update_params.itemsize(); i++)
+    //         {
+    //             std::cout<<update_params.data(i) << " \t";  
+    //         }
+    //         std::cout << std::endl;*/
+    //         /*g_params.dynamicFriction=0.7f;
+    //         g_params.staticFriction = 0.7f;*/
+    //     }
+        
+	// }
+
     virtual void Update(py::array_t<float> update_params)
 	{
         static bool update_param_flag = false;
 		if(update_params){
             if (get_param_float(update_params, 0)>0)
             {
-                /*printf("%d...\r\n",update_params.itemsize());
-                printf("%f.. \r\n", get_param_float(update_params, 0));
-                printf("%f.. \r\n", get_param_float(update_params, 1));
-                printf("%f.. \r\n", get_param_float(update_params, 2));
-                printf("%f.. \r\n", get_param_float(update_params, 3));
-                printf("%f.. \r\n", get_param_float(update_params, 4));*/
-                g_params.dynamicFriction=0.7f;
-                g_params.staticFriction = 0.7f;
+                
+                g_params.dynamicFriction=get_param_float(update_params, 0);
+                g_params.staticFriction = get_param_float(update_params, 1);
+                g_numSubsteps = int(get_param_float(update_params, 2));
+                g_params.numIterations = int(get_param_float(update_params, 3));
+                g_dt = 1.0f/get_param_float(update_params, 4);
+
                 if (!update_param_flag)
                 {
                     update_param_flag = true;
@@ -209,14 +269,6 @@ public:
                 
             }
             
-            /*std::cout << "current parameter is: ";
-            for ( size_t i; i < update_params.itemsize(); i++)
-            {
-                std::cout<<update_params.data(i) << " \t";  
-            }
-            std::cout << std::endl;*/
-            /*g_params.dynamicFriction=0.7f;
-            g_params.staticFriction = 0.7f;*/
         }
         
 	}

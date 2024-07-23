@@ -585,7 +585,6 @@ Mesh *ImportMeshFromObj(const char *path)
 	}
 
 	//cout << "Imported mesh " << path << " in " << (GetSeconds()-startTime)*1000.f << "ms" << endl;
-
 	return m;
 }
 

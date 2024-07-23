@@ -729,7 +729,8 @@ void Init(int scene,
     g_frame = 0;
     g_pause = false;
 
-    g_dt = 1.0f / 100.0f;
+    //g_dt = 1.0f / 100.0f;
+    g_dt = 1.0/180.0f;
     g_waveTime = 0.0f;
     g_windTime = 0.0f;
     g_windStrength = 1.0f;
@@ -813,7 +814,6 @@ void Init(int scene,
     g_params.diffuseLifetime = 2.0f;
 
     g_numSubsteps = 20;
-
     // planes created after particles
     g_params.numPlanes = 1;
 

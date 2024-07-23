@@ -21,6 +21,9 @@ class ClothEnv(FlexEnv):
         if action_mode == 'picker':
             self.action_tool = Picker(num_picker, picker_radius=picker_radius, particle_radius=particle_radius, picker_threshold=picker_threshold,
                                       picker_low=(-0.4, 0., -0.4), picker_high=(1.0, 0.5, 0.4))
+            #for cloth vertical
+            # self.action_tool = Picker(num_picker, picker_radius=picker_radius, particle_radius=particle_radius, picker_threshold=picker_threshold,
+            #                 picker_low=(-0.4, 0., -0.4), picker_high=(1.0, 2.0, 0.4))
             self.action_space = self.action_tool.action_space
             self.picker_radius = picker_radius
         elif action_mode == 'pickerpickplace':

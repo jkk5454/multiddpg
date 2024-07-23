@@ -61,7 +61,12 @@
     "stdexcept": "cpp",
     "streambuf": "cpp",
     "cinttypes": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "bitset": "cpp",
+    "chrono": "cpp",
+    "complex": "cpp",
+    "ratio": "cpp",
+    "thread": "cpp"
   },
   "cmake.sourceDirectory": "${workspaceFolder}/PyFlex/bindings",
   "C_Cpp_Runner.cCompilerPath": "gcc",

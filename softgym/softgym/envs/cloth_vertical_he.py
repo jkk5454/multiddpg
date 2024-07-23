@@ -12,10 +12,33 @@ import scipy.spatial
 import matplotlib.pyplot as plt
 import imageio
 import math
+import ctypes
+import sys
+import os
 
 
-class ClothMoveEnv(ClothEnv):
-    def __init__(self, cached_states_path='cloth_move_init_states.pkl', **kwargs):
+# Define a function to redirect stdout and stderr
+def redirect_stdout():
+    sys.stdout.flush()
+    sys.stderr.flush()
+    new_stdout = os.dup(1)
+    new_stderr = os.dup(2)
+    sys.stdout = os.fdopen(new_stdout, 'w')
+    sys.stderr = os.fdopen(new_stderr, 'w')
+    libc = ctypes.CDLL(None)
+    c_stdout = ctypes.c_void_p.in_dll(libc, 'stdout')
+    c_stderr = ctypes.c_void_p.in_dll(libc, 'stderr')
+    libc.fflush(c_stdout)
+    libc.fflush(c_stderr)
+    libc.freopen(ctypes.c_char_p(b'/dev/stdout'), ctypes.c_char_p(b'w'), c_stdout)
+    libc.freopen(ctypes.c_char_p(b'/dev/stderr'), ctypes.c_char_p(b'w'), c_stderr)
+
+# Redirect stdout and stderr
+redirect_stdout()
+
+
+class ClothVerticalEnv(ClothEnv):
+    def __init__(self, cached_states_path='cloth_vertical_init_states.pkl', **kwargs):
         self.fold_group_a = self.fold_group_b = None
         self.init_pos, self.prev_dist = None, None
         self.picked_particles = None
@@ -47,21 +70,18 @@ class ClothMoveEnv(ClothEnv):
         if self.action_mode in ['sawyer', 'franka']:
             cam_pos, cam_angle = np.array([0.0, 1.62576, 1.04091]), np.array([0.0, -0.844739, 0])
         else:
-            #cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
-            #cam_pos, cam_angle = np.array([-0.0, 0.3, 0.5]), np.array([0, -0, 90 / 180 * np.pi])
-            #cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-            #cam_pos, cam_angle = np.array([0.1,0.3, 1.0]), np.array([0, 0, -90 / 180 * np.pi])
-            cam_pos, cam_angle = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-            #2 cam_pos, cam_angle = np.array([-1.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
-            #cam_pos, cam_angle = np.array([-0.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
-            #cam_pos, cam_angle = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+            #cam_pos, cam_angle = np.array([0.1,2.0, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            cam_pos, cam_angle = np.array([1.5, 0.5, 0.0]), np.array([90 / 180 * np.pi, 0.,0.]) #front view
+            #cam_pos, cam_angle = np.array([0.5, 0.9, 0.0]), np.array([90 / 180 * np.pi, 0.,0.]) #front detail view
+            #cam_pos, cam_angle = np.array([0., 0.5, 1.5]), np.array([0., 0.,-90 / 180 * np.pi]) #side view
+            
         config = {
             #'ClothPos': [-1.6, 2.0, -0.8],
             'ClothPos': [-0.2, 0.005, 0], # for T-shirt
             #'ClothPos': [-0.5, 0.005, -0.2], #for garment
             'ClothSize': [int(0.3 / particle_radius), int(0.3 / particle_radius)],
             #'ClothStiff': [2.0, 1, 0.9],  # Stretch, Bend and Shear
-            'ClothStiff': [2.5, 2.3, 0.15],  # Stretch, Bend and Shear standard
+            'ClothStiff': [3.0, 2.2, 1.5],  # Stretch, Bend and Shear standard
             #'ClothStiff': [1.5, 1.8, 0.4],  # Stretch, Bend and Shear  Test for different material
             # 'glass': {
             #     'glass_border': 0.015,
@@ -280,12 +300,17 @@ class ClothMoveEnv(ClothEnv):
             #reset glass
             shape_states = np.array(pyflex.get_shape_states()).reshape(-1, 14)
             # create glass
-            self.create_glass(self.glass_length, self.glass_width, self.glass_border)
+            #self.create_glass(self.glass_length, self.glass_width, self.glass_border)
             # move glass to be at initial position
-            self.glass_states = self.init_glass_state(0.1, 0.3,self.glass_length, self.glass_width, self.glass_border)
+            #self.glass_states = self.init_glass_state(0.1, 0.3,self.glass_length, self.glass_width, self.glass_border)
 
 
-            self.set_glass_shape_states(self.glass_states,shape_states)
+            #self.set_glass_shape_states(self.glass_states,shape_states)
+            
+            self.create_rigid_body()
+            self.glass_states = self.init_rigid_body_sate()
+            
+            self.set_rigid_body_state(self.glass_states,shape_states)
 
             # picker_low = self.action_tool.picker_low
             # picker_high = self.action_tool.picker_high
@@ -354,10 +379,11 @@ class ClothMoveEnv(ClothEnv):
         else:
             if pick_flag[0]:
                pyflex.step()
-               self.dragging_detection()
+               #self.dragging_detection()
             else:
-               test_param=np.array([0.7,0.7,4.0,30.0, 120.0])
+               test_param=np.array([0.1,0.2,0.3,0.4])
                pyflex.step(update_params=test_param)
+    
 
 
     def set_glass_params(self, config):
@@ -405,12 +431,17 @@ class ClothMoveEnv(ClothEnv):
             shape_states = np.array(pyflex.get_shape_states()).reshape(-1, 14)
             self.set_glass_params(config["glass"])
             # create glass
-            self.create_glass(self.glass_length, self.glass_width, self.glass_border)
-            # move glass to be at initial position
-            self.glass_states = self.init_glass_state(0.1, 0.3,self.glass_length, self.glass_width, self.glass_border)
+            # self.create_glass(self.glass_length, self.glass_width, self.glass_border)
+            # # move glass to be at initial position
+            # self.glass_states = self.init_glass_state(0.1, 0.3,self.glass_length, self.glass_width, self.glass_border)
 
 
-            self.set_glass_shape_states(self.glass_states,shape_states)
+            # self.set_glass_shape_states(self.glass_states,shape_states)
+            
+            self.create_rigid_body()
+            self.glass_states = self.init_rigid_body_sate()
+            
+            self.set_rigid_body_state(self.glass_states,shape_states)
         else:
             glass_params = state['glass_params']
             self.glass_border = glass_params['glass_border']
@@ -422,67 +453,91 @@ class ClothMoveEnv(ClothEnv):
 
         self.current_config = deepcopy(config)
 
-    def create_glass(self, glass_length, glass_width, glass_border):
-        center = np.array([0., 0., 0.])
-        quat = quatFromAxisAngle([0, 0, 1.0], 0)
-        boxes = []
+    # def create_glass(self, glass_length, glass_width, glass_border):
+    #     center = np.array([0., 0., 0.])
+    #     quat = quatFromAxisAngle([0, 0, 1.0], 0)
+    #     boxes = []
         
-        #bench
-        halfEdge = np.array([glass_length / 2. + glass_border, glass_border / 4., glass_width / 2. + glass_border])
-        boxes.append([halfEdge, center, quat])
+    #     #bench
+    #     halfEdge = np.array([glass_length / 2. + glass_border, glass_border / 4., glass_width / 2. + glass_border])
+    #     boxes.append([halfEdge, center, quat])
 
-        #capsule
-        halfEdge = np.array([glass_border / 2., glass_width / 2. + glass_border-0.002])
-        quat = quatFromAxisAngle([0, -1., 0], np.pi/2.)
-        boxes.append([halfEdge, center, quat])
+    #     #capsule
+    #     halfEdge = np.array([glass_border / 2., glass_width / 2. + glass_border-0.002])
+    #     quat = quatFromAxisAngle([0, -1., 0], np.pi/2.)
+    #     boxes.append([halfEdge, center, quat])
 
         
-        halfEdge = boxes[0][0]
-        center = boxes[0][1]
-        quat = boxes[0][2]
-        pyflex.add_box(halfEdge, center, quat)
+    #     halfEdge = boxes[0][0]
+    #     center = boxes[0][1]
+    #     quat = boxes[0][2]
+    #     pyflex.add_box(halfEdge, center, quat)
 
-        halfEdge = boxes[1][0]
-        center = boxes[1][1]
-        quat = boxes[1][2]
-        pyflex.add_capsule(halfEdge, center, quat)
-        #pyflex.add_sphere(0.08, center, quat)
+    #     halfEdge = boxes[1][0]
+    #     center = boxes[1][1]
+    #     quat = boxes[1][2]
+    #     pyflex.add_capsule(halfEdge, center, quat)
+    #     #pyflex.add_sphere(0.08, center, quat)
         
-        return boxes
-
-    def init_glass_state(self, x, y,glass_length, glass_width, glass_border):
-        x_center, y_curr, y_last = x, y, 0.
-        quat = quatFromAxisAngle([0, 0, 1.0], 0)
-        quat_cap = quatFromAxisAngle([0, -1., 0], np.pi/2.)
+    #     return boxes
+    
+    def create_rigid_body(self):
+        filename = "./cloth3d/ironingboard_thick.obj"
+        quat = quatFromAxisAngle([0, 1.0, 0.], 90 / 180 * np.pi)
+        translation = np.array([0., 0.2, -0.2])
+        scale = np.array([1, 1, 1])
         
-        # states of 1 walls
-        states = np.zeros((2, 14))
-        #states = np.zeros((1, 14))
+        pyflex.add_rigid_body_from_mesh(filename, translation, quat, scale)
         
-        states[0, :3] = np.array([x_center, y_curr, 0.])
-        states[0, 3:6] = np.array([x_center, y_last, 0.])
-
-        #states[1, :3] = np.array([x_center - (glass_length  + 2*glass_border) / 2., (glass_border) / 2. + y_curr, 0.])
-        #states[1, 3:6] = np.array([x_center - (glass_length  + 2*glass_border) / 2., (glass_border) / 2. + y_last, 0.])
-
-        states[1, :3] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_curr-glass_border/4+0.002, 0.])
-        states[1, 3:6] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_last-glass_border/4+0.002, 0.])
-
+    def init_rigid_body_sate(self):
+        translation = np.array([0.0, 0.2, -0.2])
+        quat = quatFromAxisAngle([0, 0, 1.0], 90 / 180 * np.pi)
+        states = np.zeros((1, 14))
+        states[0, :3] = translation
+        states[0, 3:6] = translation
         states[0, 6:10] = quat
         states[0, 10:] = quat
-
-        states[1, 6:10] = quat_cap
-        states[1, 10:] = quat_cap
-        
         return states
-  
-    def set_glass_shape_states(self, glass_states,shape_states):
- 
-        all_states = np.concatenate((shape_states,glass_states), axis=0)
+        
+    def set_rigid_body_state(self, rigid_states, shape_states):
+        
+        all_states = np.concatenate((shape_states, rigid_states), axis=0)
         pyflex.set_shape_states(all_states)
+    
+
+    # def init_glass_state(self, x, y,glass_length, glass_width, glass_border):
+    #     x_center, y_curr, y_last = x, y, 0.
+    #     quat = quatFromAxisAngle([0, 0, 1.0], 0)
+    #     quat_cap = quatFromAxisAngle([0, -1., 0], np.pi/2.)
+        
+    #     # states of 1 walls
+    #     states = np.zeros((2, 14))
+    #     #states = np.zeros((1, 14))
+        
+    #     states[0, :3] = np.array([x_center, y_curr, 0.])
+    #     states[0, 3:6] = np.array([x_center, y_last, 0.])
+
+    #     #states[1, :3] = np.array([x_center - (glass_length  + 2*glass_border) / 2., (glass_border) / 2. + y_curr, 0.])
+    #     #states[1, 3:6] = np.array([x_center - (glass_length  + 2*glass_border) / 2., (glass_border) / 2. + y_last, 0.])
+
+    #     states[1, :3] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_curr-glass_border/4+0.002, 0.])
+    #     states[1, 3:6] = np.array([x_center - (glass_length  + 2*glass_border) / 2., 0. + y_last-glass_border/4+0.002, 0.])
+
+    #     states[0, 6:10] = quat
+    #     states[0, 10:] = quat
+
+    #     states[1, 6:10] = quat_cap
+    #     states[1, 10:] = quat_cap
+        
+    #     return states
+  
+    # def set_glass_shape_states(self, glass_states,shape_states):
+ 
+    #     all_states = np.concatenate((shape_states,glass_states), axis=0)
+    #     pyflex.set_shape_states(all_states)
         
     def final_state(self):
-        return self.is_final_state
+         return self.is_final_state
 
     # def compute_reward(self, action=None, obs=None, set_prev_reward=False):
     #     cam_pos1, cam_angle1 = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
@@ -597,7 +652,7 @@ class ClothMoveEnv(ClothEnv):
     #     return reward
 
 
-    
+    '''
     #Without dragging phase and release pahse
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         position_reward = 0
@@ -620,10 +675,9 @@ class ClothMoveEnv(ClothEnv):
             rgb, depth = pyflex.render_cloth()
             #Mirror symmetry
             center_x, center_y=pyflex.center_inf()
-            position_reward = -100*(math.sqrt((center_x - 0.5)**2))
             if np.isnan(center_x):
                 center_x=10
-                position_reward = -100
+                position_reward = -10
             cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720])) # reset camera to original position
         
@@ -635,11 +689,11 @@ class ClothMoveEnv(ClothEnv):
         cam_pos, cam_angle = np.array([0.1,1.6, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
         pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
         return reward
-    
     '''
+
     def compute_reward(self, action=None, obs=None, set_prev_reward=False):
         return 0
-    '''
+
     def _get_info(self):
         # Duplicate of the compute reward function!
         pos = pyflex.get_positions()
@@ -655,6 +709,7 @@ class ClothMoveEnv(ClothEnv):
     
     #get the impact point with glass and check the impact points are not dragging the particles too far away that violates the actual physicals constraints.
     
+    '''
     def dragging_detection(self):
         impact_threshold=0.005
         particle_radius=0.00625
@@ -711,8 +766,9 @@ class ClothMoveEnv(ClothEnv):
                     #normalized_elongations = (elongations - min_elongations) / (max_elongations - min_elongations)
                     normalized_elongations= (elongations[i] - np.array(1.0)) / (np.array(1.8) - np.array(1.0))
                     self.normorlize_elongations[i]=normalized_elongations
+            '''
 
-                '''
+    '''
                     ax = self.fig.add_subplot(1,2,i+1)
                     colors = plt.cm.rainbow(normalized_elongations)
                     ax.cla()

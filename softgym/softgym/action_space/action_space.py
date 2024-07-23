@@ -69,7 +69,12 @@ class Picker(ActionToolBase):
         pos.append([center[0], center[1], center[2] + 0.2])
         # 第二个拾取器在中心点下方0.2的位置
         pos.append([center[0], center[1], center[2] - 0.2])
-        return np.array(pos)
+        return np.array(pos)                                 #print board
+        
+        # pos.append([center[0], center[1], center[2] + 0.18])
+
+        # pos.append([center[0], center[1], center[2] - 0.18])
+        # return np.array(pos)                                    #vertical cloth 
         
         # r = np.sqrt(self.num_picker - 1) * self.picker_radius * 2.
         # pos = []
@@ -204,6 +209,7 @@ class Picker(ActionToolBase):
                         new_picker_pos[active_picker_indices[j], :] = picker_pos[active_picker_indices[j], :].copy()
                         new_particle_pos[picked_particle_idices[i], :3] = particle_pos[picked_particle_idices[i], :3].copy()
                         new_particle_pos[picked_particle_idices[j], :3] = particle_pos[picked_particle_idices[j], :3].copy()
+                        print('Warning: The picker is dragging the particles too far away')
 
         self._set_pos(new_picker_pos, new_particle_pos)
         return pick_flag
