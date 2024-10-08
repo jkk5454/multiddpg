@@ -19,3 +19,5 @@ PyFlex/bindings/examples/*/
 PyFlex/bindings/examples/*.gif
 
 build/
+
+prepare_1.0.sh
