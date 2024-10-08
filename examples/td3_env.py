@@ -21,12 +21,9 @@ RANDOMSEED = 1              # random seed
 MEMORY_CAPACITY = 600     # size of replay buffer
 BATCH_SIZE = 64             # update batchsize
 MAX_EPISODES = 200         # total number of episodes for training
-MAX_EP_STEPS = 80          # total number of steps for each episode
+MAX_EP_STEPS = 60          # total number of steps for each episode
 TEST_PER_EPISODES = 10      # test the model per episodes
-VAR = 0.00015                   # control exploration
-
-min_xyz = np.array([-0.25, 0, -0.25])
-max_xyz = np.array([0.5, 0.5, 0.25])
+VAR = 0.00015                    # control exploration
 
 log_file = './data/train_td3_0811/reward.txt'
 
@@ -50,29 +47,21 @@ def show_depth(savename=None):
     #print(savename)
     #plt.pause(1)
     plt.close(fig)
-    
-def normalize_function(value, min_value, max_value):
-    return (value - min_value) / (max_value - min_value)
-
-def denormalize_function(value, min_value, max_value):
-    return value * (max_value - min_value) + min_value
-
 
 def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX_EPISODES):
-        #normalize state
-        s0_normalize = normalize_function(s[:3], min_xyz, max_xyz)
-        s1_normalize = normalize_function(s[3:], min_xyz, max_xyz)
-        s_normalize = np.concatenate([s0_normalize, s1_normalize])
-        for j in range(MAX_EP_STEPS):
+     for j in range(MAX_EP_STEPS):
             # Add exploration noise
-            a_normalize = ddpg.choose_action(s_normalize)       # action from DDPG
+            a = ddpg.choose_action(s)       # action from DDPG
             
-            #denormalize action
-            a0 = a_normalize[:3]*(max_xyz-min_xyz)
-            a1 = a_normalize[3:]*(max_xyz-min_xyz)
-            a = np.concatenate([a0, a1])
-            
-            a = np.clip(np.random.normal(a, VAR), -0.00015, 0.00015)
+            a = np.clip(np.random.normal(a, VAR), -0.0002, 0.0002)
+
+            # 添加随机噪声
+            '''
+            a[1] += np.random.uniform(-0.00005, 0.00005)
+            a[2] += np.random.uniform(-0.00005, 0.00005)
+            a[4] += np.random.uniform(-0.00005, 0.00005)
+            a[5] += np.random.uniform(-0.00005, 0.00005)
+            '''
 
             #print('action:',a) 
             action1 = np.append(a[:3],0)
@@ -80,24 +69,19 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
             action = [action_base[0]+action1, action_base[1]+action2]
             # get acton
             s_, r, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
-            
-            # print('s:',s)
-            # print('a:',a)
-            
-            
             frames.extend(info['flex_env_recorded_frames'])
-            if(np.any(np.isnan(s_)) or np.any(np.isnan(s)) or np.any(np.isnan(a))):
+            if(np.any(np.isnan(s_))):
                 print(f'nan in states')
-            #     save_name = osp.join('./train_td3_0811/', 'ClothMove{}.gif'.format(i))
-            #     save_numpy_as_gif(np.array(frames), save_name)
-            #     print('Video generated and save to {}'.format(save_name))
+                save_name = osp.join('./data/train_td3_0811/', 'ClothMove{}.gif'.format(i))
+                save_numpy_as_gif(np.array(frames), save_name)
+                print('Video generated and save to {}'.format(save_name))
                 break
             
             #print('episode:', i, 'step:', j,'r',r)
-            #print('r',r)
-            #print('s',s[0],s[3])
+            print('r',r)
+            print('s',s[0],s[3],s[1],s[4] , s[2], s[5])
 
-            
+           
             if j == MAX_EP_STEPS-1:
                 #release steps
                 action_release = np.array([[0.000, 0.0000, 0.000, 0.00],
@@ -105,7 +89,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                 print('pick position:', s[0],s[3])
                 env._wrapped_env.is_final_state = 1
                 for k in range(20):
-                    s_relase, r_release, done_release, info_release = env.step(action_release, record_continuous_video=True, img_size=img_size)
+                    s_relase, r, done_release, info_release = env.step(action_release, record_continuous_video=True, img_size=img_size)
                     frames.extend(info_release['flex_env_recorded_frames'])
                 gc.collect()
                 print('r_release',r)
@@ -124,9 +108,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                         ))
                 #reward_buffer.append(ep_reward)
                 #top_view
-                cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-                pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720]))
-                savename='./train_td3_0811/train{}_top.png'.format(i)
+                savename='./data/train_td3_0811/train{}_top.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -141,7 +123,7 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                 pyflex.set_camera_params(
                     np.array([*cam_pos2,*cam_angle2,720,720]))
                 #side view
-                savename='./train_td3_0811/train{}_side.png'.format(i)
+                savename='./data/train_td3_0811/train{}_side.png'.format(i)
                 show_depth(savename)
                 center_x, center_y=pyflex.center_inf()
                 with open(log_file, 'a') as f:
@@ -152,28 +134,16 @@ def learn_step(i,s,r, ep_reward,t1, env, action_base , frames, img_size=720,ddpg
                 pyflex.set_camera_params(
                     np.array([*cam_pos1,*cam_angle1,720,720]))
                 
-
-                # print('i:',i)
-                save_name = osp.join('./train_td3_0811/', 'ClothMove{}.gif'.format(i))
-                save_numpy_as_gif(np.array(frames), save_name)
-                print('Video generated and save to {}'.format(save_name))
-                    
+        
                 
-                #  store s，a，r，s_
+                # save_name = osp.join('./data/train_td3_0811/', 'ClothMove{}.gif'.format(i))
+                # save_numpy_as_gif(np.array(frames), save_name)
+                # print('Video generated and save to {}'.format(save_name))
+                
+                
+             #  store s，a，r，s_
             #print('r:',r,'is_final_state:',env._wrapped_env.is_final_state)
-            #normalize state
-            s0_normalize = normalize_function(s[:3], min_xyz, max_xyz)
-            s1_normalize = normalize_function(s[3:], min_xyz, max_xyz)
-            s_normalize = np.concatenate([s0_normalize, s1_normalize])
-            
-            s0__normalize = normalize_function(s_[:3], min_xyz, max_xyz)
-            s1__normalize = normalize_function(s_[3:], min_xyz, max_xyz)
-            s__normalize = np.concatenate([s0__normalize, s1__normalize])
-            
-            
-            
-            if not np.any(np.isnan(s_normalize)) and not np.any(np.isnan(s__normalize)) and not np.any(np.isnan(a_normalize)):
-                ddpg.store_transition(s_normalize, a_normalize, r, s__normalize, env._wrapped_env.is_final_state)
+            ddpg.store_transition(s, a, r, s_, env._wrapped_env.is_final_state)
             
 
             # update state
@@ -210,7 +180,6 @@ def initial_state(env, frames, img_size=720):
         # intermediate frames. Only use this option for visualization as it increases computation.
         
         next_obs, rewards, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
-        #print('intial obs',next_obs)
         del action
         gc.collect()
         frames.extend(info['flex_env_recorded_frames'])
@@ -218,7 +187,7 @@ def initial_state(env, frames, img_size=720):
     
 def position_and_wrinkle_inf():
     #top vision
-    cam_pos1, cam_angle1 = np.array([0.1,7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+    cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
     pyflex.set_camera_params(
         np.array([*cam_pos1,*cam_angle1,720,720]))
     show_depth()
@@ -253,28 +222,13 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
             s, r, done, info = initial_state(env, frames, img_size) # initial state
             ep_reward = 0
             for j in range(MAX_EP_STEPS):
-                
-                #normalize state
-                s0_normalize = normalize_function(s[:3], min_xyz, max_xyz)
-                s1_normalize = normalize_function(s[3:], min_xyz, max_xyz)
-                s_normalize = np.concatenate([s0_normalize, s1_normalize])
 
-                a_normalize = ddpg.choose_action(s_normalize)
-                
-                #denormalize action
-                a0 = a_normalize[:3]*(max_xyz-min_xyz)
-                a1 = a_normalize[3:]*(max_xyz-min_xyz)
-                a = np.concatenate([a0, a1])
-                
-                #print('a', a)
-                
+                a = ddpg.choose_action(s)
                 action1 = np.append(a[:3],0)
                 action2 =np.append(a[3:],0)
                 action = [action_base[0]+action1, action_base[1]+action2]
                 # action from DDPG
                 s_, r, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
-                
-                
                 frames.extend(info['flex_env_recorded_frames'])
 
                 if j == MAX_EP_STEPS - 1:
@@ -283,8 +237,7 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
                             [0.000, 0.0000, 0.000, 0.00]])
                     env._wrapped_env.is_final_state = 1
                     for k in range(20):
-                        #s_relase, r, done_release, info_release = env.step(action_release, record_continuous_video=True, img_size=img_size)
-                        s_relase, r_release, done_release, info_release = env.step(action_release, record_continuous_video=True, img_size=img_size)
+                        s_relase, r, done_release, info_release = env.step(action_release, record_continuous_video=True, img_size=img_size)
                         frames.extend(info_release['flex_env_recorded_frames'])
                     ep_reward += r
                     
@@ -303,9 +256,7 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
                         
                     
                     #top vision
-                    cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-                    pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720]))
-                    savename='./train_td3_0811/test/Test_{}_top.png'.format(i)
+                    savename='./data/train_td3_0811/test/Test_{}_top.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
                     wrinkle_density, wrinkle_avedepth=pyflex.wrinkle_inf()
@@ -320,7 +271,7 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
                     pyflex.set_camera_params(
                         np.array([*cam_pos2,*cam_angle2,720,720]))
                     #side vision
-                    savename='./train_td3_0811/test/Test_{}_side.png'.format(i)
+                    savename='./data/train_td3_0811/test/Test_{}_side.png'.format(i)
                     show_depth(savename)
                     center_x, center_y=pyflex.center_inf()
                     mean_half_front, mean_half_back=pyflex.sidecam_inf()
@@ -333,11 +284,11 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
                     pyflex.set_camera_params(
                         np.array([*cam_pos1,*cam_angle1,720,720]))
                     
-                    
-                    # save_name = osp.join('./train_td3_0811/test/', 'ClothMove{}.gif'.format(i))
-                    # save_numpy_as_gif(np.array(frames), save_name)
-                    # print('Video generated and save to {}'.format(save_name))
-                    
+                    '''
+                    save_name = osp.join('./data/train_td3_0811/test/', 'ClothMove{}.gif'.format(i))
+                    save_numpy_as_gif(np.array(frames), save_name)
+                    print('Video generated and save to {}'.format(save_name))
+                    '''
                     
                     reward_buffer.append(ep_reward)
                 s = s_
@@ -363,7 +314,6 @@ def net_train(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MA
     plt.show()
     '''
     print('\nRunning time: ', time.time() - t0)
-    np.save('./ddpg_replay_buffer.npy', ddpg.memory)
     ddpg.save_ckpt()
     
     
@@ -409,13 +359,8 @@ def main():
     
     initial_obs, rewards, _, info = initial_state(env, frames, args.img_size)
     a_bound = np.array([0.0002, 0.0002, 0.0002, 0.0002, 0.0002, 0.0002])
-    action_0 = np.array([[0.009, 0.00012, -0.00015, 0.001],
-                          [0.0009, -0.00012, 0.00015, 0.001]])
-    
-    a0_bound = a_bound[:3]/(max_xyz-min_xyz)
-    a1_bound = a_bound[3:]/(max_xyz-min_xyz)
-    a_bound = np.concatenate([a0_bound, a1_bound])
-    print('a_bound:',a_bound)
+    action_0 = np.array([[0.0009, 0.00005, -0.00015, 0.001],
+                          [0.0009, -0.00005, 0.00015, 0.001]])
                        
     
     print('initial_obs_dim:',initial_obs.shape[0],'a_dim:',a_bound.shape[0])

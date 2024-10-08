@@ -158,7 +158,7 @@ def net_test(env, action_base , frames, img_size=720,ddpg=None, max_episodes=MAX
             #action = [action_base[0]+action1, action_base[1]+action2]
             # action from DDPG
             s_, r, done, info = env.step(action, record_continuous_video=True, img_size=img_size)
-            #print('s_',s_)
+            print('s_',s_)
             frames.extend(info['flex_env_recorded_frames'])
 
             if j == MAX_EP_STEPS - 1:
