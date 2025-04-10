@@ -63,61 +63,89 @@ def main():
     
     
     frames = [env.get_image(args.img_size, args.img_size)]  
+    #######################################################################################
+    ##########################Vertical Pulling###########################################
+    #######################################################################################
+    # for i in range(env.horizon):
+    # #for i in range(80):
+    #     if i < 20:
+    #         action = np.array([[-0.0010, 0.000, 0.000, 0.001],
+    #                       [-0.0010, 0.000, 0.000, 0.001]])
+    #     elif 19<i<54:
+    #         action = np.array([[-0.00, 0.00313, -0.0003, 0.001],
+    #                       [-0.00, 0.00283, -0.0003, 0.001]])
+    #     elif 53 <i<104:
+    #         if i == 54:
+    #             draw=[0.00, 0.00, 8.0, 60.0, 240.0]
+    #             env.env_update(draw)
+    #         action = np.array([[0.0011, -0.000, 0.000, 0.001],
+    #                       [0.0011, -0.000, 0.000, 0.001]])
+            
+    #     # elif 104<i<115:
+    #     #     if i==105:
+    #     #         draw=[0.00, 0.00, 6.0, 60.0, 240.0]
+    #     #         env.env_update(draw)
+    #     #     action = np.array([[0.000, -0.000, 0.00, 0.001],
+    #     #                     [0.000, -0.00, 0.00, 0.001]])
+    #     elif 103<i<144:
+    #         action = np.array([[-0.000, -0.0006, 0.0008, 0.001],
+    #                         [-0.000, -0.0009, 0.0008, 0.001]])
+    #     elif 143<i<184:
+    #         action = np.array([[0.000, -0.0002, -0.0003, 0.001],
+    #                     [0.000, -0.0000, -0.0003, 0.001]])
+    #     elif 183<i<240:
+    #         if i == 179:
+    #             draw = [0.7, 0.7, 4.0, 30.0, 120.0]
+    #             env.env_update(draw)
+    #         action = np.array([[0.000, -0.0005, 0.000, 0.001],
+    #                     [0.000, -0.0005, 0.000, 0.001]])
+            
+    #     # elif 49<i<101:
+    #     #     action = np.array([[0.0012, -0.00012, 0.0000, 0.001],
+    #     #                   [0.0012, -0.00012, -0.0000, 0.001]])
+    #     #     if i==78 or i==95:
+    #     #         draw=1
+    #     # elif 100<i<151:
+    #     #     action = np.array([[0.000, 0.0000, 0.000, 0.001],
+    #     #                 [0.000, 0.0000, 0.000, 0.001]])
+    #     # elif 150<i<env.horizon:
+    #     #     env._wrapped_env.is_final_state = 1
+    #     #     action = np.array([[0.000, 0.0000, 0.000, 0.00],
+    #     #                 [0.000, 0.0000, 0.000, 0.00]])
+    #     #     if i == env.horizon-1:
+    #     #         env._wrapped_env.is_final_state = 1
+    #     else:
+    #         action = np.array([[0.000, 0.0000, 0.000, 0.000],
+    #                     [0.000, 0.0000, 0.000, 0.000]])
+        
+    #     #action = env.action_space.sample()
+    #     # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all
+    #     # intermediate frames. Only use this option for visualization as it increases computation.
+    
     for i in range(env.horizon):
+        draw=0
     #for i in range(80):
         if i < 20:
-            action = np.array([[-0.0010, 0.000, 0.000, 0.001],
-                          [-0.0010, 0.000, 0.000, 0.001]])
-        elif 19<i<54:
-            action = np.array([[-0.00, 0.00313, -0.0003, 0.001],
-                          [-0.00, 0.00283, -0.0003, 0.001]])
-        elif 53 <i<104:
-            if i == 54:
-                draw=[0.00, 0.00, 8.0, 60.0, 240.0]
-                env.env_update(draw)
-            action = np.array([[0.0011, -0.000, 0.000, 0.001],
-                          [0.0011, -0.000, 0.000, 0.001]])
-            
-        # elif 104<i<115:
-        #     if i==105:
-        #         draw=[0.00, 0.00, 6.0, 60.0, 240.0]
-        #         env.env_update(draw)
-        #     action = np.array([[0.000, -0.000, 0.00, 0.001],
-        #                     [0.000, -0.00, 0.00, 0.001]])
-        elif 103<i<144:
-            action = np.array([[-0.000, -0.0006, 0.0008, 0.001],
-                            [-0.000, -0.0009, 0.0008, 0.001]])
-        elif 143<i<184:
-            action = np.array([[0.000, -0.0002, -0.0003, 0.001],
-                        [0.000, -0.0000, -0.0003, 0.001]])
-        elif 183<i<240:
-            if i == 179:
-                draw = [0.7, 0.7, 4.0, 30.0, 120.0]
-                env.env_update(draw)
-            action = np.array([[0.000, -0.0005, 0.000, 0.001],
-                        [0.000, -0.0005, 0.000, 0.001]])
-            
-        # elif 49<i<101:
-        #     action = np.array([[0.0012, -0.00012, 0.0000, 0.001],
-        #                   [0.0012, -0.00012, -0.0000, 0.001]])
-        #     if i==78 or i==95:
-        #         draw=1
-        # elif 100<i<151:
-        #     action = np.array([[0.000, 0.0000, 0.000, 0.001],
-        #                 [0.000, 0.0000, 0.000, 0.001]])
-        # elif 150<i<env.horizon:
-        #     env._wrapped_env.is_final_state = 1
-        #     action = np.array([[0.000, 0.0000, 0.000, 0.00],
-        #                 [0.000, 0.0000, 0.000, 0.00]])
-        #     if i == env.horizon-1:
-        #         env._wrapped_env.is_final_state = 1
-        else:
-            action = np.array([[0.000, 0.0000, 0.000, 0.000],
-                        [0.000, 0.0000, 0.000, 0.000]])
-        
+            action = np.array([[-0.001, 0.000, 0.000, 0.001],
+                          [-0.001, 0.000, 0.000, 0.001]])
+        elif 19<i<50:
+            action = np.array([[-0.00, 0.0018, 0.000, 0.001],
+                          [-0.00, 0.0018, 0.000, 0.001]])
+        elif 49<i<101:
+            action = np.array([[0.00120, -0.00015, 0.000, 0.001],
+                          [0.00120, -0.00015, -0.000, 0.001]])
+            if i==78 or i==95:
+                draw=1
+        elif 100<i<115:
+            action = np.array([[0.000, 0.0000, 0.000, 0.001],
+                        [0.000, 0.0000, 0.000, 0.001]])
+        elif 114<i<env.horizon:
+            action = np.array([[0.000, 0.0000, 0.000, 0.00],
+                        [0.000, 0.0000, 0.000, 0.00]])
+            if i == env.horizon-1:
+                env._wrapped_env.is_final_state = 1
         #action = env.action_space.sample()
         # By default, the environments will apply action repitition. The option of record_continuous_video provides rendering of all
-        # intermediate frames. Only use this option for visualization as it increases computation.
         
 
         obs, reward, done, info = env.step(action, record_continuous_video=True, img_size=args.img_size)

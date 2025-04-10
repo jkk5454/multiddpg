@@ -49,16 +49,16 @@ class ClothMoveEnv(ClothEnv):
         else:
             #cam_pos, cam_angle = np.array([0.1, 0.8, 0.8]), np.array([0, -45 / 180. * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.0, 0.3, 0.5]), np.array([0, -0, 90 / 180 * np.pi])
-            cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+            cam_pos, cam_angle = np.array([0.1,1.2, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.20, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
             #cam_pos, cam_angle = np.array([-0.5,0.3, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
         config = {
             #'ClothPos': [-1.6, 2.0, -0.8],
-            'ClothPos': [-0.2, 0.005, 0], # for T-shirt
-            #'ClothPos': [-0.5, 0.005, -0.2], #for garment
-            'ClothSize': [int(0.3 / particle_radius), int(0.3 / particle_radius)],
-            #'ClothStiff': [2.0, 1, 0.9],  # Stretch, Bend and Shear
-            'ClothStiff': [2.3, 2.0, 0.2],  # Stretch, Bend and Shear standard
+            #'ClothPos': [-0.2, 0.005, 0], # for T-shirt
+            'ClothPos': [-0.5, 0.005, -0.2], #for garment
+            'ClothSize': [int(0.03 / particle_radius), int(0.03 / particle_radius)],
+            'ClothStiff': [2.0, 1, 0.9],  # Stretch, Bend and Shear
+            #'ClothStiff': [2.3, 2.0, 0.2],  # Stretch, Bend and Shear standard
             #'ClothStiff': [1.5, 1.8, 0.4],  # Stretch, Bend and Shear  Test for different material
             'glass': {
                 'glass_border': 0.015,
@@ -143,54 +143,54 @@ class ClothMoveEnv(ClothEnv):
                 list(bend_edges)), np.array(list(shear_edges))
 
     
-    def generate_env_variation(self, num_variations=2, vary_cloth_size=True):
-        """ Generate initial states. Note: This will also change the current states! """
-        generated_configs, generated_states = [], []
-        default_config = self.get_default_config()
-        default_config['flip_mesh'] = 1
+    # def generate_env_variation(self, num_variations=2, vary_cloth_size=True):
+    #     """ Generate initial states. Note: This will also change the current states! """
+    #     generated_configs, generated_states = [], []
+    #     default_config = self.get_default_config()
+    #     default_config['flip_mesh'] = 1
         
-        mesh_verts = np.array([])
-        mesh_stretch_edges = np.array([])
-        mesh_bend_edges = np.array([])
-        mesh_shear_edges = np.array([])
-        mesh_faces = np.array([])
+    #     mesh_verts = np.array([])
+    #     mesh_stretch_edges = np.array([])
+    #     mesh_bend_edges = np.array([])
+    #     mesh_shear_edges = np.array([])
+    #     mesh_faces = np.array([])
     
-        for i in range(num_variations):
-            config = deepcopy(default_config)
-            self.update_camera(config['camera_name'], config['camera_params'][config['camera_name']])
-            if vary_cloth_size:
-                cloth_dimx, cloth_dimy = self._sample_cloth_size()
-                config['ClothSize'] = [cloth_dimx, cloth_dimy]
-            else:
-                cloth_dimx, cloth_dimy = config['ClothSize']
+    #     for i in range(num_variations):
+    #         config = deepcopy(default_config)
+    #         self.update_camera(config['camera_name'], config['camera_params'][config['camera_name']])
+    #         if vary_cloth_size:
+    #             cloth_dimx, cloth_dimy = self._sample_cloth_size()
+    #             config['ClothSize'] = [cloth_dimx, cloth_dimy]
+    #         else:
+    #             cloth_dimx, cloth_dimy = config['ClothSize']
             
-            cloth_dimx, cloth_dimy = -1, -1
-            # sample random mesh
-            path = "./cloth3d/val/Tshirt_processed.obj"
-            retval = self.load_cloth(path)
-            mesh_verts = retval[0]
-            mesh_faces = retval[1]
-            mesh_stretch_edges, mesh_bend_edges, mesh_shear_edges = retval[2:]
-            num_particle = mesh_verts.shape[0]//3
-            #flattened_area = trimesh.load(path).area/2
-            config.update({
-                'ClothSize':[cloth_dimx,cloth_dimy],
-                'mesh_verts': mesh_verts.reshape(-1),
-                'mesh_stretch_edges': mesh_stretch_edges.reshape(-1),
-                'mesh_bend_edges': mesh_bend_edges.reshape(-1),
-                'mesh_shear_edges': mesh_shear_edges.reshape(-1),
-                'mesh_faces': mesh_faces.reshape(-1),
-            })
-            self.set_scene(config)
-            #self.action_tool.reset([0., -1., 0.])
-            pyflex.step()
-            #print(pyflex.get_positions().reshape(-1,4))
-            generated_configs.append(deepcopy(config))
-            print('config {}: {}'.format(i, config['camera_params']))
-            generated_states.append(deepcopy(self.get_state()))
+    #         cloth_dimx, cloth_dimy = -1, -1
+    #         # sample random mesh
+    #         path = "./cloth3d/val/Tshirt_processed.obj"
+    #         retval = self.load_cloth(path)
+    #         mesh_verts = retval[0]
+    #         mesh_faces = retval[1]
+    #         mesh_stretch_edges, mesh_bend_edges, mesh_shear_edges = retval[2:]
+    #         num_particle = mesh_verts.shape[0]//3
+    #         #flattened_area = trimesh.load(path).area/2
+    #         config.update({
+    #             'ClothSize':[cloth_dimx,cloth_dimy],
+    #             'mesh_verts': mesh_verts.reshape(-1),
+    #             'mesh_stretch_edges': mesh_stretch_edges.reshape(-1),
+    #             'mesh_bend_edges': mesh_bend_edges.reshape(-1),
+    #             'mesh_shear_edges': mesh_shear_edges.reshape(-1),
+    #             'mesh_faces': mesh_faces.reshape(-1),
+    #         })
+    #         self.set_scene(config)
+    #         #self.action_tool.reset([0., -1., 0.])
+    #         pyflex.step()
+    #         #print(pyflex.get_positions().reshape(-1,4))
+    #         generated_configs.append(deepcopy(config))
+    #         print('config {}: {}'.format(i, config['camera_params']))
+    #         generated_states.append(deepcopy(self.get_state()))
 
-        return generated_configs, generated_states
-    '''
+    #     return generated_configs, generated_states
+    
     def generate_env_variation(self, num_variations=2, vary_cloth_size=True):
         """ Generate initial states. Note: This will also change the current states! """
         generated_configs, generated_states = [], []
@@ -229,7 +229,7 @@ class ClothMoveEnv(ClothEnv):
             generated_states.append(deepcopy(self.get_state()))
 
         return generated_configs, generated_states
-    '''
+    
     def set_test_color(self, num_particles):
         """
         Assign random colors to group a and the same colors for each corresponding particle in group b
@@ -347,8 +347,11 @@ class ClothMoveEnv(ClothEnv):
                pyflex.step()
                #self.dragging_detection()
             else:
-               test_param=np.array([0.7,0.7,4.0,30.0, 120.0])
-               pyflex.step(update_params=test_param)
+                #    test_param=np.array([0.7,0.7,4.0,30.0, 120.0])
+                #    pyflex.step(update_params=test_param)
+                friction_params = [0.7, 0.7, 4.0, 30.0, 120.0]
+                pyflex.update_env(friction_params)
+                pyflex.step()
 
 
     def set_glass_params(self, config):
@@ -573,49 +576,49 @@ class ClothMoveEnv(ClothEnv):
     '''
 
     #Without dragging phase and release pahse
-    def compute_reward(self, action=None, obs=None, set_prev_reward=False):
-        position_reward = 0
-        picker_reward = 0
-        picker_reward_2 = 0
-        s = self._get_obs()
-        if self.is_final_state == 0:
-            picker_reward = -np.exp(math.sqrt((s[0] - 0.27)**2 + (s[3] - 0.27)**2)-abs(s[0]-s[3]))
-            #print('picker_reward:', picker_reward)
-            #picker_reward = picker_reward-abs(s[0]-s[3])
-            if abs(s[0]-0.27) < 0.005:
-                #print('s[0] get picker_reward:', picker_reward, 's[0]', s[0])
-                picker_reward += 1
-            if abs(s[3]-0.27) < 0.005:
-                #print('s[3] get picker_reward:', picker_reward,'s[3]', s[3])
-                picker_reward += 1
-            #add side camera center
-            cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
-            pyflex.set_camera_params(
-            np.array([*cam_pos2,*cam_angle2,720,720]))
-            rgb, depth = pyflex.render_cloth()
-            #Mirror symmetry
-            center_x, center_y=pyflex.center_inf()
-            if np.isnan(center_x):
-                center_x=10
-                position_reward = -10
-            cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-            pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720])) # reset camera to original position
-            
-            position_reward = -np.exp(math.sqrt((s[1] - 0.39)**2 + (s[4] - 0.39)**2)-abs(s[1]-s[4]))
-            
-            picker_reward_2 = -np.exp(math.sqrt((s[2] - 0.07)**2 + (s[5] - -0.04)**2)-abs(s[0]+s[3])/2) 
-        
-        reward = (picker_reward+ position_reward+picker_reward_2)/3
-        #print('reward',reward, 'picker_reward',picker_reward)
-        if np.isnan(reward):
-            reward = -100
-            
-        cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
-        pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
-        return reward
-
     # def compute_reward(self, action=None, obs=None, set_prev_reward=False):
-    #     return 0
+    #     position_reward = 0
+    #     picker_reward = 0
+    #     picker_reward_2 = 0
+    #     s = self._get_obs()
+    #     if self.is_final_state == 0:
+    #         picker_reward = -np.exp(math.sqrt((s[0] - 0.27)**2 + (s[3] - 0.27)**2)-abs(s[0]-s[3]))
+    #         #print('picker_reward:', picker_reward)
+    #         #picker_reward = picker_reward-abs(s[0]-s[3])
+    #         if abs(s[0]-0.27) < 0.005:
+    #             #print('s[0] get picker_reward:', picker_reward, 's[0]', s[0])
+    #             picker_reward += 1
+    #         if abs(s[3]-0.27) < 0.005:
+    #             #print('s[3] get picker_reward:', picker_reward,'s[3]', s[3])
+    #             picker_reward += 1
+    #         #add side camera center
+    #         cam_pos2, cam_angle2 = np.array([-0.5,0.15, 0.0]), np.array([-+90 / 180 * np.pi, 0, 0.])
+    #         pyflex.set_camera_params(
+    #         np.array([*cam_pos2,*cam_angle2,720,720]))
+    #         rgb, depth = pyflex.render_cloth()
+    #         #Mirror symmetry
+    #         center_x, center_y=pyflex.center_inf()
+    #         if np.isnan(center_x):
+    #             center_x=10
+    #             position_reward = -10
+    #         cam_pos1, cam_angle1 = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+    #         pyflex.set_camera_params(np.array([*cam_pos1,*cam_angle1,720,720])) # reset camera to original position
+            
+    #         position_reward = -np.exp(math.sqrt((s[1] - 0.39)**2 + (s[4] - 0.39)**2)-abs(s[1]-s[4]))
+            
+    #         picker_reward_2 = -np.exp(math.sqrt((s[2] - 0.07)**2 + (s[5] - -0.04)**2)-abs(s[0]+s[3])/2) 
+        
+    #     reward = (picker_reward+ position_reward+picker_reward_2)/3
+    #     #print('reward',reward, 'picker_reward',picker_reward)
+    #     if np.isnan(reward):
+    #         reward = -100
+            
+    #     cam_pos, cam_angle = np.array([0.1,0.7, 0.0]), np.array([0, -90 / 180 * np.pi, 0.])
+    #     pyflex.set_camera_params(np.array([*cam_pos,*cam_angle,720,720])) # reset camera to observation position
+    #     return reward
+
+    def compute_reward(self, action=None, obs=None, set_prev_reward=False):
+        return 0
     
     def _get_info(self):
         # Duplicate of the compute reward function!
@@ -632,98 +635,98 @@ class ClothMoveEnv(ClothEnv):
     
     #get the impact point with glass and check the impact points are not dragging the particles too far away that violates the actual physicals constraints.
     
-    def dragging_detection(self):
-        impact_threshold=0.005
-        particle_radius=0.00625
-        particle_pos = np.array(pyflex.get_positions()).reshape(-1, 4)
-        center_capsule = self.glass_states[1,:3]
-        impact_point=np.zeros((100,3))
-        impact_particles=[None]*100
-        impact_point[0] = center_capsule-[0,0,self.glass_width/2]
-        #get the impact particles id
-        for i in range(100):
-            impact_point[i]=impact_point[0]+[0,0,self.glass_width*i/100]
-            dists = scipy.spatial.distance.cdist(impact_point[i].reshape((-1, 3)), particle_pos[:, :3].reshape((-1, 3)))
-            idx_dists = np.hstack([np.arange(particle_pos.shape[0]).reshape((-1, 1)), dists.reshape((-1, 1))])
-            mask = dists.flatten() <= impact_threshold + self.glass_border/2. + particle_radius
-            idx_dists = idx_dists[mask, :].reshape((-1, 2))
-            if idx_dists.shape[0] > 0:
-                impact_id, impact_dist = None, None
-                for j in range(idx_dists.shape[0]):
-                    if idx_dists[j, 0] not in impact_particles and (impact_id is None or idx_dists[j, 1] < impact_dist):
-                        impact_id = idx_dists[j, 0]
-                        impact_dist = idx_dists[j, 1]
-                    if impact_id is not None:
-                        impact_particles[i] = int(impact_id)
+    # def dragging_detection(self):
+    #     impact_threshold=0.005
+    #     particle_radius=0.00625
+    #     particle_pos = np.array(pyflex.get_positions()).reshape(-1, 4)
+    #     center_capsule = self.glass_states[1,:3]
+    #     impact_point=np.zeros((100,3))
+    #     impact_particles=[None]*100
+    #     impact_point[0] = center_capsule-[0,0,self.glass_width/2]
+    #     #get the impact particles id
+    #     for i in range(100):
+    #         impact_point[i]=impact_point[0]+[0,0,self.glass_width*i/100]
+    #         dists = scipy.spatial.distance.cdist(impact_point[i].reshape((-1, 3)), particle_pos[:, :3].reshape((-1, 3)))
+    #         idx_dists = np.hstack([np.arange(particle_pos.shape[0]).reshape((-1, 1)), dists.reshape((-1, 1))])
+    #         mask = dists.flatten() <= impact_threshold + self.glass_border/2. + particle_radius
+    #         idx_dists = idx_dists[mask, :].reshape((-1, 2))
+    #         if idx_dists.shape[0] > 0:
+    #             impact_id, impact_dist = None, None
+    #             for j in range(idx_dists.shape[0]):
+    #                 if idx_dists[j, 0] not in impact_particles and (impact_id is None or idx_dists[j, 1] < impact_dist):
+    #                     impact_id = idx_dists[j, 0]
+    #                     impact_dist = idx_dists[j, 1]
+    #                 if impact_id is not None:
+    #                     impact_particles[i] = int(impact_id)
             
-        if impact_particles is not None:
-            impact_particle_idices = []
-            active_impact_indices = []
-            for i in range(100):
-                if impact_particles[i] is not None:
-                    impact_particle_idices.append(impact_particles[i])
-                    active_impact_indices.append(i)
+    #     if impact_particles is not None:
+    #         impact_particle_idices = []
+    #         active_impact_indices = []
+    #         for i in range(100):
+    #             if impact_particles[i] is not None:
+    #                 impact_particle_idices.append(impact_particles[i])
+    #                 active_impact_indices.append(i)
 
-            l = len(impact_particle_idices)
-            elongations = [[] for _ in range(len(self.picked_particles))]
-            #print('len of l is:',l)
-            for i in range(len(self.picked_particles)):
-                draw_particles_x=[]
-                draw_particles_y=[]
-                for j in range(l):
-                    init_distance = np.linalg.norm(self.init_pos[self.picked_particles[i], :3] -
-                                                   self.init_pos[impact_particle_idices[j], :3])
-                    now_distance = np.linalg.norm(particle_pos[self.picked_particles[i], :3] -
-                                                  particle_pos[impact_particle_idices[j], :3])
-                    elongations[i].append(now_distance / init_distance)          
-                    #print('elongation:',now_distance/init_distance)
-                    draw_particles_x.append(particle_pos[impact_particle_idices[j], 0])
-                    draw_particles_y.append(particle_pos[impact_particle_idices[j], 2])
+    #         l = len(impact_particle_idices)
+    #         elongations = [[] for _ in range(len(self.picked_particles))]
+    #         #print('len of l is:',l)
+    #         for i in range(len(self.picked_particles)):
+    #             draw_particles_x=[]
+    #             draw_particles_y=[]
+    #             for j in range(l):
+    #                 init_distance = np.linalg.norm(self.init_pos[self.picked_particles[i], :3] -
+    #                                                self.init_pos[impact_particle_idices[j], :3])
+    #                 now_distance = np.linalg.norm(particle_pos[self.picked_particles[i], :3] -
+    #                                               particle_pos[impact_particle_idices[j], :3])
+    #                 elongations[i].append(now_distance / init_distance)          
+    #                 #print('elongation:',now_distance/init_distance)
+    #                 draw_particles_x.append(particle_pos[impact_particle_idices[j], 0])
+    #                 draw_particles_y.append(particle_pos[impact_particle_idices[j], 2])
                     
-                #colors set
-            if l:
-                self.normorlize_elongations = [[] for _ in range(len(self.picked_particles))]
-                for i in range(len(self.picked_particles)):
-                    #normalized_elongations = (elongations - min_elongations) / (max_elongations - min_elongations)
-                    normalized_elongations= (elongations[i] - np.array(1.0)) / (np.array(1.8) - np.array(1.0))
-                    self.normorlize_elongations[i]=normalized_elongations
+    #             #colors set
+    #         if l:
+    #             self.normorlize_elongations = [[] for _ in range(len(self.picked_particles))]
+    #             for i in range(len(self.picked_particles)):
+    #                 #normalized_elongations = (elongations - min_elongations) / (max_elongations - min_elongations)
+    #                 normalized_elongations= (elongations[i] - np.array(1.0)) / (np.array(1.8) - np.array(1.0))
+    #                 self.normorlize_elongations[i]=normalized_elongations
 
-                    ax = self.fig.add_subplot(1,2,i+1)
-                    colors = plt.cm.rainbow(normalized_elongations)
-                    ax.cla()
+    #                 ax = self.fig.add_subplot(1,2,i+1)
+    #                 colors = plt.cm.rainbow(normalized_elongations)
+    #                 ax.cla()
                     
-                    im=ax.scatter(draw_particles_x, draw_particles_y, c=colors,cmap='rainbow')
-                    for j in range(l):
-                        ax.plot([particle_pos[self.picked_particles[i]][0], particle_pos[impact_particle_idices[j]][0]]
-                            ,[particle_pos[self.picked_particles[i]][2], particle_pos[impact_particle_idices[j]][2]],color=colors[j])
-                    ax.set_ylim(-0.12,0.12)
-                    ax.set_xlim(-0.05,0.3)
-                    if self.fig.cbar[i] is None:
-                        cb = self.fig.colorbar(im, ax=ax)
-                        cb.ax.yaxis.set_label_position('left')
-                        cb.ax.set_ylabel('elongation',rotation=270,fontsize=14,fontweight='bold')
-                        self.fig.cbar[i]=cb
-                    self.fig.cbar[i].update_normal(im)
+    #                 im=ax.scatter(draw_particles_x, draw_particles_y, c=colors,cmap='rainbow')
+    #                 for j in range(l):
+    #                     ax.plot([particle_pos[self.picked_particles[i]][0], particle_pos[impact_particle_idices[j]][0]]
+    #                         ,[particle_pos[self.picked_particles[i]][2], particle_pos[impact_particle_idices[j]][2]],color=colors[j])
+    #                 ax.set_ylim(-0.12,0.12)
+    #                 ax.set_xlim(-0.05,0.3)
+    #                 if self.fig.cbar[i] is None:
+    #                     cb = self.fig.colorbar(im, ax=ax)
+    #                     cb.ax.yaxis.set_label_position('left')
+    #                     cb.ax.set_ylabel('elongation',rotation=270,fontsize=14,fontweight='bold')
+    #                     self.fig.cbar[i]=cb
+    #                 self.fig.cbar[i].update_normal(im)
                 
-                self.fig.canvas.draw()
-                #argb_image = self.fig.canvas.tostring_rgb()
-                #print('argb_image:',argb_image) 
-                #image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
-                #image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
-                buf = self.fig.canvas.tostring_rgb()
-                ncols, nrows = self.fig.canvas.get_width_height()
-                image = np.fromstring(buf, dtype=np.uint8).reshape(nrows*2, ncols*2, 3) # 2 for 4k monitor
-                self.elongnation_images.append(image)
-                #print('max elongation:',np.max(self.normorlize_elongations))
-                if self.headless is False:
-                    plt.draw()
-                    plt.pause(0.1)
-                #plt.close()
+    #             self.fig.canvas.draw()
+    #             #argb_image = self.fig.canvas.tostring_rgb()
+    #             #print('argb_image:',argb_image) 
+    #             #image = np.frombuffer(self.fig.canvas.tostring_rgb(), dtype=np.uint8)
+    #             #image = image.reshape(self.fig.canvas.get_width_height()[::-1] + (3,))
+    #             buf = self.fig.canvas.tostring_rgb()
+    #             ncols, nrows = self.fig.canvas.get_width_height()
+    #             image = np.fromstring(buf, dtype=np.uint8).reshape(nrows*2, ncols*2, 3) # 2 for 4k monitor
+    #             self.elongnation_images.append(image)
+    #             #print('max elongation:',np.max(self.normorlize_elongations))
+    #             if self.headless is False:
+    #                 plt.draw()
+    #                 plt.pause(0.1)
+    #             #plt.close()
 
                 
-    # get the elonganation of the object
-    def get_elongation_gif(self):
-        imageio.mimsave('./data/elongation.gif', self.elongnation_images,fps=5)
+    # # get the elonganation of the object
+    # def get_elongation_gif(self):
+    #     imageio.mimsave('./data/elongation.gif', self.elongnation_images,fps=5)
 
         
                
